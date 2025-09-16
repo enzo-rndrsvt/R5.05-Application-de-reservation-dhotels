@@ -9,5 +9,7 @@ namespace R5._05_Application_de_reservation_dhotels
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 
         public string? Summary { get; set; }
+
+        public int Test { get; set; }
     }
 }
