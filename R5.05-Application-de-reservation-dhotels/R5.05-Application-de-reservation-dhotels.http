@@ -1,6 +1,0 @@
-@R5._05_Application_de_reservation_dhotels_HostAddress = http://localhost:5245
-
-GET {{R5._05_Application_de_reservation_dhotels_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
