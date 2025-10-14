@@ -9,40 +9,65 @@
 {
     <p><em>Chargement...</em></p>
 }
+else if (errorMessage != null)
+{
+    <p class="text-danger">@errorMessage</p>
+}
+else if (!hotels.Any())
+{
+    <p><em>Aucun hôtel disponible.</em></p>
+}
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nom</th>
-                <th>Note</th>
-                <th>Propriétaire</th>
-                <th>Nombre de chambres</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var hotel in hotels)
-            {
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
                 <tr>
-                    <td>@hotel.Name</td>
-                    <td>@hotel.StarRating</td>
-                    <td>@hotel.OwnerName</td>
-                    <td>@hotel.NumberOfRooms</td>
-                    <td>
-                        <a href="/hotels/@hotel.Id">Détails</a>
-                    </td>
+                    <th>Nom</th>
+                    <th>Propriétaire</th>
+                    <th>Note</th>
+                    <th>Nombre de chambres</th>
+                    <th>Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var hotel in hotels)
+                {
+                    <tr>
+                        <td>@hotel.Name</td>
+                        <td>@hotel.OwnerName</td>
+                        <td>
+                            @for (int i = 0; i < (int)hotel.StarRating; i++)
+                            {
+                                <span>⭐</span>
+                            }
+                            <span class="text-muted">(@hotel.StarRating.ToString("0.0"))</span>
+                        </td>
+                        <td>@hotel.NumberOfRooms</td>
+                        <td>
+                            <a href="/hotels/@hotel.Id" class="btn btn-sm btn-primary">Voir détails</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted mt-3">Total: @hotels.Count() hôtel(s)</p>
 }
 
 @code {
-    private IEnumerable<Hotel>? hotels;
+    private IEnumerable<HotelForUser>? hotels;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        hotels = await HotelService.GetHotelsAsync(1, 10);
+        try
+        {
+            hotels = await HotelService.GetAllHotelsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement des hôtels: {ex.Message}";
+        }
     }
 }

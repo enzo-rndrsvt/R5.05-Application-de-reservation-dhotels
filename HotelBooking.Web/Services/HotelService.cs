@@ -22,5 +22,22 @@ namespace HotelBooking.Web.Services
         {
             return await _httpClient.GetFromJsonAsync<Hotel>($"api/hotels/{id}") ?? new Hotel();
         }
+
+        public async Task<IEnumerable<HotelForUser>> GetAllHotelsAsync()
+        {
+            try
+            {
+                // Utiliser l'endpoint public qui ne nécessite pas d'authentification
+                var hotels = await _httpClient.GetFromJsonAsync<IEnumerable<HotelForUser>>(
+                    "api/public/hotels?pageNumber=1&pageSize=1000");
+                
+                return hotels ?? Enumerable.Empty<HotelForUser>();
+            }
+            catch (Exception)
+            {
+                // Log l'erreur si nécessaire
+                return Enumerable.Empty<HotelForUser>();
+            }
+        }
     }
 }

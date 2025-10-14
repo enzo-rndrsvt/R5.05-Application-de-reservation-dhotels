@@ -219,6 +219,12 @@
             </summary>
             <param name="roomId">Id of the room.</param>
         </member>
+        <member name="M:HotelBooking.Api.Controllers.PublicHotelController.GetHotelsAsync(HotelBooking.Domain.Models.PaginationDTO)">
+            <summary>
+            Get a paginated list of hotels (public endpoint - no authentication required).
+            </summary>
+            <response code="200">The list of hotels is retrieved successfully.</response>
+        </member>
         <member name="M:HotelBooking.Api.Controllers.RoomAdminController.GetRoomsForAdminAsync(HotelBooking.Domain.Models.PaginationDTO)">
             <summary>
             Get a paginated list of rooms for an admin.
