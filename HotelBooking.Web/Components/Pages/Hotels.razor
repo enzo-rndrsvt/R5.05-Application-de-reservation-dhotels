@@ -1,0 +1,48 @@
+﻿@page "/hotels"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@inject IHotelService HotelService
+
+<h3>Liste des hôtels</h3>
+
+@if (hotels == null)
+{
+    <p><em>Chargement...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Note</th>
+                <th>Propriétaire</th>
+                <th>Nombre de chambres</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var hotel in hotels)
+            {
+                <tr>
+                    <td>@hotel.Name</td>
+                    <td>@hotel.StarRating</td>
+                    <td>@hotel.OwnerName</td>
+                    <td>@hotel.NumberOfRooms</td>
+                    <td>
+                        <a href="/hotels/@hotel.Id">Détails</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<Hotel>? hotels;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hotels = await HotelService.GetHotelsAsync(1, 10);
+    }
+}
