@@ -76,9 +76,14 @@
                                         <span class="badge bg-secondary">@hotel.NumberOfRooms</span>
                                     </td>
                                     <td>
-                                        <a href="/hotels/@hotel.Id" class="btn btn-sm btn-primary">
-                                            <i class="oi oi-eye"></i> Voir détails
-                                        </a>
+                                        <div class="btn-group" role="group">
+                                            <a href="/hotels/@hotel.Id" class="btn btn-sm btn-primary">
+                                                <i class="oi oi-eye"></i> Détails
+                                            </a>
+                                            <a href="/hotels/@hotel.Id/rooms" class="btn btn-sm btn-success">
+                                                <i class="oi oi-grid-three-up"></i> Chambres
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             }

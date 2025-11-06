@@ -26,7 +26,6 @@ namespace HotelBooking.Web.Services
             }
             catch
             {
-                // Si on a une erreur 401 ou 403, c'est que l'utilisateur n'est pas authentifié ou n'a pas les droits
                 return Enumerable.Empty<Hotel>();
             }
         }
@@ -47,7 +46,6 @@ namespace HotelBooking.Web.Services
 
         public async Task<IEnumerable<HotelForUser>> GetAllHotelsAsync()
         {
-            // Cette méthode utilise un endpoint protégé maintenant
             await AddAuthenticationHeader();
             
             try
@@ -72,6 +70,35 @@ namespace HotelBooking.Web.Services
             {
                 Console.WriteLine($"Erreur lors de la récupération des hôtels: {ex.Message}");
                 return Enumerable.Empty<HotelForUser>();
+            }
+        }
+
+        public async Task<IEnumerable<Room>> GetHotelRoomsAsync(Guid hotelId, int pageNumber = 1, int pageSize = 20)
+        {
+            await AddAuthenticationHeader();
+            
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/hotels/{hotelId}/rooms/available?pageNumber={pageNumber}&pageSize={pageSize}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var rooms = await response.Content.ReadFromJsonAsync<IEnumerable<Room>>();
+                    return rooms ?? Enumerable.Empty<Room>();
+                }
+                else if (response.StatusCode == HttpStatusCode.Unauthorized || 
+                         response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    Console.WriteLine("L'utilisateur n'est pas autorisé à accéder aux chambres");
+                    return Enumerable.Empty<Room>();
+                }
+                
+                return Enumerable.Empty<Room>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la récupération des chambres: {ex.Message}");
+                return Enumerable.Empty<Room>();
             }
         }
 

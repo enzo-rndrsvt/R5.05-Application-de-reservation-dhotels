@@ -1,0 +1,236 @@
+@page "/rooms"
+@page "/hotels/{HotelId:guid}/rooms"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IHotelService HotelService
+@inject NavigationManager NavigationManager
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Liste des chambres</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Accueil</a></li>
+                    <li class="breadcrumb-item"><a href="/hotels">Hôtels</a></li>
+                    <li class="breadcrumb-item active">Chambres</li>
+                </ol>
+            </nav>
+            <h3><i class="oi oi-grid-three-up"></i> Liste des chambres disponibles</h3>
+            @if (HotelId.HasValue)
+            {
+                <p class="text-muted">Hôtel: @selectedHotelName</p>
+            }
+        </div>
+        <AuthorizeView>
+            <Authorized>
+                <span class="badge bg-success fs-6">
+                    <i class="oi oi-circle-check"></i> Accès autorisé
+                </span>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+
+    <AuthorizeView>
+        <Authorized>
+            @if (!HotelId.HasValue)
+            {
+                <div class="alert alert-warning">
+                    <i class="oi oi-warning"></i> 
+                    Veuillez sélectionner un hôtel pour voir ses chambres disponibles.
+                    <a href="/hotels" class="btn btn-primary ms-3">Voir les hôtels</a>
+                </div>
+            }
+            else
+            {
+                @if (rooms == null)
+                {
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="mt-2">Chargement des chambres...</p>
+                    </div>
+                }
+                else if (errorMessage != null)
+                {
+                    <div class="alert alert-danger">
+                        <i class="oi oi-warning"></i> @errorMessage
+                    </div>
+                }
+                else if (!rooms.Any())
+                {
+                    <div class="alert alert-info">
+                        <i class="oi oi-info"></i> Aucune chambre disponible pour cet hôtel.
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-success mb-4">
+                        <i class="oi oi-circle-check"></i> 
+                        <strong>@rooms.Count()</strong> chambre(s) disponible(s) trouvée(s).
+                    </div>
+                    
+                    <div class="row">
+                        @foreach (var room in rooms)
+                        {
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100 shadow-sm">
+                                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">
+                                            <i class="oi oi-home"></i> Chambre @room.Number
+                                        </h5>
+                                        <span class="badge bg-light text-dark">@room.Type</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text text-muted">@room.BriefDescription</p>
+                                        
+                                        <div class="row mb-3">
+                                            <div class="col-6">
+                                                <small class="text-muted">Capacité adultes</small>
+                                                <div class="fw-bold">
+                                                    <i class="oi oi-people"></i> @room.AdultsCapacity
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Capacité enfants</small>
+                                                <div class="fw-bold">
+                                                    <i class="oi oi-person"></i> @room.ChildrenCapacity
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="price-section">
+                                            @if (room.CurrentDiscount != null)
+                                            {
+                                                <div class="mb-2">
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="oi oi-tag"></i> @room.CurrentDiscount.Percentage% de réduction
+                                                    </span>
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="text-decoration-line-through text-muted me-2">
+                                                        @room.PricePerNight.ToString("C")
+                                                    </span>
+                                                    <span class="h5 text-success mb-0">
+                                                        @CalculateDiscountedPrice(room.PricePerNight, room.CurrentDiscount.Percentage).ToString("C")
+                                                    </span>
+                                                </div>
+                                                <small class="text-muted">par nuit</small>
+                                            }
+                                            else
+                                            {
+                                                <div class="h5 text-primary">
+                                                    @room.PricePerNight.ToString("C") 
+                                                    <small class="text-muted">/ nuit</small>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <div class="d-grid">
+                                            <button class="btn btn-success" @onclick="() => ReserveRoom(room.Id)">
+                                                <i class="oi oi-calendar"></i> Réserver
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </Authorized>
+        <NotAuthorized>
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-warning d-flex align-items-center p-4" role="alert">
+                        <i class="oi oi-lock-locked me-3 fs-1"></i>
+                        <div>
+                            <h4 class="alert-heading">Accès restreint</h4>
+                            <p class="mb-3">Vous devez être connecté pour consulter la liste des chambres disponibles.</p>
+                            <hr>
+                            <div class="d-flex gap-2">
+                                <a href="/login" class="btn btn-primary">
+                                    <i class="oi oi-account-login"></i> Se connecter
+                                </a>
+                                <a href="/register" class="btn btn-outline-primary">
+                                    <i class="oi oi-plus"></i> Créer un compte
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    [Parameter] public Guid? HotelId { get; set; }
+    
+    private IEnumerable<Room>? rooms;
+    private string? errorMessage;
+    private string selectedHotelName = "Hôtel sélectionné";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HotelId.HasValue)
+        {
+            await LoadRooms();
+            await LoadHotelName();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (HotelId.HasValue)
+        {
+            await LoadRooms();
+            await LoadHotelName();
+        }
+    }
+
+    private async Task LoadRooms()
+    {
+        if (!HotelId.HasValue) return;
+
+        try
+        {
+            rooms = await HotelService.GetHotelRoomsAsync(HotelId.Value, 1, 50);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement des chambres: {ex.Message}";
+        }
+    }
+
+    private async Task LoadHotelName()
+    {
+        if (!HotelId.HasValue) return;
+
+        try
+        {
+            var hotel = await HotelService.GetHotelByIdAsync(HotelId.Value);
+            selectedHotelName = hotel.Name ?? "Hôtel sélectionné";
+        }
+        catch
+        {
+            selectedHotelName = "Hôtel sélectionné";
+        }
+    }
+
+    private decimal CalculateDiscountedPrice(decimal originalPrice, decimal discountPercentage)
+    {
+        return originalPrice * (1 - discountPercentage / 100);
+    }
+
+    private void ReserveRoom(Guid roomId)
+    {
+        // TODO: Implémenter la logique de réservation
+        NavigationManager.NavigateTo($"/booking/room/{roomId}");
+    }
+}

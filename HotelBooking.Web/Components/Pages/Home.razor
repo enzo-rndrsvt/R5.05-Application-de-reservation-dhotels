@@ -1,13 +1,20 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Components.Authorization
 
-<PageTitle>Accueil - Réservation d'hôtels</PageTitle>
+<PageTitle>Hôtel SkullKing - L'hôtel des pirates</PageTitle>
 
 <div class="container mt-5">
     <div class="row">
         <div class="col-12 text-center">
-            <h1 class="display-4">Bienvenue sur notre plateforme de réservation d'hôtels</h1>
-            <p class="lead">Trouvez et réservez les meilleurs hôtels pour vos voyages</p>
+            <h1 class="display-4">🏴‍☠️ Bienvenue à l'Hôtel SkullKing 🏴‍☠️</h1>
+            <p class="lead">L'hôtel des pirates - Lit à Paris pour vrais pirates</p>
+            <div class="mb-4">
+                @for (int i = 0; i < 5; i++)
+                {
+                    <span class="fs-3">⭐</span>
+                }
+                <p class="text-muted">Hôtel 5 étoiles - Propriétaire: Becks</p>
+            </div>
         </div>
     </div>
 
@@ -18,40 +25,60 @@
                     <div class="alert alert-success d-flex align-items-center" role="alert">
                         <i class="oi oi-circle-check me-3 fs-4"></i>
                         <div>
-                            <h4 class="alert-heading mb-1">Vous êtes connecté !</h4>
-                            <p class="mb-0">Bonjour <strong>@context.User.Identity?.Name</strong>, vous pouvez maintenant accéder à toutes nos fonctionnalités.</p>
+                            <h4 class="alert-heading mb-1">Ahoy @context.User.Identity?.Name ! ⚓</h4>
+                            <p class="mb-0">Bienvenue à bord, moussaillon ! Prêt à découvrir nos trésors ?</p>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="row mt-3">
                 <div class="col-md-4">
-                    <div class="card h-100">
+                    <div class="card h-100 border-primary">
                         <div class="card-body text-center">
                             <i class="oi oi-list-rich display-4 text-primary mb-3"></i>
-                            <h5 class="card-title">Parcourir les hôtels</h5>
-                            <p class="card-text">Découvrez notre sélection d'hôtels de qualité</p>
-                            <a href="/hotels" class="btn btn-primary">Voir les hôtels</a>
+                            <h5 class="card-title">🏴‍☠️ Notre hôtel</h5>
+                            <p class="card-text">Découvrez l'unique hôtel SkullKing, refuge des pirates parisiens</p>
+                            <a href="/hotels" class="btn btn-primary">
+                                <i class="oi oi-eye"></i> Voir l'hôtel
+                            </a>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card h-100">
+                    <div class="card h-100 border-success">
+                        <div class="card-body text-center">
+                            <i class="oi oi-grid-three-up display-4 text-success mb-3"></i>
+                            <h5 class="card-title">🛏️ Nos cabines</h5>
+                            <p class="card-text">Explorez nos chambres thématiques dignes des plus grands pirates</p>
+                            <a href="/rooms" class="btn btn-success">
+                                <i class="oi oi-home"></i> Voir les cabines
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-info">
                         <div class="card-body text-center">
                             <i class="oi oi-person display-4 text-info mb-3"></i>
-                            <h5 class="card-title">Mon profil</h5>
-                            <p class="card-text">Gérez vos informations personnelles</p>
-                            <a href="/profile" class="btn btn-info">Mon profil</a>
+                            <h5 class="card-title">⚓ Mon profil</h5>
+                            <p class="card-text">Gérez vos informations de matelot</p>
+                            <a href="/profile" class="btn btn-info">
+                                <i class="oi oi-cog"></i> Mon profil
+                            </a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card h-100">
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card bg-dark text-white">
                         <div class="card-body text-center">
-                            <i class="oi oi-calendar display-4 text-success mb-3"></i>
-                            <h5 class="card-title">Mes réservations</h5>
-                            <p class="card-text">Consultez vos réservations en cours</p>
-                            <a href="/bookings" class="btn btn-success">Mes réservations</a>
+                            <h5>🎯 Configuration de l'hôtel</h5>
+                            <p class="mb-3">Vous êtes connecté en tant qu'administrateur ? Configurez l'hôtel SkullKing.</p>
+                            <a href="/admin/setup" class="btn btn-warning">
+                                <i class="oi oi-wrench"></i> Configuration Admin
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -63,25 +90,25 @@
                     <div class="alert alert-warning d-flex align-items-center" role="alert">
                         <i class="oi oi-circle-x me-3 fs-4"></i>
                         <div>
-                            <h4 class="alert-heading mb-1">Vous n'êtes pas connecté</h4>
-                            <p class="mb-0">Connectez-vous ou créez un compte pour accéder à nos services de réservation.</p>
+                            <h4 class="alert-heading mb-1">🏴‍☠️ Accès au navire refusé !</h4>
+                            <p class="mb-0">Ahoy ! Pour monter à bord du SkullKing, il faut d'abord s'identifier, matelot !</p>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="row mt-3">
                 <div class="col-md-6 offset-md-3 text-center">
-                    <div class="card">
+                    <div class="card border-primary">
                         <div class="card-body">
                             <i class="oi oi-account-login display-4 text-primary mb-3"></i>
-                            <h3>Commencez votre voyage</h3>
-                            <p>Connectez-vous ou inscrivez-vous pour accéder à notre sélection d'hôtels</p>
+                            <h3>⚓ Embarquez avec nous !</h3>
+                            <p>Rejoignez l'équipage pour accéder à toutes nos merveilles pirates</p>
                             <div class="d-grid gap-2 d-md-block">
                                 <a href="/login" class="btn btn-primary btn-lg">
-                                    <i class="oi oi-account-login"></i> Se connecter
+                                    <i class="oi oi-account-login"></i> 🏴‍☠️ Connexion
                                 </a>
                                 <a href="/register" class="btn btn-outline-primary btn-lg">
-                                    <i class="oi oi-plus"></i> S'inscrire
+                                    <i class="oi oi-plus"></i> ⚓ Inscription
                                 </a>
                             </div>
                         </div>
