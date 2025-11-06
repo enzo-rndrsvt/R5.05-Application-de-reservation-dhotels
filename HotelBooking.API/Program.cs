@@ -23,6 +23,18 @@ services.AddControllers()
     .AddNewtonsoftJson(options =>
         options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore);
 
+// Ajouter CORS pour permettre au front-end Blazor de communiquer avec l'API
+services.AddCors(options =>
+{
+    options.AddPolicy("AllowBlazorApp", policy =>
+    {
+        policy.WithOrigins("https://localhost:7229", "http://localhost:7229")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 services.BindConfigurations(builder.Configuration);
 services.AddControllers();
 services.AddSwaggerUi();
@@ -43,6 +55,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Utiliser CORS avant l'authentification
+app.UseCors("AllowBlazorApp");
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();

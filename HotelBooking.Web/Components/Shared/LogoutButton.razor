@@ -1,0 +1,23 @@
+@using HotelBooking.Web.Services
+@inject IAuthService AuthService
+@inject NavigationManager NavManager
+
+<button @onclick="LogoutUser" class="btn btn-danger btn-sm" title="Se déconnecter">
+    <i class="oi oi-account-logout me-1"></i>
+    <span>Déconnexion</span>
+</button>
+
+@code {
+    private async Task LogoutUser()
+    {
+        try 
+        {
+            await AuthService.Logout();
+            NavManager.NavigateTo("/", true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la déconnexion: {ex.Message}");
+        }
+    }
+}
