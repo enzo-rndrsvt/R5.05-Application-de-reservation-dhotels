@@ -1,6 +1,10 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Réservation d'hôtels</a>
+        <a class="navbar-brand" href="">
+            <i class="oi oi-home"></i> Hôtel SkullKing
+        </a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -14,11 +18,63 @@
                 <span class="oi oi-home" aria-hidden="true"></span> Accueil
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="hotels">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Hôtels
-            </NavLink>
-        </div>
+        
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="hotels">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Nos hôtels
+                        <span class="badge bg-success ms-2">Connecté</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="rooms">
+                        <span class="oi oi-grid-three-up" aria-hidden="true"></span> Nos chambres
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="profile">
+                        <span class="oi oi-person" aria-hidden="true"></span> Mon profil
+                    </NavLink>
+                </div>
+                <hr class="text-white-50 my-2" />
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="admin/setup">
+                        <span class="oi oi-wrench" aria-hidden="true"></span> Configuration
+                        <small class="d-block">Admin uniquement</small>
+                    </NavLink>
+                </div>
+                <hr class="text-white-50 my-2" />
+                <div class="nav-item px-3">
+                    <div class="nav-link text-success">
+                        <span class="oi oi-circle-check" aria-hidden="true"></span> 
+                        Bienvenue @context.User.Identity?.Name
+                    </div>
+                </div>
+                <div class="nav-item px-3 py-2">
+                    <LogoutButtonNav />
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link text-warning" href="hotels">
+                        <span class="oi oi-lock-locked" aria-hidden="true"></span> Nos hôtels
+                        <small class="d-block">Connexion requise</small>
+                    </NavLink>
+                </div>
+                <hr class="text-white-50 my-2" />
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="login">
+                        <span class="oi oi-account-login" aria-hidden="true"></span> Connexion
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="register">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Inscription
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>
 

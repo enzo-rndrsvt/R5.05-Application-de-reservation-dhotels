@@ -1,48 +1,140 @@
 ﻿@page "/hotels"
 @using HotelBooking.Web.Models
 @using HotelBooking.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IHotelService HotelService
 
-<h3>Liste des hôtels</h3>
+<PageTitle>Liste des hôtels</PageTitle>
 
-@if (hotels == null)
-{
-    <p><em>Chargement...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nom</th>
-                <th>Note</th>
-                <th>Propriétaire</th>
-                <th>Nombre de chambres</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var hotel in hotels)
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="oi oi-list-rich"></i> Liste des hôtels</h3>
+        <AuthorizeView>
+            <Authorized>
+                <span class="badge bg-success fs-6">
+                    <i class="oi oi-circle-check"></i> Accès autorisé
+                </span>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+
+    <AuthorizeView>
+        <Authorized>
+            @if (hotels == null)
             {
-                <tr>
-                    <td>@hotel.Name</td>
-                    <td>@hotel.StarRating</td>
-                    <td>@hotel.OwnerName</td>
-                    <td>@hotel.NumberOfRooms</td>
-                    <td>
-                        <a href="/hotels/@hotel.Id">Détails</a>
-                    </td>
-                </tr>
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <p class="mt-2">Chargement des hôtels...</p>
+                </div>
             }
-        </tbody>
-    </table>
-}
+            else if (errorMessage != null)
+            {
+                <div class="alert alert-danger">
+                    <i class="oi oi-warning"></i> @errorMessage
+                </div>
+            }
+            else if (!hotels.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="oi oi-info"></i> Aucun hôtel disponible pour le moment.
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-success mb-4">
+                    <i class="oi oi-circle-check"></i> 
+                    Vous avez accès à <strong>@hotels.Count()</strong> hôtel(s) dans notre catalogue.
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th><i class="oi oi-home"></i> Nom</th>
+                                <th><i class="oi oi-person"></i> Propriétaire</th>
+                                <th><i class="oi oi-star"></i> Note</th>
+                                <th><i class="oi oi-grid-three-up"></i> Chambres</th>
+                                <th><i class="oi oi-cog"></i> Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var hotel in hotels)
+                            {
+                                <tr>
+                                    <td>@hotel.Name</td>
+                                    <td>@hotel.OwnerName</td>
+                                    <td>
+                                        @for (int i = 0; i < (int)hotel.StarRating; i++)
+                                        {
+                                            <span>⭐</span>
+                                        }
+                                        <span class="text-muted">(@hotel.StarRating.ToString("0.0"))</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@hotel.NumberOfRooms</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="/hotels/@hotel.Id" class="btn btn-sm btn-primary">
+                                                <i class="oi oi-eye"></i> Détails
+                                            </a>
+                                            <a href="/hotels/@hotel.Id/rooms" class="btn btn-sm btn-success">
+                                                <i class="oi oi-grid-three-up"></i> Chambres
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </Authorized>
+        <NotAuthorized>
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-warning d-flex align-items-center p-4" role="alert">
+                        <i class="oi oi-lock-locked me-3 fs-1"></i>
+                        <div>
+                            <h4 class="alert-heading">Accès restreint</h4>
+                            <p class="mb-3">Vous devez être connecté pour consulter la liste des hôtels disponibles.</p>
+                            <hr>
+                            <div class="d-flex gap-2">
+                                <a href="/login" class="btn btn-primary">
+                                    <i class="oi oi-account-login"></i> Se connecter
+                                </a>
+                                <a href="/register" class="btn btn-outline-primary">
+                                    <i class="oi oi-plus"></i> Créer un compte
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
 
 @code {
-    private IEnumerable<Hotel>? hotels;
+    private IEnumerable<HotelForUser>? hotels;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        hotels = await HotelService.GetHotelsAsync(1, 10);
+        await LoadHotels();
+    }
+
+    private async Task LoadHotels()
+    {
+        try
+        {
+            hotels = await HotelService.GetAllHotelsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement des hôtels: {ex.Message}";
+        }
     }
 }
