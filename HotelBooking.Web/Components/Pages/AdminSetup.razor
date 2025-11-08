@@ -10,90 +10,132 @@
 
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
+        <div class="col-md-10">
+        <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h3 class="text-center">
-                        <i class="oi oi-wrench"></i> Configuration de l'hôtel SkullKing
-                    </h3>
-                </div>
-                <div class="card-body">
-                    @if (!string.IsNullOrEmpty(successMessage))
-                    {
-                        <div class="alert alert-success">
-                            <i class="oi oi-circle-check"></i> @successMessage
-                        </div>
-                    }
-
-                    @if (!string.IsNullOrEmpty(errorMessage))
-                    {
-                        <div class="alert alert-danger">
-                            <i class="oi oi-warning"></i> @errorMessage
-                        </div>
-                    }
-
-                    <div class="alert alert-info">
-                        <h5><i class="oi oi-info"></i> À propos de cette page</h5>
-                        <p>Cette page vous permet de créer l'hôtel principal "SkullKing" dans le système. Cliquez sur le bouton ci-dessous pour créer l'hôtel avec les paramètres prédéfinis.</p>
-                    </div>
-
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5>Données de l'hôtel SkullKing</h5>
-                        </div>
-                        <div class="card-body">
-                            <dl class="row">
-                                <dt class="col-sm-3">Nom :</dt>
-                                <dd class="col-sm-9">SkullKing</dd>
-                                
-                                <dt class="col-sm-3">Description courte :</dt>
-                                <dd class="col-sm-9">L'hôtel des pirates.</dd>
-                                
-                                <dt class="col-sm-3">Description complète :</dt>
-                                <dd class="col-sm-9">Lit à Paris pour vrais pirates.</dd>
-                                
-                                <dt class="col-sm-3">Nombre d'étoiles :</dt>
-                                <dd class="col-sm-9">
-                                    @for (int i = 0; i < 5; i++)
-                                    {
-                                        <span>⭐</span>
-                                    }
-                                    (5 étoiles)
-                                </dd>
-                                
-                                <dt class="col-sm-3">Propriétaire :</dt>
-                                <dd class="col-sm-9">Becks</dd>
-                                
-                                <dt class="col-sm-3">Ville ID :</dt>
-                                <dd class="col-sm-9">06f823bf-7b05-4953-4160-08dc299de452</dd>
-                            </dl>
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <button @onclick="CreateSkullKingHotel" class="btn btn-success btn-lg" disabled="@isLoading">
-                            @if (isLoading)
-                            {
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span> Création en cours...</span>
-                            }
-                            else
-                            {
-                                <i class="oi oi-plus"></i> <span>Créer l&#39;hotel SkullKing</span>
-                            }
-                        </button>
-                        
-                        <a href="/hotels" class="btn btn-primary">
-                            <i class="oi oi-list-rich"></i> Voir les hôtels existants
-                        </a>
-                        
-                        <a href="/" class="btn btn-secondary">
-                            <i class="oi oi-home"></i> Retour à l'accueil
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <h3 class="text-center">
+            <i class="oi oi-wrench"></i> Administration SkullKing
+      </h3>
+       <p class="text-center mb-0">🏴‍☠️ Panneau de contrôle du navire ⚓</p>
         </div>
+                <div class="card-body">
+          @if (!string.IsNullOrEmpty(successMessage))
+          {
+ <div class="alert alert-success">
+       <i class="oi oi-circle-check"></i> @successMessage
+         </div>
+         }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+            {
+       <div class="alert alert-danger">
+    <i class="oi oi-warning"></i> @errorMessage
+     </div>
+   }
+
+         <div class="row">
+ <!-- Configuration de l'hôtel -->
+         <div class="col-md-6 mb-4">
+      <div class="card h-100">
+   <div class="card-header bg-info text-white">
+        <h5><i class="oi oi-home"></i> Configuration Hôtel</h5>
+    </div>
+   <div class="card-body">
+        <div class="alert alert-info">
+          <h6><i class="oi oi-info"></i> Créer l'hôtel principal</h6>
+          <p class="mb-0">Créez l'hôtel SkullKing avec les paramètres prédéfinis.</p>
+</div>
+
+       <div class="card mb-3">
+     <div class="card-body">
+     <h6>Données de l'hôtel SkullKing</h6>
+    <ul class="list-unstyled">
+       <li><strong>Nom :</strong> SkullKing</li>
+      <li><strong>Description :</strong> L'hôtel des pirates</li>
+     <li><strong>Étoiles :</strong> ⭐⭐⭐⭐⭐ (5/5)</li>
+ <li><strong>Propriétaire :</strong> Becks</li>
+    </ul>
+         </div>
+              </div>
+
+       <div class="d-grid">
+     <button @onclick="CreateSkullKingHotel" class="btn btn-success" disabled="@isLoading">
+      @if (isLoading)
+           {
+<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      <span> Création...</span>
+        }
+       else
+         {
+<i class="oi oi-plus"></i> <span>Créer l'hotel SkullKing</span>
+         }
+             </button>
+       </div>
+                 </div>
+         </div>
+     </div>
+
+      <!-- Gestion des chambres -->
+       <div class="col-md-6 mb-4">
+         <div class="card h-100">
+            <div class="card-header bg-success text-white">
+   <h5><i class="oi oi-grid-three-up"></i> Gestion des Chambres</h5>
+          </div>
+         <div class="card-body">
+    <div class="alert alert-success">
+       <h6><i class="oi oi-info"></i> Ajouter des cabines</h6>
+         <p class="mb-0">Créez de nouvelles chambres pour accueillir vos invités pirates.</p>
+     </div>
+
+       <div class="card mb-3">
+           <div class="card-body">
+        <h6>Types de chambres disponibles</h6>
+        <ul class="list-unstyled">
+           <li>🏴‍☠️ <strong>Standard</strong> - Cabine de matelot</li>
+         <li>⚓ <strong>Deluxe</strong> - Cabine d'officier</li>
+           <li>👑 <strong>Suite</strong> - Cabine de capitaine</li>
+   <li>🏆 <strong>Presidential</strong> - Quartier du Roi des Pirates</li>
+         </ul>
+           </div>
+              </div>
+
+         <div class="d-grid gap-2">
+                   <a href="/admin/rooms/create" class="btn btn-success">
+      <i class="oi oi-plus"></i> Créer une chambre
+  </a>
+         <a href="/rooms" class="btn btn-outline-success">
+     <i class="oi oi-list"></i> Voir les chambres existantes
+            </a>
+          </div>
+   </div>
+          </div>
+        </div>
+            </div>
+
+         <!-- Navigation -->
+     <div class="row mt-4">
+  <div class="col-12">
+           <div class="card bg-dark text-white">
+        <div class="card-body text-center">
+         <h5>🧭 Navigation</h5>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+  <a href="/hotels" class="btn btn-primary">
+             <i class="oi oi-list-rich"></i> Voir les hôtels
+   </a>
+        <a href="/rooms" class="btn btn-success">
+       <i class="oi oi-grid-three-up"></i> Voir les chambres
+        </a>
+        <a href="/" class="btn btn-secondary">
+          <i class="oi oi-home"></i> Retour à l'accueil
+         </a>
+        </div>
+        </div>
+  </div>
+         </div>
+             </div>
+    </div>
+   </div>
+      </div>
     </div>
 </div>
 
@@ -102,43 +144,43 @@
     private string errorMessage = string.Empty;
     private bool isLoading = false;
 
-    private async Task CreateSkullKingHotel()
+  private async Task CreateSkullKingHotel()
     {
         errorMessage = string.Empty;
         successMessage = string.Empty;
         isLoading = true;
 
-        try
-        {
+     try
+   {
             var skullKingHotel = new HotelCreation
-            {
-                Name = "SkullKing",
-                BriefDescription = "L'hôtel des pirates.",
-                FullDescription = "Lit à Paris pour vrais pirates.",
-                StarRating = 5,
-                OwnerName = "Becks",
-                Geolocation = "48.8566, 2.3522", // Coordonnées de Paris
-                CityId = new Guid("06f823bf-7b05-4953-4160-08dc299de452")
+        {
+      Name = "SkullKing",
+      BriefDescription = "L'hôtel des pirates.",
+ FullDescription = "Lit à Paris pour vrais pirates.",
+    StarRating = 5,
+ OwnerName = "Becks",
+     Geolocation = "48.8566, 2.3522", // Coordonnées de Paris
+        CityId = new Guid("06f823bf-7b05-4953-4160-08dc299de452")
             };
 
             var result = await HotelAdminService.CreateHotelAsync(skullKingHotel);
 
-            if (result)
-            {
-                successMessage = "L'hôtel SkullKing a été créé avec succès ! Vous pouvez maintenant consulter les hôtels pour le voir dans la liste.";
-            }
+  if (result)
+          {
+   successMessage = "L'hôtel SkullKing a été créé avec succès ! Vous pouvez maintenant consulter les hôtels pour le voir dans la liste.";
+       }
             else
-            {
-                errorMessage = "Erreur lors de la création de l'hôtel. Vérifiez que vous avez les droits d'administrateur et que l'ID de ville est valide.";
-            }
+    {
+       errorMessage = "Erreur lors de la création de l'hôtel. Vérifiez que vous avez les droits d'administrateur et que l'ID de ville est valide.";
+          }
         }
-        catch (Exception ex)
+  catch (Exception ex)
         {
             errorMessage = $"Erreur inattendue : {ex.Message}";
         }
-        finally
+   finally
         {
-            isLoading = false;
+       isLoading = false;
         }
     }
 }

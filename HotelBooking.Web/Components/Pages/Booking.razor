@@ -1,0 +1,69 @@
+@page "/booking"
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Réservation - Hôtel SkullKing</PageTitle>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+     <div class="col-md-8">
+    <div class="card border-primary">
+     <div class="card-header bg-primary text-white text-center">
+              <h3>????? Réservation au SkullKing ?</h3>
+   <p class="mb-0">Embarquez pour l'aventure !</p>
+   </div>
+       <div class="card-body text-center">
+         <div class="alert alert-info">
+ <h4><i class="oi oi-info"></i> Fonctionnalité en développement</h4>
+   <p class="mb-3">Notre système de réservation est en cours de développement par l'équipage technique du SkullKing.</p>
+    <p class="mb-0">En attendant, vous pouvez explorer nos cabines disponibles !</p>
+</div>
+
+      <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="card h-100 border-success">
+       <div class="card-body text-center">
+     <i class="oi oi-grid-three-up display-4 text-success mb-3"></i>
+         <h5>Découvrir nos cabines</h5>
+      <p>Explorez toutes les chambres disponibles au SkullKing</p>
+           <a href="/rooms" class="btn btn-success">
+        <i class="oi oi-home"></i> Voir les cabines
+          </a>
+       </div>
+        </div>
+        </div>
+ <div class="col-md-6">
+         <div class="card h-100 border-primary">
+            <div class="card-body text-center">
+       <i class="oi oi-home display-4 text-primary mb-3"></i>
+          <h5>Notre hôtel</h5>
+          <p>Découvrez l'hôtel SkullKing et ses services</p>
+   <a href="/hotels" class="btn btn-primary">
+        <i class="oi oi-eye"></i> Découvrir
+   </a>
+</div>
+  </div>
+     </div>
+          </div>
+
+        <div class="mt-4">
+  <h5>??? Prochaines fonctionnalités</h5>
+     <ul class="list-group list-group-flush">
+      <li class="list-group-item">?? Sélection des dates de séjour</li>
+  <li class="list-group-item">????? Choix de la cabine</li>
+     <li class="list-group-item">?? Calcul du prix total avec réductions</li>
+      <li class="list-group-item">?? Confirmation de réservation</li>
+         <li class="list-group-item">?? Email de confirmation</li>
+</ul>
+    </div>
+
+        <div class="mt-4">
+    <a href="/" class="btn btn-outline-secondary">
+       <i class="oi oi-arrow-left"></i> Retour à l'accueil
+          </a>
+     </div>
+  </div>
+       </div>
+     </div>
+        </div>
+</div>

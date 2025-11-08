@@ -31,6 +31,65 @@ namespace HotelBooking.Web.Services
             }
         }
 
+        public async Task<bool> CreateRoomAsync(RoomCreation roomData)
+        {
+            await AddAuthenticationHeader();
+
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/admin/rooms", roomData);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la création de la chambre: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<IEnumerable<HotelForUser>> GetHotelsForRoomCreationAsync()
+        {
+            await AddAuthenticationHeader();
+
+            // Utiliser l'endpoint public pour récupérer les hôtels
+            try
+            {
+                var response = await _httpClient.GetAsync("api/public/hotels");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var hotelsAdmin = await response.Content.ReadFromJsonAsync<IEnumerable<HotelForAdmin>>();
+
+
+                    // Convertir HotelForAdmin en HotelForUser
+                    if (hotelsAdmin != null)
+                    {
+                        var hotelForUser = hotelsAdmin.Select(h => new HotelForUser
+                        {
+                            Id = h.Id,
+                            Name = h.Name,
+                            BriefDescription = "L'hôtel des pirates.", // Valeur par défaut
+                            OwnerName = h.OwnerName,
+                            StarRating = h.StarRating,
+                            CreationDate = h.CreationDate,
+                            ModificationDate = h.ModificationDate,
+                            NumberOfRooms = h.NumberOfRooms
+                        });
+
+                        return hotelForUser;
+                    }
+                }
+
+                Console.WriteLine($"Erreur API: {response.StatusCode} - {response.ReasonPhrase}");
+                return Enumerable.Empty<HotelForUser>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la récupération des hôtels: {ex.Message}");
+                return Enumerable.Empty<HotelForUser>();
+            }
+        }
+
         public async Task<bool> DeleteAllHotelsAsync()
         {
             await AddAuthenticationHeader();
@@ -52,10 +111,10 @@ namespace HotelBooking.Web.Services
         private async Task AddAuthenticationHeader()
         {
             var token = await _localStorage.GetItemAsync<string>("authToken");
-            
+
             if (!string.IsNullOrEmpty(token))
             {
-                _httpClient.DefaultRequestHeaders.Authorization = 
+                _httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             }
         }
