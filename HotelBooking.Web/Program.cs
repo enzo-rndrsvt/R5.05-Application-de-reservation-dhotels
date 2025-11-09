@@ -28,6 +28,7 @@ builder.Services.AddHttpClient("HotelBookingAPI", client =>
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IHotelAdminService, HotelAdminService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();

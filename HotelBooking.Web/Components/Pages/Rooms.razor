@@ -132,9 +132,12 @@
                                     </div>
                                 </div>
                                 <div class="card-footer bg-transparent">
-                                    <div class="d-grid">
-                                        <button class="btn btn-success" @onclick="() => ReserveRoom(room.Id)">
-                                            <i class="oi oi-calendar"></i> Embarquer dans cette cabine
+                                    <div class="d-grid gap-2">
+                                        <a href="/booking/@room.Id" class="btn btn-success">
+                                            <i class="oi oi-calendar"></i> Réserver
+                                        </a>
+                                        <button class="btn btn-outline-primary" @onclick="() => ShowRoomDetails(room.Id)">
+                                            <i class="oi oi-eye"></i> Détails
                                         </button>
                                     </div>
                                 </div>
@@ -169,10 +172,86 @@
     </AuthorizeView>
 </div>
 
+<!-- Modal pour les détails de chambre -->
+@if (showModal && selectedRoom != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+   <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+                <div class="modal-header">
+         <h5 class="modal-title">
+       <i class="oi oi-home"></i> Cabine @selectedRoom.Number - @selectedRoom.Type
+  </h5>
+  <button type="button" class="btn-close" @onclick="CloseModal"></button>
+ </div>
+ <div class="modal-body">
+     <div class="row">
+           <div class="col-md-6">
+          <h6><i class="oi oi-info"></i> Informations de la cabine</h6>
+         <dl class="row">
+       <dt class="col-4">Type :</dt>
+    <dd class="col-8">@selectedRoom.Type</dd>
+     
+         <dt class="col-4">Capacité adultes :</dt>
+             <dd class="col-8">@selectedRoom.AdultsCapacity matelots</dd>
+          
+          <dt class="col-4">Capacité enfants :</dt>
+                    <dd class="col-8">@selectedRoom.ChildrenCapacity moussaillons</dd>
+    </dl>
+         </div>
+    <div class="col-md-6">
+  <h6><i class="oi oi-dollar"></i> Tarification</h6>
+             @if (selectedRoom.CurrentDiscount != null)
+         {
+      <div class="alert alert-warning">
+         <strong>Réduction de @selectedRoom.CurrentDiscount.Percentage% !</strong>
+   </div>
+      <dl class="row">
+      <dt class="col-6">Prix original :</dt>
+    <dd class="col-6"><del>@selectedRoom.PricePerNight.ToString("C")</del></dd>
+      
+         <dt class="col-6"><strong>Prix réduit :</strong></dt>
+ <dd class="col-6"><strong>@CalculateDiscountedPrice(selectedRoom.PricePerNight, selectedRoom.CurrentDiscount.Percentage).ToString("C")</strong></dd>
+ </dl>
+               }
+     else
+        {
+   <dl class="row">
+      <dt class="col-6">Prix par nuit :</dt>
+    <dd class="col-6"><strong>@selectedRoom.PricePerNight.ToString("C")</strong></dd>
+    </dl>
+}
+              </div>
+            </div>
+        
+              <hr>
+       
+    <div class="row">
+                <div class="col-12">
+         <h6><i class="oi oi-document"></i> Description</h6>
+      <p>@selectedRoom.BriefDescription</p>
+  </div>
+                </div>
+        </div>
+                <div class="modal-footer">
+     <a href="/booking/@selectedRoom.Id" class="btn btn-success">
+  <i class="oi oi-calendar"></i> Réserver cette cabine
+ </a>
+   <button type="button" class="btn btn-secondary" @onclick="CloseModal">
+            <i class="oi oi-x"></i> Fermer
+           </button>
+          </div>
+          </div>
+        </div>
+    </div>
+}
+
 @code {
     private IEnumerable<Room>? rooms;
     private string? errorMessage;
     private HotelForUser? skullKingHotel;
+    private Room? selectedRoom;
+    private bool showModal = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -207,9 +286,25 @@
         return originalPrice * (1 - discountPercentage / 100);
     }
 
+    private void ShowRoomDetails(Guid roomId)
+    {
+        if (rooms != null)
+        {
+            selectedRoom = rooms.FirstOrDefault(r => r.Id == roomId);
+            showModal = true;
+            StateHasChanged();
+        }
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        selectedRoom = null;
+        StateHasChanged();
+    }
+
     private void ReserveRoom(Guid roomId)
     {
-        // TODO: Implémenter la logique de réservation
-        NavigationManager.NavigateTo($"/booking/room/{roomId}");
+        NavigationManager.NavigateTo($"/booking/{roomId}");
     }
 }

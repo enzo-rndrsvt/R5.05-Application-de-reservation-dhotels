@@ -12,5 +12,28 @@ namespace HotelBooking.Domain.Abstractions.Services
         /// containing the booking's details.
         /// </summary>
         Task AddAsync(BookingDTO bookingDTO);
+
+        /// <summary>
+        /// Get all bookings for a specific user.
+        /// </summary>
+        /// <param name="userId">Id of the user</param>
+        /// <param name="pagination">Pagination parameters</param>
+        /// <returns>User's bookings with room and hotel details</returns>
+        Task<IEnumerable<BookingWithDetailsDTO>> GetBookingsForUserAsync(Guid userId, PaginationDTO pagination);
+
+        /// <summary>
+        /// Get the count of bookings for a specific user.
+        /// </summary>
+        /// <param name="userId">Id of the user</param>
+        /// <returns>Number of bookings for the user</returns>
+        Task<int> GetBookingsCountForUserAsync(Guid userId);
+
+        /// <summary>
+        /// Get a specific booking by ID if it belongs to the user.
+        /// </summary>
+        /// <param name="bookingId">Id of the booking</param>
+        /// <param name="userId">Id of the user</param>
+        /// <returns>Booking details if found and belongs to user</returns>
+        Task<BookingWithDetailsDTO?> GetBookingByIdForUserAsync(Guid bookingId, Guid userId);
     }
 }

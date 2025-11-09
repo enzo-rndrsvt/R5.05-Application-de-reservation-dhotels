@@ -18,6 +18,7 @@ namespace HotelBooking.Application.Tests
     {
         private readonly Mock<IBookingRepository> _bookingRepositoryMock = new();
         private readonly Mock<IValidator<BookingDTO>> _bookingValidatorMock = new();
+        private readonly Mock<IValidator<PaginationDTO>> _paginationValidatorMock = new();
         private readonly Mock<IHotelDiscountRepository> _hotelDiscountRepositoryMock = new();
         private readonly Mock<IRoomRepository> _roomRepositoryMock = new();
         private readonly Mock<IEmailService> _emailServiceMock = new();
@@ -31,6 +32,7 @@ namespace HotelBooking.Application.Tests
             _bookingService = new(
                 _bookingRepositoryMock.Object,
                 _bookingValidatorMock.Object,
+                _paginationValidatorMock.Object,
                 _hotelDiscountRepositoryMock.Object,
                 _roomRepositoryMock.Object,
                 _emailServiceMock.Object,

@@ -60,21 +60,21 @@
    
  <!-- Description de l'hôtel SkullKing -->
   <div class="row mt-4">
-           <div class="col-12">
-  <div class="card border-primary">
-           <div class="card-header bg-primary text-white">
+ <div class="col-12">
+      <div class="card border-primary">
+   <div class="card-header bg-primary text-white">
   <h4><i class="oi oi-info"></i> À propos du SkullKing</h4>
        </div>
-      <div class="card-body">
+  <div class="card-body">
     <div class="row">
     <div class="col-md-8">
     <p class="lead">Bienvenue à bord du SkullKing, l'hôtel le plus légendaire des sept mers !</p>
   <p>
        Notre établissement 5 étoiles vous offre une expérience unique 
        au cœur de Paris, où l'aventure pirate rencontre le confort moderne. 
-         Sous la direction du capitaine Becks, notre équipage 
+   Sous la direction du capitaine Becks, notre équipage 
      vous garantit un séjour inoubliable.
-       </p>
+    </p>
        <p>
    Que vous soyez un matelot en quête d'aventure ou un capitaine expérimenté, 
       nos cabines soigneusement aménagées sauront 
@@ -82,14 +82,14 @@ répondre à tous vos besoins d'aventurier.
        </p>
    </div>
 <div class="col-md-4">
-      <h5><strong>Le SkullKing en bref</strong></h5>
+ <h5><strong>Le SkullKing en bref</strong></h5>
     <dl class="row">
        <dt class="col-6">Nom :</dt>
     <dd class="col-6">SkullKing</dd>
     
   <dt class="col-6">Capitaine :</dt>
      <dd class="col-6">Becks</dd>
-       
+     
   <dt class="col-6">Classification :</dt>
     <dd class="col-6">5 <span class="text-warning">★★★★★</span></dd>
      
@@ -100,31 +100,43 @@ répondre à tous vos besoins d'aventurier.
    </div>
  </div>
       </div>
-       </div>
+ </div>
     </div>
 
+    <!-- Section Réservations et services -->
     <div class="row mt-4">
-  <div class="col-12">
-     <AuthorizeView Roles="Admin" Context="adminContext">
-        <Authorized>
-      <div class="card bg-dark text-white">
-      <div class="card-body text-center">
-      <h5><i class="oi oi-cog"></i> Administration <span class="badge bg-danger ms-2">ADMIN</span></h5>
-      <p class="mb-3">Vous êtes connecté en tant qu'administrateur ? Gérez l'hôtel SkullKing.</p>
-      <div class="d-flex gap-2 justify-content-center">
-      <a href="/admin/setup" class="btn btn-warning">
-  <i class="oi oi-wrench"></i> Configuration
-    </a>
-   <a href="/admin/rooms/create" class="btn btn-success">
-   <i class="oi oi-plus"></i> Créer chambre
-   </a>
+      <div class="col-md-6">
+     <div class="card h-100 border-success">
+      <div class="card-header bg-success text-white">
+      <h5><i class="oi oi-calendar"></i> Réservation</h5>
+         </div>
+        <div class="card-body">
+         <p>Réservez votre cabine au SkullKing et embarquez pour l'aventure !</p>
+   <div class="d-grid">
+     <a href="/booking" class="btn btn-success btn-lg">
+         <i class="oi oi-calendar"></i> Faire une réservation
+           </a>
+        </div>
+   </div>
+         </div>
+      </div>
+ 
+        <div class="col-md-6">
+         <div class="card h-100 border-info">
+   <div class="card-header bg-info text-white">
+    <h5><i class="oi oi-list"></i> Mes Réservations</h5>
+ </div>
+  <div class="card-body">
+           <p>Consultez et gérez toutes vos réservations au SkullKing.</p>
+           <div class="d-grid">
+       <a href="/my-bookings" class="btn btn-info btn-lg">
+      <i class="oi oi-list"></i> Voir mes réservations
+  </a>
+     </div>
+         </div>
+     </div>
      </div>
    </div>
- </div>
-   </Authorized>
-     </AuthorizeView>
-   </div>
- </div>
         </Authorized>
 <NotAuthorized>
      <div class="row mt-4">

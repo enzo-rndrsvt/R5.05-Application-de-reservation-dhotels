@@ -114,6 +114,62 @@ namespace HotelBooking.Api.Controllers
         }
 
         /// <summary>
+        /// Get paginated list of bookings for the current user.
+        /// </summary>
+        /// <response code="200">The list of user bookings is retrieved successfully.</response>
+        [HttpGet("current-user/bookings")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(IEnumerable<BookingWithDetailsDTO>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetUserBookingsAsync([FromQuery] PaginationDTO pagination)
+        {
+            var userId = new Guid(HttpContext.User.Identity.Name);
+
+            try
+            {
+                var bookings = await _bookingService.GetBookingsForUserAsync(userId, pagination);
+                var bookingsCount = await _bookingService.GetBookingsCountForUserAsync(userId);
+
+                Response.Headers.AddPaginationMetadata(bookingsCount, pagination);
+
+                return Ok(bookings);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.GetErrorsForClient());
+            }
+        }
+
+        /// <summary>
+        /// Get a specific booking by ID for the current user.
+        /// </summary>
+        /// <param name="bookingId">ID of the booking to retrieve</param>
+        /// <response code="200">Booking retrieved successfully</response>
+        /// <response code="404">Booking not found or doesn't belong to user</response>
+        [HttpGet("current-user/bookings/{bookingId}")]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BookingWithDetailsDTO), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetUserBookingByIdAsync(Guid bookingId)
+        {
+            var userId = new Guid(HttpContext.User.Identity.Name);
+
+            try
+            {
+                var booking = await _bookingService.GetBookingByIdForUserAsync(bookingId, userId);
+
+                if (booking == null)
+                {
+                    return NotFound("Booking not found or you don't have permission to access it.");
+                }
+
+                return Ok(booking);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error retrieving booking: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Create and store a new hotel review for a user.
         /// </summary>
         /// <param name="newReview">Properties of the new review.</param>
