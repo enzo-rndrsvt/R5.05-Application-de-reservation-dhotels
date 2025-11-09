@@ -287,6 +287,31 @@
             <param name="newReview">Properties of the new review.</param>
             <response code="201">The review is created successfully.</response>
         </member>
+        <member name="M:HotelBooking.Api.Controllers.UserProfileController.GetCurrentUserProfile">
+            <summary>
+            Get current user profile information.
+            </summary>
+            <response code="200">Returns the user profile information.</response>
+            <response code="404">User not found.</response>
+        </member>
+        <member name="M:HotelBooking.Api.Controllers.UserProfileController.UpdateCurrentUserProfile(HotelBooking.Api.Models.User.UserProfileUpdateDTO)">
+            <summary>
+            Update current user profile information.
+            </summary>
+            <param name="profileUpdate">Updated profile information.</param>
+            <response code="200">Profile updated successfully.</response>
+            <response code="400">Invalid data provided.</response>
+            <response code="404">User not found.</response>
+        </member>
+        <member name="M:HotelBooking.Api.Controllers.UserProfileController.ChangeCurrentUserPassword(HotelBooking.Api.Models.User.PasswordChangeDTO)">
+            <summary>
+            Change current user password.
+            </summary>
+            <param name="passwordChange">New password information.</param>
+            <response code="200">Password changed successfully.</response>
+            <response code="400">Invalid data provided.</response>
+            <response code="404">User not found.</response>
+        </member>
         <member name="M:HotelBooking.Api.Extensions.ConfigurationsExtensions.BindConfigurations(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
             Bind configurations from appsettings.json to their corresponding classes.
@@ -637,6 +662,71 @@
             <summary>
             Password of the user.
             Must be of length between 8 and 50.
+            </summary>
+        </member>
+        <member name="T:HotelBooking.Api.Models.User.UserProfileUpdateDTO">
+            <summary>
+            Model for updating user profile information.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.User.UserProfileUpdateDTO.FirstName">
+            <summary>
+            First name of the user.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.User.UserProfileUpdateDTO.LastName">
+            <summary>
+            Last name of the user.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.User.UserProfileUpdateDTO.Email">
+            <summary>
+            Email of the user.
+            </summary>
+        </member>
+        <member name="T:HotelBooking.Api.Models.User.PasswordChangeDTO">
+            <summary>
+            Model for changing user password.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.User.PasswordChangeDTO.NewPassword">
+            <summary>
+            New password for the user.
+            </summary>
+        </member>
+        <member name="T:HotelBooking.Api.Models.User.UserProfileDTO">
+            <summary>
+            Model for user profile information.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.User.UserProfileDTO.Id">
+            <summary>
+            User ID.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.User.UserProfileDTO.FirstName">
+            <summary>
+            First name of the user.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.User.UserProfileDTO.LastName">
+            <summary>
+            Last name of the user.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.User.UserProfileDTO.Email">
+            <summary>
+            Email of the user.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.User.UserProfileDTO.Username">
+            <summary>
+            Username of the user.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.User.UserProfileDTO.Roles">
+            <summary>
+            User roles.
             </summary>
         </member>
         <member name="T:HotelBooking.Api.Models.ValidationResultDTO">
