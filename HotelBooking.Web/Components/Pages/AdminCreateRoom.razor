@@ -16,87 +16,87 @@
   <h3 class="text-center">
   <i class="oi oi-grid-three-up"></i> Créer une nouvelle chambre
      </h3>
-    <p class="text-center mb-0">????? Ajouter une nouvelle cabine au SkullKing ?</p>
-         </div>
-     <div class="card-body">
+    <p class="text-center mb-0"><i class="oi oi-plus"></i> Ajouter une nouvelle cabine au SkullKing</p>
+   </div>
+<div class="card-body">
       @if (!string.IsNullOrEmpty(successMessage))
     {
-        <div class="alert alert-success">
+     <div class="alert alert-success">
              <i class="oi oi-circle-check"></i> @successMessage
       </div>
-             }
+  }
 
-        @if (!string.IsNullOrEmpty(errorMessage))
+  @if (!string.IsNullOrEmpty(errorMessage))
    {
-              <div class="alert alert-danger">
-         <i class="oi oi-warning"></i> @errorMessage
+          <div class="alert alert-danger">
+    <i class="oi oi-warning"></i> @errorMessage
    </div>
   }
 
        @if (hotels == null)
-          {
+   {
         <div class="text-center p-3">
-              <div class="spinner-border text-primary" role="status">
-               <span class="visually-hidden">Chargement...</span>
+          <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Chargement...</span>
        </div>
     <p class="mt-2">Chargement des hôtels...</p>
      </div>
        }
        else if (!hotels.Any())
-                    {
+            {
    <div class="alert alert-warning">
     <h5><i class="oi oi-warning"></i> Aucun hôtel disponible</h5>
-              <p>Vous devez d'abord créer un hôtel avant de pouvoir ajouter des chambres.</p>
-       <a href="/admin/setup" class="btn btn-primary">
-     <i class="oi oi-plus"></i> Créer l'hôtel SkullKing
+           <p>Vous devez d'abord créer un hôtel avant de pouvoir ajouter des chambres.</p>
+  <a href="/admin/setup" class="btn btn-primary">
+<i class="oi oi-plus"></i> Créer l'hôtel SkullKing
     </a>
        </div>
            }
-          else
+     else
    {
-               <EditForm Model="@roomModel" OnValidSubmit="HandleCreateRoom" FormName="CreateRoomForm">
+           <EditForm Model="@roomModel" OnValidSubmit="HandleCreateRoom" FormName="CreateRoomForm">
  <DataAnnotationsValidator />
      
       <div class="row">
    <div class="col-md-6">
      <div class="form-group mb-3">
     <label for="hotelId" class="form-label">
-                  <i class="oi oi-home"></i> Hôtel
-     </label>
+        <i class="oi oi-home"></i> Hôtel
+ </label>
   <select id="hotelId" class="form-select" @bind="roomModel.HotelId">
          <option value="">-- Sélectionner un hôtel --</option>
         @foreach (var hotel in hotels)
    {
-            <option value="@hotel.Id">@hotel.Name (? @hotel.StarRating.ToString("0.0"))</option>
+       <option value="@hotel.Id">@hotel.Name (<span class="text-warning">?</span> @hotel.StarRating.ToString("0.0"))</option>
         }
      </select>
      <ValidationMessage For="@(() => roomModel.HotelId)" class="text-danger" />
-          </div>
+    </div>
       </div>
 
-    <div class="col-md-6">
+  <div class="col-md-6">
      <div class="form-group mb-3">
   <label for="number" class="form-label">
       <i class="oi oi-tag"></i> Numéro de chambre
    </label>
     <InputNumber id="number" class="form-control" @bind-Value="roomModel.Number" />
-     <ValidationMessage For="@(() => roomModel.Number)" class="text-danger" />
+ <ValidationMessage For="@(() => roomModel.Number)" class="text-danger" />
     </div>
  </div>
     </div>
 
         <div class="row">
-            <div class="col-md-6">
+          <div class="col-md-6">
         <div class="form-group mb-3">
-        <label for="type" class="form-label">
+     <label for="type" class="form-label">
      <i class="oi oi-layers"></i> Type de chambre
-            </label>
-           <select id="type" class="form-select" @bind="roomModel.Type">
-         <option value="">-- Choisir un type --</option>
-      <option value="Standard">????? Standard - Cabine de matelot</option>
-       <option value="Deluxe">? Deluxe - Cabine d'officier</option>
-               <option value="Suite">?? Suite - Cabine de capitaine</option>
-           <option value="Presidential">?? Presidential - Quartier du Roi des Pirates</option>
+    </label>
+    <select id="type" class="form-select" @bind="roomModel.Type">
+   <option value="">-- Choisir un type --</option>
+      <option value="Standard"><i class="oi oi-home"></i> Standard - Cabine de matelot</option>
+       <option value="Deluxe"><i class="oi oi-star"></i> Deluxe - Cabine d'officier</option>
+       <option value="Suite"><i class="oi oi-crown"></i> Suite - Cabine de capitaine</option>
+           <option value="Presidential"><i class="oi oi-badge"></i> Presidential - Quartier du Roi des Pirates</option>
           </select>
   <ValidationMessage For="@(() => roomModel.Type)" class="text-danger" />
   </div>
@@ -109,61 +109,61 @@
 </label>
         <InputNumber id="pricePerNight" class="form-control" @bind-Value="roomModel.PricePerNight" />
            <ValidationMessage For="@(() => roomModel.PricePerNight)" class="text-danger" />
-             </div>
+          </div>
     </div>
        </div>
 
      <div class="row">
-          <div class="col-md-6">
-            <div class="form-group mb-3">
+    <div class="col-md-6">
+<div class="form-group mb-3">
      <label for="adultsCapacity" class="form-label">
-       <i class="oi oi-people"></i> Capacité adultes
-           </label>
+ <i class="oi oi-people"></i> Capacité adultes
+   </label>
     <InputNumber id="adultsCapacity" class="form-control" @bind-Value="roomModel.AdultsCapacity" />
-           <ValidationMessage For="@(() => roomModel.AdultsCapacity)" class="text-danger" />
-                </div>
-       </div>
+      <ValidationMessage For="@(() => roomModel.AdultsCapacity)" class="text-danger" />
+           </div>
+  </div>
 
            <div class="col-md-6">
  <div class="form-group mb-3">
-                <label for="childrenCapacity" class="form-label">
-               <i class="oi oi-person"></i> Capacité enfants
+ <label for="childrenCapacity" class="form-label">
+ <i class="oi oi-person"></i> Capacité enfants
            </label>
       <InputNumber id="childrenCapacity" class="form-control" @bind-Value="roomModel.ChildrenCapacity" />
-   <ValidationMessage For="@(() => roomModel.ChildrenCapacity)" class="text-danger" />
-            </div>
+ <ValidationMessage For="@(() => roomModel.ChildrenCapacity)" class="text-danger" />
+          </div>
  </div>
      </div>
 
             <div class="form-group mb-4">
-            <label for="briefDescription" class="form-label">
+    <label for="briefDescription" class="form-label">
            <i class="oi oi-document"></i> Description de la chambre
     </label>
      <InputTextArea id="briefDescription" class="form-control" rows="3" @bind-Value="roomModel.BriefDescription" 
-      placeholder="Décrivez cette cabine de pirate..." />
+    placeholder="Décrivez cette cabine de pirate..." />
       <ValidationMessage For="@(() => roomModel.BriefDescription)" class="text-danger" />
     <div class="form-text">Exemple : "Cabine spacieuse avec vue sur les sept mers, équipée d'un hamac confortable et d'un coffre au trésor."</div>
-        </div>
+     </div>
 
    <div class="d-grid gap-2">
-     <button type="submit" class="btn btn-success btn-lg" disabled="@isLoading">
+   <button type="submit" class="btn btn-success btn-lg" disabled="@isLoading">
   @if (isLoading)
     {
 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
 <span> Création en cours...</span>
-        }
+     }
  else
-         {
+    {
       <i class="oi oi-plus"></i> <span>Créer la chambre</span>
 }
-       </button>
+    </button>
    
-           <div class="row mt-3">
+    <div class="row mt-3">
    <div class="col-md-4">
-    <a href="/rooms" class="btn btn-primary w-100">
+ <a href="/rooms" class="btn btn-primary w-100">
   <i class="oi oi-grid-three-up"></i> Voir les chambres
   </a>
-         </div>
+     </div>
        <div class="col-md-4">
   <a href="/admin/setup" class="btn btn-outline-secondary w-100">
     <i class="oi oi-wrench"></i> Configuration
@@ -178,9 +178,9 @@
     </div>
       </EditForm>
    }
-                </div>
-            </div>
-    </div>
+  </div>
+      </div>
+  </div>
     </div>
 </div>
 
@@ -188,7 +188,7 @@
     [SupplyParameterFromForm]
     private RoomCreation roomModel { get; set; } = new();
     
-    private IEnumerable<HotelForUser>? hotels;
+  private IEnumerable<HotelForUser>? hotels;
     private string successMessage = string.Empty;
     private string errorMessage = string.Empty;
     private bool isLoading = false;
@@ -201,47 +201,47 @@
     private async Task LoadHotels()
     {
     try
-        {
-      hotels = await HotelAdminService.GetHotelsForRoomCreationAsync();
+     {
+  hotels = await HotelAdminService.GetHotelsForRoomCreationAsync();
         }
       catch (Exception ex)
-        {
-            errorMessage = $"Erreur lors du chargement des hôtels: {ex.Message}";
-        }
-    }
+    {
+   errorMessage = $"Erreur lors du chargement des hôtels: {ex.Message}";
+     }
+  }
 
     private async Task HandleCreateRoom()
     {
       errorMessage = string.Empty;
-      successMessage = string.Empty;
+   successMessage = string.Empty;
      isLoading = true;
 
         try
-        {
-            if (roomModel.HotelId == Guid.Empty)
+     {
+if (roomModel.HotelId == Guid.Empty)
       {
-           errorMessage = "Veuillez sélectionner un hôtel.";
+    errorMessage = "Veuillez sélectionner un hôtel.";
            return;
-            }
+    }
 
-            var result = await HotelAdminService.CreateRoomAsync(roomModel);
+          var result = await HotelAdminService.CreateRoomAsync(roomModel);
 
       if (result)
      {
-     successMessage = $"?? La chambre {roomModel.Number} ({roomModel.Type}) a été créée avec succès ! " +
+     successMessage = $"La chambre {roomModel.Number} ({roomModel.Type}) a été créée avec succès ! " +
             $"Les pirates peuvent maintenant réserver cette cabine pour {roomModel.PricePerNight:C} par nuit.";
         
   // Réinitialiser le formulaire
-        roomModel = new RoomCreation();
+      roomModel = new RoomCreation();
    }
          else
-            {
-    errorMessage = "? Erreur lors de la création de la chambre. Vérifiez vos droits d'administrateur et les données saisies.";
-      }
-      }
-        catch (Exception ex)
         {
-            errorMessage = $"? Erreur inattendue : {ex.Message}";
+    errorMessage = "Erreur lors de la création de la chambre. Vérifiez vos droits d'administrateur et les données saisies.";
+      }
+      }
+   catch (Exception ex)
+    {
+            errorMessage = $"Erreur inattendue : {ex.Message}";
    }
         finally
    {

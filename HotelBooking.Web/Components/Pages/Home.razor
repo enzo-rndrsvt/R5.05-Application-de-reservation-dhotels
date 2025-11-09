@@ -6,120 +6,169 @@
 <div class="container mt-5">
     <div class="row">
         <div class="col-12 text-center">
-            <h1 class="display-4">🏴‍☠️ Bienvenue à l'Hôtel SkullKing 🏴‍☠️</h1>
-            <p class="lead">L'hôtel des pirates - Lit à Paris pour vrais pirates</p>
-            <div class="mb-4">
-                @for (int i = 0; i < 5; i++)
-                {
-                    <span class="fs-3">⭐</span>
-                }
-                <p class="text-muted">Hôtel 5 étoiles - Propriétaire: Becks</p>
-            </div>
-        </div>
+  <h1 class="display-4"><strong>Bienvenue à l'Hôtel SkullKing</strong></h1>
+     <p class="lead">L'hôtel des pirates - Lit à Paris pour vrais pirates</p>
+  <div class="mb-4">
+       @for (int i = 0; i < 5; i++)
+    {
+          <span class="fs-3 text-warning">★</span>
+       }
+        <p class="text-muted">Hôtel 5 étoiles - Propriétaire: Becks</p>
+     </div>
+    </div>
     </div>
 
     <AuthorizeView>
         <Authorized>
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="alert alert-success d-flex align-items-center" role="alert">
-                        <i class="oi oi-circle-check me-3 fs-4"></i>
-                        <div>
-                            <h4 class="alert-heading mb-1">Ahoy @context.User.Identity?.Name ! ⚓</h4>
-                            <p class="mb-0">Bienvenue à bord, moussaillon ! Prêt à découvrir nos trésors ?</p>
-                        </div>
-                    </div>
-                </div>
+  <div class="row mt-4">
+       <div class="col-12">
+      <div class="alert alert-success d-flex align-items-center" role="alert">
+  <i class="oi oi-circle-check me-3 fs-4"></i>
+         <div>
+<h4 class="alert-heading mb-1">Ahoy @context.User.Identity?.Name !</h4>
+     <p class="mb-0">Bienvenue à bord, moussaillon ! Prêt à découvrir nos trésors ?</p>
+       </div>
+     </div>
+      </div>
+        </div>
+     <div class="row mt-3">
+    <div class="col-md-6">
+      <div class="card h-100 border-success">
+          <div class="card-body text-center">
+     <i class="oi oi-grid-three-up display-4 text-success mb-3"></i>
+   <h5 class="card-title">Nos cabines</h5>
+     <p class="card-text">Explorez toutes nos chambres thématiques dignes des plus grands pirates</p>
+    <a href="/rooms" class="btn btn-success btn-lg">
+    <i class="oi oi-home"></i> Découvrir toutes nos cabines
+ </a>
+       </div>
+    </div>
+     </div>
+ <div class="col-md-6">
+      <div class="card h-100 border-info">
+     <div class="card-body text-center">
+ <i class="oi oi-calendar display-4 text-info mb-3"></i>
+   <h5 class="card-title">Réservation</h5>
+  <p class="card-text">Réservez votre aventure au SkullKing dès maintenant</p>
+ <a href="/booking" class="btn btn-info btn-lg">
+      <i class="oi oi-calendar"></i> Réserver maintenant
+       </a>
+  </div>
+       </div>
+        </div>
             </div>
-            <div class="row mt-3">
-                <div class="col-md-4">
-                    <div class="card h-100 border-primary">
-                        <div class="card-body text-center">
-                            <i class="oi oi-home display-4 text-primary mb-3"></i>
-                            <h5 class="card-title">🏴‍☠️ Notre hôtel</h5>
-                            <p class="card-text">Découvrez l'unique hôtel SkullKing, refuge des pirates parisiens</p>
-                            <a href="/hotels" class="btn btn-primary">
-                                <i class="oi oi-eye"></i> Découvrir l'hôtel
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-success">
-                        <div class="card-body text-center">
-                            <i class="oi oi-grid-three-up display-4 text-success mb-3"></i>
-                            <h5 class="card-title">🛏️ Nos cabines</h5>
-                            <p class="card-text">Explorez nos chambres thématiques dignes des plus grands pirates</p>
-                            <a href="/rooms" class="btn btn-success">
-                                <i class="oi oi-home"></i> Voir les cabines
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card h-100 border-info">
-                        <div class="card-body text-center">
-                            <i class="oi oi-calendar display-4 text-info mb-3"></i>
-                            <h5 class="card-title">📋 Réservation</h5>
-                            <p class="card-text">Réservez votre aventure au SkullKing</p>
-                            <a href="/booking" class="btn btn-info">
-                                <i class="oi oi-calendar"></i> Réserver
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card bg-dark text-white">
-                        <div class="card-body text-center">
-                            <h5>🎯 Administration</h5>
-                            <p class="mb-3">Vous êtes connecté en tant qu'administrateur ? Gérez l'hôtel SkullKing.</p>
-                            <div class="d-flex gap-2 justify-content-center">
-                                <a href="/admin/setup" class="btn btn-warning">
-                                    <i class="oi oi-wrench"></i> Configuration
-                                </a>
-                                <a href="/admin/rooms/create" class="btn btn-success">
-                                    <i class="oi oi-plus"></i> Créer chambre
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+   
+ <!-- Description de l'hôtel SkullKing -->
+  <div class="row mt-4">
+           <div class="col-12">
+  <div class="card border-primary">
+           <div class="card-header bg-primary text-white">
+  <h4><i class="oi oi-info"></i> À propos du SkullKing</h4>
+       </div>
+      <div class="card-body">
+    <div class="row">
+    <div class="col-md-8">
+    <p class="lead">Bienvenue à bord du SkullKing, l'hôtel le plus légendaire des sept mers !</p>
+  <p>
+       Notre établissement 5 étoiles vous offre une expérience unique 
+       au cœur de Paris, où l'aventure pirate rencontre le confort moderne. 
+         Sous la direction du capitaine Becks, notre équipage 
+     vous garantit un séjour inoubliable.
+       </p>
+       <p>
+   Que vous soyez un matelot en quête d'aventure ou un capitaine expérimenté, 
+      nos cabines soigneusement aménagées sauront 
+répondre à tous vos besoins d'aventurier.
+       </p>
+   </div>
+<div class="col-md-4">
+      <h5><strong>Le SkullKing en bref</strong></h5>
+    <dl class="row">
+       <dt class="col-6">Nom :</dt>
+    <dd class="col-6">SkullKing</dd>
+    
+  <dt class="col-6">Capitaine :</dt>
+     <dd class="col-6">Becks</dd>
+       
+  <dt class="col-6">Classification :</dt>
+    <dd class="col-6">5 <span class="text-warning">★★★★★</span></dd>
+     
+  <dt class="col-6">Localisation :</dt>
+         <dd class="col-6">Paris, France</dd>
+     </dl>
+</div>
+   </div>
+ </div>
+      </div>
+       </div>
+    </div>
+
+    <div class="row mt-4">
+       <div class="col-12">
+      <div class="card bg-dark text-white">
+      <div class="card-body text-center">
+        <h5><i class="oi oi-cog"></i> Administration</h5>
+      <p class="mb-3">Vous êtes connecté en tant qu'administrateur ? Gérez l'hôtel SkullKing.</p>
+      <div class="d-flex gap-2 justify-content-center">
+         <a href="/admin/setup" class="btn btn-warning">
+       <i class="oi oi-wrench"></i> Configuration
+    </a>
+          <a href="/admin/rooms/create" class="btn btn-success">
+   <i class="oi oi-plus"></i> Créer chambre
+      </a>
+       </div>
+   </div>
+ </div>
+   </div>
+ </div>
         </Authorized>
-        <NotAuthorized>
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="alert alert-warning d-flex align-items-center" role="alert">
-                        <i class="oi oi-circle-x me-3 fs-4"></i>
-                        <div>
-                            <h4 class="alert-heading mb-1">🏴‍☠️ Accès au navire refusé !</h4>
-                            <p class="mb-0">Ahoy ! Pour monter à bord du SkullKing, il faut d'abord s'identifier, matelot !</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-6 offset-md-3 text-center">
-                    <div class="card border-primary">
-                        <div class="card-body">
-                            <i class="oi oi-account-login display-4 text-primary mb-3"></i>
-                            <h3>⚓ Embarquez avec nous !</h3>
-                            <p>Rejoignez l'équipage pour accéder à toutes nos merveilles pirates</p>
-                            <div class="d-grid gap-2 d-md-block">
-                                <a href="/login" class="btn btn-primary btn-lg">
-                                    <i class="oi oi-account-login"></i> 🏴‍☠️ Connexion
-                                </a>
-                                <a href="/register" class="btn btn-outline-primary btn-lg">
-                                    <i class="oi oi-plus"></i> ⚓ Inscription
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<NotAuthorized>
+     <div class="row mt-4">
+       <div class="col-12">
+      <div class="alert alert-warning d-flex align-items-center" role="alert">
+       <i class="oi oi-circle-x me-3 fs-4"></i>
+  <div>
+ <h4 class="alert-heading mb-1">Accès au navire refusé !</h4>
+   <p class="mb-0">Ahoy ! Pour monter à bord du SkullKing, il faut d'abord s'identifier, matelot !</p>
+    </div>
+      </div>
+  </div>
+       </div>
+    <div class="row mt-3">
+     <div class="col-md-6 offset-md-3 text-center">
+       <div class="card border-primary">
+<div class="card-body">
+     <i class="oi oi-account-login display-4 text-primary mb-3"></i>
+  <h3><strong>Embarquez avec nous !</strong></h3>
+       <p>Rejoignez l'équipage pour accéder à toutes nos merveilles pirates</p>
+ <div class="d-grid gap-2 d-md-block">
+<a href="/login" class="btn btn-primary btn-lg">
+       <i class="oi oi-account-login"></i> Connexion
+     </a>
+ <a href="/register" class="btn btn-outline-primary btn-lg">
+      <i class="oi oi-plus"></i> Inscription
+     </a>
+     </div>
+      </div>
+      </div>
+    </div>
+     </div>
+     
+      <!-- Aperçu de l'hôtel pour les visiteurs -->
+      <div class="row mt-4">
+    <div class="col-12">
+       <div class="card border-secondary">
+       <div class="card-header">
+     <h5><i class="oi oi-info"></i> Découvrez le SkullKing</h5>
+ </div>
+ <div class="card-body text-muted">
+      <p>L'hôtel SkullKing vous attend avec ses cabines thématiques et son ambiance pirate unique. 
+      Connectez-vous pour découvrir toutes nos offres et réserver votre aventure !
+      </p>
+        </div>
+     </div>
+       </div>
+    </div>
         </NotAuthorized>
     </AuthorizeView>
 </div>
