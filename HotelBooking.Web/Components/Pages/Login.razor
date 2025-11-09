@@ -6,61 +6,61 @@
 
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="text-center">Connexion</h3>
-                </div>
-                <div class="card-body">
-                    @if (!string.IsNullOrEmpty(errorMessage))
-                    {
-                        <div class="alert alert-danger">
-                            @errorMessage
-                        </div>
-                    }
+      <div class="col-md-6">
+      <div class="card">
+    <div class="card-header bg-primary text-white">
+   <h3 class="text-center">Connexion</h3>
+     </div>
+        <div class="card-body">
+  @if (!string.IsNullOrEmpty(errorMessage))
+      {
+   <div class="alert alert-danger">
+          @errorMessage
+           </div>
+         }
 
-                    @if (!string.IsNullOrEmpty(successMessage))
-                    {
-                        <div class="alert alert-success">
-                            @successMessage
-                        </div>
-                    }
+         @if (!string.IsNullOrEmpty(successMessage))
+          {
+        <div class="alert alert-success">
+    @successMessage
+       </div>
+   }
 
-                    <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
-                        <DataAnnotationsValidator />
-                        
-                        <div class="form-group mb-3">
-                            <label for="username">Nom d'utilisateur</label>
-                            <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
-                            <ValidationMessage For="@(() => loginModel.Username)" class="text-danger" />
-                        </div>
+           <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
+       <DataAnnotationsValidator />
+ 
+       <div class="form-group mb-3">
+        <label for="username">Nom d'utilisateur</label>
+      <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
+<ValidationMessage For="@(() => loginModel.Username)" class="text-danger" />
+    </div>
 
-                        <div class="form-group mb-3">
-                            <label for="password">Mot de passe</label>
-                            <InputText id="password" class="form-control" type="password" @bind-Value="loginModel.Password" />
-                            <ValidationMessage For="@(() => loginModel.Password)" class="text-danger" />
-                        </div>
+           <div class="form-group mb-3">
+       <label for="password">Mot de passe</label>
+        <InputText id="password" class="form-control" type="password" @bind-Value="loginModel.Password" />
+                 <ValidationMessage For="@(() => loginModel.Password)" class="text-danger" />
+      </div>
 
-                        <div class="d-grid gap-2 mt-4">
-                            <button type="submit" class="btn btn-primary" disabled="@isLoading">
-                                @if (isLoading)
-                                {
-                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span> Connexion en cours...</span>
-                                }
-                                else
-                                {
-                                    <span>Se connecter</span>
-                                }
-                            </button>
-                        </div>
-                    </EditForm>
-                    
-                    <div class="mt-3 text-center">
-                        <p>Vous n'avez pas de compte ? <a href="register">Inscrivez-vous</a></p>
-                    </div>
-                </div>
+   <div class="d-grid gap-2 mt-4">
+         <button type="submit" class="btn btn-primary" disabled="@isLoading">
+        @if (isLoading)
+           {
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+ <span> Connexion en cours...</span>
+       }
+ else
+   {
+       <span>Se connecter</span>
+      }
+</button>
             </div>
+           </EditForm>
+    
+        <div class="mt-3 text-center">
+    <p>Vous n'avez pas de compte ? <a href="register">Inscrivez-vous</a></p>
+          </div>
+           </div>
+    </div>
         </div>
     </div>
 </div>
@@ -76,31 +76,31 @@
     private async Task HandleLogin()
     {
         errorMessage = string.Empty;
-        successMessage = string.Empty;
+      successMessage = string.Empty;
         isLoading = true;
 
-        try
-        {
-            var result = await AuthService.Login(loginModel);
+try
+     {
+         var result = await AuthService.Login(loginModel);
 
-            if (result.Success)
-            {
-                successMessage = "Connexion réussie ! Redirection...";
-                await Task.Delay(1000); // Petite pause pour voir le message
-                NavManager.NavigateTo("/hotels", true); // Force le rafraîchissement
+     if (result.Success)
+       {
+     successMessage = "Connexion réussie ! Redirection...";
+   await Task.Delay(1000); // Petite pause pour voir le message
+                NavManager.NavigateTo("/", true); // Redirection vers la page d'accueil
+     }
+       else
+   {
+         errorMessage = result.Message ?? "Une erreur est survenue lors de la connexion";
             }
-            else
-            {
-                errorMessage = result.Message ?? "Une erreur est survenue lors de la connexion";
-            }
-        }
+      }
         catch (Exception ex)
         {
-            errorMessage = $"Erreur: {ex.Message}";
+     errorMessage = $"Erreur: {ex.Message}";
         }
-        finally
+finally
         {
-            isLoading = false;
-        }
+       isLoading = false;
+   }
     }
 }

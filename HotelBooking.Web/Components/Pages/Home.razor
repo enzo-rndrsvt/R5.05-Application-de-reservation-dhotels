@@ -104,21 +104,25 @@ répondre à tous vos besoins d'aventurier.
     </div>
 
     <div class="row mt-4">
-       <div class="col-12">
+  <div class="col-12">
+     <AuthorizeView Roles="Admin" Context="adminContext">
+        <Authorized>
       <div class="card bg-dark text-white">
       <div class="card-body text-center">
-        <h5><i class="oi oi-cog"></i> Administration</h5>
+      <h5><i class="oi oi-cog"></i> Administration <span class="badge bg-danger ms-2">ADMIN</span></h5>
       <p class="mb-3">Vous êtes connecté en tant qu'administrateur ? Gérez l'hôtel SkullKing.</p>
       <div class="d-flex gap-2 justify-content-center">
-         <a href="/admin/setup" class="btn btn-warning">
-       <i class="oi oi-wrench"></i> Configuration
+      <a href="/admin/setup" class="btn btn-warning">
+  <i class="oi oi-wrench"></i> Configuration
     </a>
-          <a href="/admin/rooms/create" class="btn btn-success">
+   <a href="/admin/rooms/create" class="btn btn-success">
    <i class="oi oi-plus"></i> Créer chambre
-      </a>
-       </div>
+   </a>
+     </div>
    </div>
  </div>
+   </Authorized>
+     </AuthorizeView>
    </div>
  </div>
         </Authorized>
