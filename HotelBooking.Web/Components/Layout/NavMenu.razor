@@ -1,4 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
+@using HotelBooking.Web.Components.Shared
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -23,13 +24,18 @@
             <Authorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="hotels">
-                        <span class="oi oi-list-rich" aria-hidden="true"></span> Nos hôtels
-                        <span class="badge bg-success ms-2">Connecté</span>
+                        <span class="oi oi-home" aria-hidden="true"></span> Notre hôtel
+                        <span class="badge bg-success ms-2">SkullKing</span>
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="rooms">
-                        <span class="oi oi-grid-three-up" aria-hidden="true"></span> Nos chambres
+                        <span class="oi oi-grid-three-up" aria-hidden="true"></span> Nos cabines
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="booking">
+                        <span class="oi oi-calendar" aria-hidden="true"></span> Réservation
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
@@ -39,9 +45,18 @@
                 </div>
                 <hr class="text-white-50 my-2" />
                 <div class="nav-item px-3">
+                    <div class="text-white-50 small">🏴‍☠️ Administration</div>
+                </div>
+                <div class="nav-item px-3">
                     <NavLink class="nav-link" href="admin/setup">
                         <span class="oi oi-wrench" aria-hidden="true"></span> Configuration
-                        <small class="d-block">Admin uniquement</small>
+                        <small class="d-block">Hôtel & Chambres</small>
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="admin/rooms/create">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Créer chambre
+                        <small class="d-block">Nouvelle cabine</small>
                     </NavLink>
                 </div>
                 <hr class="text-white-50 my-2" />
@@ -58,7 +73,7 @@
             <NotAuthorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link text-warning" href="hotels">
-                        <span class="oi oi-lock-locked" aria-hidden="true"></span> Nos hôtels
+                        <span class="oi oi-lock-locked" aria-hidden="true"></span> Notre hôtel
                         <small class="d-block">Connexion requise</small>
                     </NavLink>
                 </div>

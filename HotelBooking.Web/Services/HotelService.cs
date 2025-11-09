@@ -46,24 +46,37 @@ namespace HotelBooking.Web.Services
 
         public async Task<IEnumerable<HotelForUser>> GetAllHotelsAsync()
         {
-            await AddAuthenticationHeader();
-            
+            // Utiliser l'endpoint public qui retourne HotelForAdminDTO
             try
             {
-                var response = await _httpClient.GetAsync("api/hotels/featured");
+                var response = await _httpClient.GetAsync("api/public/hotels");
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    var hotels = await response.Content.ReadFromJsonAsync<IEnumerable<HotelForUser>>();
-                    return hotels ?? Enumerable.Empty<HotelForUser>();
-                }
-                else if (response.StatusCode == HttpStatusCode.Unauthorized || 
-                         response.StatusCode == HttpStatusCode.Forbidden)
-                {
-                    Console.WriteLine("L'utilisateur n'est pas autorisé à accéder aux hôtels");
-                    return Enumerable.Empty<HotelForUser>();
+                    var hotelsAdmin = await response.Content.ReadFromJsonAsync<IEnumerable<HotelForAdmin>>();
+                    
+                    // Convertir HotelForAdmin en HotelForUser
+                    if (hotelsAdmin != null)
+                    {
+                        var hotelForUser = hotelsAdmin.Select(h => new HotelForUser
+                        {
+                            Id = h.Id,
+                            Name = h.Name,
+                            BriefDescription = "L'hôtel des pirates.", // Valeur par défaut
+                            OwnerName = h.OwnerName,
+                            StarRating = h.StarRating,
+                            CreationDate = h.CreationDate,
+                            ModificationDate = h.ModificationDate,
+                            NumberOfRooms = h.NumberOfRooms
+                        });
+                        
+                        return hotelForUser;
+                    }
                 }
                 
+                Console.WriteLine($"Erreur API: {response.StatusCode} - {response.ReasonPhrase}");
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Contenu erreur: {errorContent}");
                 return Enumerable.Empty<HotelForUser>();
             }
             catch (Exception ex)
@@ -76,7 +89,7 @@ namespace HotelBooking.Web.Services
         public async Task<IEnumerable<Room>> GetHotelRoomsAsync(Guid hotelId, int pageNumber = 1, int pageSize = 20)
         {
             await AddAuthenticationHeader();
-            
+     
             try
             {
                 var response = await _httpClient.GetAsync($"api/hotels/{hotelId}/rooms/available?pageNumber={pageNumber}&pageSize={pageSize}");
@@ -92,7 +105,7 @@ namespace HotelBooking.Web.Services
                     Console.WriteLine("L'utilisateur n'est pas autorisé à accéder aux chambres");
                     return Enumerable.Empty<Room>();
                 }
-                
+      
                 return Enumerable.Empty<Room>();
             }
             catch (Exception ex)
@@ -105,7 +118,7 @@ namespace HotelBooking.Web.Services
         private async Task AddAuthenticationHeader()
         {
             var token = await _localStorage.GetItemAsync<string>("authToken");
-            
+ 
             if (!string.IsNullOrEmpty(token))
             {
                 _httpClient.DefaultRequestHeaders.Authorization = 
