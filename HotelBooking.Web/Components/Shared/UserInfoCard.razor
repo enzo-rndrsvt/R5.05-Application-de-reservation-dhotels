@@ -1,0 +1,97 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="card border-info mb-3">
+ <div class="card-header bg-info text-white">
+        <h6><i class="oi oi-info"></i> Informations Utilisateur</h6>
+    </div>
+    <div class="card-body">
+        @if (authState != null && authState.User.Identity?.IsAuthenticated == true)
+        {
+     <dl class="row mb-0">
+         <dt class="col-sm-3">Utilisateur :</dt>
+    <dd class="col-sm-9">
+    <strong>@authState.User.Identity.Name</strong>
+ </dd>
+     
+     <dt class="col-sm-3">Rôles :</dt>
+     <dd class="col-sm-9">
+  @if (userRoles.Any())
+ {
+       @foreach (var role in userRoles)
+        {
+         <span class="badge @GetRoleBadgeClass(role) me-1">@role</span>
+      }
+                    }
+  else
+        {
+      <span class="text-muted">Aucun rôle défini</span>
+  }
+   </dd>
+     
+     <dt class="col-sm-3">Statut :</dt>
+     <dd class="col-sm-9">
+         @if (isAdmin)
+         {
+ <span class="badge bg-danger">
+      <i class="oi oi-shield"></i> Administrateur
+  </span>
+         }
+  else
+          {
+         <span class="badge bg-secondary">
+ <i class="oi oi-person"></i> Utilisateur Standard
+         </span>
+   }
+        </dd>
+            </dl>
+     }
+      else
+        {
+            <p class="text-muted mb-0">Non connecté</p>
+    }
+ </div>
+</div>
+
+@code {
+    private AuthenticationState? authState;
+    private List<string> userRoles = new();
+    private bool isAdmin = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+ await LoadUserInfo();
+ }
+
+    private async Task LoadUserInfo()
+    {
+    try
+        {
+  authState = await AuthStateProvider.GetAuthenticationStateAsync();
+       
+       if (authState?.User.Identity?.IsAuthenticated == true)
+       {
+   userRoles = authState.User.Claims
+     .Where(c => c.Type == "role" || c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")
+   .Select(c => c.Value)
+   .ToList();
+       
+    isAdmin = authState.User.IsInRole("Admin");
+    }
+        }
+      catch (Exception ex)
+ {
+            Console.WriteLine($"Erreur lors du chargement des informations utilisateur: {ex.Message}");
+        }
+    }
+    
+    private string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+       "Admin" => "bg-danger",
+      "RegularUser" => "bg-success",
+    _ => "bg-secondary"
+ };
+    }
+}

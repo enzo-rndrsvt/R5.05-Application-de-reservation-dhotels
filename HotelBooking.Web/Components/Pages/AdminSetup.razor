@@ -1,33 +1,38 @@
 ﻿@page "/admin/setup"
 @using HotelBooking.Web.Models
 @using HotelBooking.Web.Services
+@using HotelBooking.Web.Components.Shared
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IHotelAdminService HotelAdminService
 @inject NavigationManager NavigationManager
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 
 <PageTitle>Configuration de l'hôtel SkullKing</PageTitle>
 
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
+ <div class="row justify-content-center">
+     <div class="col-md-10">
   <div class="card">
-       <div class="card-header bg-primary text-white">
-        <h3 class="text-center">
-            <i class="oi oi-wrench"></i> Administration SkullKing
+    <div class="card-header bg-primary text-white">
+ <h3 class="text-center">
+    <i class="oi oi-wrench"></i> Administration SkullKing
       </h3>
        <p class="text-center mb-0"><i class="oi oi-cog"></i> Panneau de contrôle du navire</p>
-        </div>
-                <div class="card-body">
+ </div>
+        <div class="card-body">
+     
+ <!-- Informations utilisateur -->
+     <UserInfoCard />
+   
    @if (!string.IsNullOrEmpty(successMessage))
     {
  <div class="alert alert-success">
    <i class="oi oi-circle-check"></i> @successMessage
-         </div>
-         }
+       </div>
+     }
 
-        @if (!string.IsNullOrEmpty(errorMessage))
-            {
+     @if (!string.IsNullOrEmpty(errorMessage))
+          {
      <div class="alert alert-danger">
     <i class="oi oi-warning"></i> @errorMessage
      </div>
@@ -36,41 +41,41 @@
          <div class="row">
  <!-- Configuration de l'hôtel -->
     <div class="col-md-6 mb-4">
-      <div class="card h-100">
+<div class="card h-100">
    <div class="card-header bg-info text-white">
         <h5><i class="oi oi-home"></i> Configuration Hôtel</h5>
     </div>
    <div class="card-body">
         <div class="alert alert-info">
           <h6><i class="oi oi-info"></i> Créer l'hôtel principal</h6>
-          <p class="mb-0">Créez l'hôtel SkullKing avec les paramètres prédéfinis.</p>
+    <p class="mb-0">Créez l'hôtel SkullKing avec les paramètres prédéfinis.</p>
 </div>
 
  <div class="card mb-3">
      <div class="card-body">
-     <h6>Données de l'hôtel SkullKing</h6>
+   <h6>Données de l'hôtel SkullKing</h6>
     <ul class="list-unstyled">
     <li><strong>Nom :</strong> SkullKing</li>
-      <li><strong>Description :</strong> L'hôtel des pirates</li>
+   <li><strong>Description :</strong> L'hôtel des pirates</li>
      <li><strong>Étoiles :</strong> <span class="text-warning">★★★★★</span> (5/5)</li>
  <li><strong>Propriétaire :</strong> Becks</li>
     </ul>
-         </div>
-              </div>
+</div>
+</div>
 
-       <div class="d-grid">
+    <div class="d-grid">
      <button @onclick="CreateSkullKingHotel" class="btn btn-success" disabled="@isLoading">
       @if (isLoading)
-           {
+    {
 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
       <span> Création...</span>
     }
-       else
+     else
          {
 <i class="oi oi-plus"></i> <span>Créer l'hotel SkullKing</span>
   }
          </button>
-       </div>
+  </div>
        </div>
          </div>
      </div>
@@ -78,32 +83,32 @@
       <!-- Gestion des chambres -->
        <div class="col-md-6 mb-4">
     <div class="card h-100">
-            <div class="card-header bg-success text-white">
+        <div class="card-header bg-success text-white">
    <h5><i class="oi oi-grid-three-up"></i> Gestion des Chambres</h5>
        </div>
          <div class="card-body">
     <div class="alert alert-success">
-       <h6><i class="oi oi-info"></i> Ajouter des cabines</h6>
-    <p class="mb-0">Créez de nouvelles chambres pour accueillir vos invités pirates.</p>
+    <h6><i class="oi oi-info"></i> Ajouter des cabines</h6>
+ <p class="mb-0">Créez de nouvelles chambres pour accueillir vos invités pirates.</p>
 </div>
 
-       <div class="card mb-3">
+<div class="card mb-3">
  <div class="card-body">
-        <h6>Types de chambres disponibles</h6>
+     <h6>Types de chambres disponibles</h6>
         <ul class="list-unstyled">
            <li><i class="oi oi-home"></i> <strong>Standard</strong> - Cabine de matelot</li>
-         <li><i class="oi oi-star"></i> <strong>Deluxe</strong> - Cabine d'officier</li>
-     <li><i class="oi oi-crown"></i> <strong>Suite</strong> - Cabine de capitaine</li>
+<li><i class="oi oi-star"></i> <strong>Deluxe</strong> - Cabine d'officier</li>
+   <li><i class="oi oi-crown"></i> <strong>Suite</strong> - Cabine de capitaine</li>
    <li><i class="oi oi-badge"></i> <strong>Presidential</strong> - Quartier du Roi des Pirates</li>
    </ul>
-           </div>
+ </div>
      </div>
 
-         <div class="d-grid gap-2">
+  <div class="d-grid gap-2">
  <a href="/admin/rooms/create" class="btn btn-success">
       <i class="oi oi-plus"></i> Créer une chambre
   </a>
-       <a href="/rooms" class="btn btn-outline-success">
+     <a href="/rooms" class="btn btn-outline-success">
    <i class="oi oi-list"></i> Voir les chambres existantes
     </a>
    </div>
@@ -112,7 +117,7 @@
      </div>
        </div>
 
-         <!-- Navigation -->
+     <!-- Navigation -->
      <div class="row mt-4">
   <div class="col-12">
            <div class="card bg-dark text-white">
@@ -121,9 +126,9 @@
    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
   <a href="/rooms" class="btn btn-success">
        <i class="oi oi-grid-three-up"></i> Voir les chambres
-        </a>
-     <a href="/" class="btn btn-secondary">
-          <i class="oi oi-home"></i> Retour à l'accueil
+     </a>
+ <a href="/" class="btn btn-secondary">
+    <i class="oi oi-home"></i> Retour à l'accueil
       </a>
       </div>
 </div>
@@ -142,8 +147,8 @@
     private bool isLoading = false;
 
   private async Task CreateSkullKingHotel()
-    {
-        errorMessage = string.Empty;
+  {
+      errorMessage = string.Empty;
     successMessage = string.Empty;
         isLoading = true;
 
@@ -151,7 +156,7 @@
    {
   var skullKingHotel = new HotelCreation
         {
-      Name = "SkullKing",
+    Name = "SkullKing",
       BriefDescription = "L'hôtel des pirates.",
  FullDescription = "Lit à Paris pour vrais pirates.",
     StarRating = 5,
@@ -160,23 +165,23 @@
         CityId = new Guid("06f823bf-7b05-4953-4160-08dc299de452")
 };
 
-            var result = await HotelAdminService.CreateHotelAsync(skullKingHotel);
+     var result = await HotelAdminService.CreateHotelAsync(skullKingHotel);
 
   if (result)
-          {
+     {
  successMessage = "L'hôtel SkullKing a été créé avec succès ! Vous pouvez maintenant consulter les chambres pour les voir dans la liste.";
-       }
-            else
-    {
+    }
+  else
+{
 errorMessage = "Erreur lors de la création de l'hôtel. Vérifiez que vous avez les droits d'administrateur et que l'ID de ville est valide.";
           }
-        }
+      }
   catch (Exception ex)
    {
-            errorMessage = $"Erreur inattendue : {ex.Message}";
+          errorMessage = $"Erreur inattendue : {ex.Message}";
         }
    finally
-        {
+      {
        isLoading = false;
         }
     }

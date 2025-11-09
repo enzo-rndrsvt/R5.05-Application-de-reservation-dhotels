@@ -29,6 +29,15 @@ namespace HotelBooking.Infrastructure.Repositories
                     .FindAsync(id));
         }
 
+        public async Task<UserDTO> GetByIdIncludingRolesAsync(Guid id)
+        {
+            var user = await _dbContext.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            return user == null ? null : _mapper.Map<UserDTO>(user);
+        }
+
         public async Task<Guid> AddAsync(UserDTO newUser)
         {
             var user = _mapper.Map<UserTable>(newUser);
@@ -46,6 +55,14 @@ namespace HotelBooking.Infrastructure.Repositories
 
             _logger.LogInformation("Created new user with Id: {id}", entityEntry.Entity.Id);
             return entityEntry.Entity.Id;
+        }
+
+        public async Task UpdateAsync(UserDTO user)
+        {
+            var userTable = _mapper.Map<UserTable>(user);
+            _dbContext.Users.Update(userTable);
+            await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("Updated user with Id: {id}", user.Id);
         }
 
         public Task<bool> ExistsAsync(Guid id) =>

@@ -15,6 +15,7 @@ builder.Services.AddAuthentication()
     {
         options.LoginPath = "/login";
         options.LogoutPath = "/logout";
+        options.AccessDeniedPath = "/access-denied";
     });
 
 // Configurer le HttpClient pour l'API
@@ -26,12 +27,20 @@ builder.Services.AddHttpClient("HotelBookingAPI", client =>
 // Enregistrer les services
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IHotelAdminService, HotelAdminService>();
+builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-
-// Ajouter l'authentification
-builder.Services.AddAuthorizationCore();
+// Ajouter l'authentification et l'autorisation
+builder.Services.AddAuthorizationCore(options =>
+{
+    // Politique pour les administrateurs
+    options.AddPolicy("AdminOnly", policy => 
+    {
+   policy.RequireAuthenticatedUser();
+        policy.RequireRole("Admin");
+    });
+});
 
 var app = builder.Build();
 

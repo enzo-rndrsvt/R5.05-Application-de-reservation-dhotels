@@ -1,0 +1,367 @@
+@page "/profile"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IUserProfileService UserProfileService
+@inject NavigationManager NavigationManager
+@inject IAuthService AuthService
+@inject IJSRuntime JSRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Mon Profil - SkullKing</PageTitle>
+
+<div class="container mt-4">
+  <div class="row justify-content-center">
+        <div class="col-md-8">
+ <div class="card">
+  <div class="card-header bg-primary text-white">
+    <h3 class="text-center">
+     <i class="oi oi-person"></i> Mon Profil
+         </h3>
+    <p class="text-center mb-0"><i class="oi oi-cog"></i> Gérez vos informations personnelles</p>
+     </div>
+     <div class="card-body">
+      
+        @if (!string.IsNullOrEmpty(successMessage))
+     {
+       <div class="alert alert-success">
+       <i class="oi oi-circle-check"></i> @successMessage
+       </div>
+       }
+
+       @if (!string.IsNullOrEmpty(errorMessage))
+     {
+       <div class="alert alert-danger">
+        <i class="oi oi-warning"></i> @errorMessage
+       </div>
+      }
+
+          @if (userProfile == null)
+  {
+          <div class="text-center p-4">
+         <div class="spinner-border text-primary" role="status">
+         <span class="visually-hidden">Chargement...</span>
+       </div>
+    <p class="mt-2">Chargement du profil...</p>
+         </div>
+     }
+ else
+    {
+          <div class="row mb-4">
+        <div class="col-12">
+          <div class="card bg-light">
+  <div class="card-body text-center">
+     <div class="display-6 mb-3">
+       <i class="oi oi-person"></i>
+  </div>
+ <h4>@userProfile.FirstName @userProfile.LastName</h4>
+  <p class="text-muted mb-2"><i class="oi oi-at"></i> @userProfile.Username</p>
+        <p class="text-muted mb-2"><i class="oi oi-envelope-closed"></i> @userProfile.Email</p>
+          @if (userProfile.Roles.Any())
+      {
+        <div class="mt-3">
+      @foreach (var role in userProfile.Roles)
+       {
+        <span class="badge bg-secondary me-1">@role</span>
+       }
+       </div>
+          }
+        </div>
+       </div>
+          </div>
+       </div>
+
+  <!-- Onglets pour organiser les sections -->
+       <ul class="nav nav-tabs profile-tabs" id="profileTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+       <button class="nav-link @(activeTab == "info" ? "active" : "")" 
+        id="info-tab" 
+ data-bs-toggle="tab" 
+         data-bs-target="#info" 
+         type="button" 
+        role="tab" 
+      aria-controls="info" 
+  aria-selected="@(activeTab == "info" ? "true" : "false")"
+   @onclick="@(() => SwitchToTab("info"))">
+<i class="oi oi-person"></i> Informations personnelles
+      </button>
+       </li>
+        <li class="nav-item" role="presentation">
+        <button class="nav-link @(activeTab == "password" ? "active" : "")" 
+    id="password-tab" 
+       data-bs-toggle="tab" 
+    data-bs-target="#password" 
+          type="button" 
+  role="tab" 
+      aria-controls="password" 
+        aria-selected="@(activeTab == "password" ? "true" : "false")"
+        @onclick="@(() => SwitchToTab("password"))">
+    <i class="oi oi-lock-locked"></i> Mot de passe
+    </button>
+  </li>
+       </ul>
+
+        <div class="tab-content profile-tab-content mt-3" id="profileTabsContent">
+        <!-- Onglet Informations personnelles -->
+       <div class="tab-pane profile-tab-pane fade @(activeTab == "info" ? "show active" : "")" id="info" role="tabpanel" aria-labelledby="info-tab">
+       <EditForm Model="@userProfile" OnValidSubmit="HandleUpdateProfile" FormName="ProfileForm">
+      <DataAnnotationsValidator />
+     
+       <div class="row">
+       <div class="col-md-6">
+<div class="form-group mb-3">
+     <label for="firstName" class="form-label">
+        <i class="oi oi-person"></i> Prénom
+  </label>
+         <InputText id="firstName" class="form-control" @bind-Value="userProfile.FirstName" />
+ <ValidationMessage For="@(() => userProfile.FirstName)" class="text-danger" />
+   </div>
+  </div>
+   <div class="col-md-6">
+     <div class="form-group mb-3">
+  <label for="lastName" class="form-label">
+      <i class="oi oi-person"></i> Nom
+     </label>
+<InputText id="lastName" class="form-control" @bind-Value="userProfile.LastName" />
+          <ValidationMessage For="@(() => userProfile.LastName)" class="text-danger" />
+</div>
+        </div>
+      </div>
+   
+  <div class="form-group mb-3">
+  <label for="email" class="form-label">
+        <i class="oi oi-envelope-closed"></i> Email
+ </label>
+      <InputText id="email" class="form-control" @bind-Value="userProfile.Email" />
+        <ValidationMessage For="@(() => userProfile.Email)" class="text-danger" />
+      </div>
+   
+        <div class="form-group mb-3">
+       <label for="username" class="form-label">
+   <i class="oi oi-at"></i> Nom d'utilisateur
+        </label>
+       <InputText id="username" class="form-control" @bind-Value="userProfile.Username" disabled />
+<small class="form-text text-muted">Le nom d'utilisateur ne peut pas être modifié</small>
+   </div>
+
+   <div class="d-grid">
+   <button type="submit" class="btn btn-success" disabled="@isUpdatingProfile">
+   @if (isUpdatingProfile)
+  {
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+         <span> Mise à jour...</span>
+         }
+       else
+        {
+  <i class="oi oi-circle-check"></i> <span>Mettre à jour le profil</span>
+      }
+    </button>
+    </div>
+    </EditForm>
+        </div>
+      
+       <!-- Onglet Mot de passe -->
+   <div class="tab-pane profile-tab-pane fade @(activeTab == "password" ? "show active" : "")" id="password" role="tabpanel" aria-labelledby="password-tab">
+       <EditForm Model="@userProfile" OnValidSubmit="HandleChangePassword" FormName="PasswordForm">
+       <DataAnnotationsValidator />
+       
+   <div class="alert alert-info">
+        <i class="oi oi-info"></i> Laissez les champs vides si vous ne souhaitez pas changer votre mot de passe.
+        </div>
+
+    <div class="form-group mb-3">
+         <label for="newPassword" class="form-label">
+     <i class="oi oi-lock-locked"></i> Nouveau mot de passe
+          </label>
+         <InputText type="password" id="newPassword" class="form-control" @bind-Value="userProfile.NewPassword" />
+         <ValidationMessage For="@(() => userProfile.NewPassword)" class="text-danger" />
+</div>
+
+  <div class="form-group mb-3">
+ <label for="confirmPassword" class="form-label">
+ <i class="oi oi-lock-locked"></i> Confirmer le nouveau mot de passe
+</label>
+     <InputText type="password" id="confirmPassword" class="form-control" @bind-Value="userProfile.ConfirmPassword" />
+       <ValidationMessage For="@(() => userProfile.ConfirmPassword)" class="text-danger" />
+       </div>
+
+   <div class="d-grid">
+    <button type="submit" class="btn btn-warning" disabled="@isChangingPassword">
+@if (isChangingPassword)
+ {
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        <span> Changement...</span>
+        }
+       else
+         {
+      <i class="oi oi-key"></i> <span>Changer le mot de passe</span>
+       }
+       </button>
+  </div>
+</EditForm>
+        </div>
+        </div>
+     }
+        
+     <!-- Navigation -->
+       <div class="row mt-4">
+        <div class="col-12">
+        <div class="card bg-dark text-white">
+       <div class="card-body text-center">
+       <h5><i class="oi oi-compass"></i> Navigation</h5>
+       <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+ <a href="/rooms" class="btn btn-success">
+       <i class="oi oi-grid-three-up"></i> Voir les chambres
+         </a>
+         <a href="/booking" class="btn btn-info">
+   <i class="oi oi-calendar"></i> Réserver
+     </a>
+      <a href="/" class="btn btn-secondary">
+        <i class="oi oi-home"></i> Retour à l'accueil
+ </a>
+    </div>
+        </div>
+          </div>
+       </div>
+       </div>
+        </div>
+       </div>
+         </div>
+      </div>
+</div>
+
+@code {
+    private UserProfile? userProfile;
+    private string successMessage = string.Empty;
+    private string errorMessage = string.Empty;
+ private bool isUpdatingProfile = false;
+    private bool isChangingPassword = false;
+    private string activeTab = "info"; // État des onglets géré côté Blazor
+
+    protected override async Task OnInitializedAsync()
+    {
+   await LoadUserProfile();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+ {
+      if (firstRender)
+      {
+    // Attendre que le DOM soit complètement rendu
+    await Task.Delay(500);
+    
+      try
+     {
+         // Initialiser les onglets avec notre nouvelle API
+ await JSRuntime.InvokeVoidAsync("initializeBootstrapTabs");
+       }
+      catch (Exception ex)
+       {
+ Console.WriteLine($"Erreur lors de l'initialisation des onglets: {ex.Message}");
+        }
+        }
+    }
+
+    private async Task SwitchToTab(string tabName)
+    {
+     try
+  {
+         Console.WriteLine($"Basculement vers l'onglet: {tabName}");
+         
+         // Mettre à jour l'état côté Blazor
+      activeTab = tabName;
+         StateHasChanged();
+         
+      // Attendre que le DOM soit mis à jour
+         await Task.Delay(50);
+         
+       // Activer l'onglet côté JavaScript aussi
+         await JSRuntime.InvokeVoidAsync("activateTab", $"#{tabName}");
+ }
+      catch (Exception ex)
+     {
+         Console.WriteLine($"Erreur lors du changement d'onglet {tabName}: {ex.Message}");
+      }
+    }
+
+    private async Task LoadUserProfile()
+    {
+      try
+       {
+      userProfile = await UserProfileService.GetCurrentUserProfileAsync();
+   
+       if (userProfile == null)
+       {
+          errorMessage = "Impossible de charger les informations du profil.";
+        }
+       }
+       catch (Exception ex)
+    {
+   errorMessage = $"Erreur lors du chargement du profil: {ex.Message}";
+       }
+     }
+
+    private async Task HandleUpdateProfile()
+    {
+     if (userProfile == null) return;
+
+        errorMessage = string.Empty;
+     successMessage = string.Empty;
+      isUpdatingProfile = true;
+
+        try
+        {
+            var result = await UserProfileService.UpdateUserProfileAsync(userProfile);
+      
+      if (result)
+       {
+              successMessage = "Profil mis à jour avec succès !";
+        }
+       else
+  {
+       errorMessage = "Erreur lors de la mise à jour du profil.";
+       }
+      }
+       catch (Exception ex)
+        {
+            errorMessage = $"Erreur inattendue : {ex.Message}";
+   }
+        finally
+        {
+        isUpdatingProfile = false;
+    }
+}
+
+    private async Task HandleChangePassword()
+    {
+    if (userProfile == null || string.IsNullOrEmpty(userProfile.NewPassword)) return;
+
+        errorMessage = string.Empty;
+ successMessage = string.Empty;
+     isChangingPassword = true;
+
+        try
+      {
+      var result = await UserProfileService.ChangePasswordAsync(userProfile.NewPassword);
+        
+      if (result)
+      {
+       successMessage = "Mot de passe changé avec succès !";
+         userProfile.NewPassword = string.Empty;
+userProfile.ConfirmPassword = string.Empty;
+        }
+      else
+    {
+          errorMessage = "Erreur lors du changement de mot de passe.";
+       }
+        }
+        catch (Exception ex)
+      {
+     errorMessage = $"Erreur inattendue : {ex.Message}";
+   }
+        finally
+        {
+  isChangingPassword = false;
+        }
+    }
+}
