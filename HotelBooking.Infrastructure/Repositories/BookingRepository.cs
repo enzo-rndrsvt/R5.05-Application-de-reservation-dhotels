@@ -138,5 +138,87 @@ namespace HotelBooking.Infrastructure.Repositories
             return await _dbContext.Bookings
                 .AnyAsync(b => b.Id == bookingId && b.UserId == userId);
         }
+
+        public async Task<IEnumerable<BookingWithDetailsDTO>> GetAvailableRoomsAsync(Guid hotelId, DateTime startingDate, DateTime endingDate, int itemsToSkip, int itemsToTake)
+        {
+            var availableRooms = await _dbContext.Rooms
+                .Where(r => r.HotelId == hotelId)
+                .Include(r => r.Hotel)
+                .Include(r => r.Bookings)
+                .Where(r => !r.Bookings.Any(b => b.IntersectsWith(startingDate, endingDate)))
+                .OrderBy(r => r.Number)
+                .Skip(itemsToSkip)
+                .Take(itemsToTake)
+                .Select(r => new BookingWithDetailsDTO
+                {
+                    RoomId = r.Id,
+                    RoomNumber = r.Number,
+                    RoomType = r.Type,
+                    RoomDescription = r.BriefDescription,
+                    PricePerNight = r.PricePerNight,
+                    AdultsCapacity = r.AdultsCapacity,
+                    ChildrenCapacity = r.ChildrenCapacity,
+                    HotelId = r.HotelId,
+                    HotelName = r.Hotel.Name,
+                    HotelDescription = r.Hotel.BriefDescription,
+                    HotelStarRating = r.Hotel.StarRating,
+                    OwnerName = r.Hotel.OwnerName
+                })
+                .ToListAsync();
+
+            return availableRooms;
+        }
+
+        public async Task<RoomAvailabilityInfo> CheckRoomAvailabilityAsync(Guid roomId, DateTime startingDate, DateTime endingDate)
+        {
+            var conflictingBookings = await _dbContext.Bookings
+                .Where(b => b.RoomId == roomId && b.IntersectsWith(startingDate, endingDate))
+                .OrderBy(b => b.StartingDate)
+                .ToListAsync();
+
+            if (!conflictingBookings.Any())
+            {
+                return RoomAvailabilityInfo.Available(roomId);
+            }
+
+            var conflicts = conflictingBookings.Select(b => new BookingConflict
+            {
+                BookingId = b.Id,
+                StartingDate = b.StartingDate,
+                EndingDate = b.EndingDate
+            }).ToList();
+
+            // Trouver la prochaine date disponible
+            var lastConflictEnd = conflictingBookings.Max(b => b.EndingDate);
+            DateTime? nextAvailable = null;
+            
+            // Vérifier s'il y a une date libre après le dernier conflit
+            var futureBookings = await _dbContext.Bookings
+                .Where(b => b.RoomId == roomId && b.StartingDate >= lastConflictEnd)
+                .OrderBy(b => b.StartingDate)
+                .FirstOrDefaultAsync();
+
+            if (futureBookings == null)
+            {
+                nextAvailable = lastConflictEnd;
+            }
+
+            string message;
+            if (conflicts.Count == 1)
+            {
+                message = $"Chambre déjà réservée du {conflicts[0].Period}";
+            }
+            else
+            {
+                message = $"Chambre réservée pour {conflicts.Count} périodes sur cette période";
+            }
+
+            if (nextAvailable.HasValue)
+            {
+                message += $". Prochaine disponibilité : {nextAvailable.Value:dd/MM/yyyy}";
+            }
+
+            return RoomAvailabilityInfo.Unavailable(roomId, message, conflicts, nextAvailable);
+        }
     }
 }

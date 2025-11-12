@@ -228,5 +228,58 @@ namespace HotelBooking.Api.Controllers
 
             return Created();
         }
+
+        /// <summary>
+        /// Check room availability for a specific period.
+        /// </summary>
+        /// <param name="roomId">ID of the room to check</param>
+        /// <param name="startDate">Check-in date (YYYY-MM-DD)</param>
+        /// <param name="endDate">Check-out date (YYYY-MM-DD)</param>
+        /// <response code="200">Room availability information retrieved successfully</response>
+        /// <response code="400">Invalid parameters</response>
+        [HttpGet("room-availability/{roomId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CheckRoomAvailabilityAsync(Guid roomId, [FromQuery] string startDate, [FromQuery] string endDate)
+        {
+            try
+            {
+                // Log des paramètres reçus
+                Console.WriteLine($"=== DEBUG CheckRoomAvailability ===");
+                Console.WriteLine($"Room ID: {roomId}");
+                Console.WriteLine($"Start Date: {startDate}");
+                Console.WriteLine($"End Date: {endDate}");
+
+                if (!DateTime.TryParse(startDate, out var startDateTime) || !DateTime.TryParse(endDate, out var endDateTime))
+                {
+                    Console.WriteLine($"ERREUR: Format de date invalide");
+                    return BadRequest("Invalid date format. Please use YYYY-MM-DD format.");
+                }
+
+                if (startDateTime >= endDateTime)
+                {
+                    Console.WriteLine($"ERREUR: Date de début après date de fin");
+                    return BadRequest("Check-in date must be before check-out date.");
+                }
+
+                if (startDateTime < DateTime.Today)
+                {
+                    Console.WriteLine($"ERREUR: Date de début dans le passé");
+                    return BadRequest("Check-in date cannot be in the past.");
+                }
+
+                Console.WriteLine($"Appel de CheckRoomAvailabilityAsync...");
+                var availability = await _bookingService.CheckRoomAvailabilityAsync(roomId, startDateTime, endDateTime);
+                Console.WriteLine($"Résultat: Available={availability?.IsAvailable}, Message={availability?.Message}");
+                
+                return Ok(availability);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"EXCEPTION dans CheckRoomAvailability: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return BadRequest($"Error checking availability: {ex.Message}");
+            }
+        }
     }
 }

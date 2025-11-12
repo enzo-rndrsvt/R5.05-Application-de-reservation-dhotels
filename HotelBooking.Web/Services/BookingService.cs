@@ -133,15 +133,48 @@ if (room != null)
 
  try
             {
-     // Pour cette implémentation, nous simulons la vérification de disponibilité
-     // Dans un vrai projet, l'API devrait avoir un endpoint pour vérifier la disponibilité
- return true; // Simulation - toujours disponible pour le moment
+                var response = await _httpClient.GetAsync($"api/users/room-availability/{roomId}?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var availability = await response.Content.ReadFromJsonAsync<RoomAvailabilityInfo>();
+                    return availability?.IsAvailable ?? false;
+                }
+                
+                Console.WriteLine($"Erreur API lors de la vérification de disponibilité: {response.StatusCode}");
+                return false;
        }
    catch (Exception ex)
          {
                 Console.WriteLine($"Erreur lors de la vérification de disponibilité: {ex.Message}");
     return false;
      }
+        }
+
+        /// <summary>
+        /// Obtenir des informations détaillées sur la disponibilité d'une chambre
+        /// </summary>
+        public async Task<RoomAvailabilityInfo?> GetRoomAvailabilityInfoAsync(Guid roomId, DateTime startDate, DateTime endDate)
+        {
+            await AddAuthenticationHeader();
+
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/users/room-availability/{roomId}?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<RoomAvailabilityInfo>();
+                }
+                
+                Console.WriteLine($"Erreur API lors de la récupération des infos de disponibilité: {response.StatusCode}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la récupération des infos de disponibilité: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<bool> CancelBookingAsync(Guid bookingId)

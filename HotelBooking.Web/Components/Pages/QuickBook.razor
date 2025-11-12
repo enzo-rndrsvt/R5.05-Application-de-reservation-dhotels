@@ -1,0 +1,253 @@
+@page "/quick-book"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@inject IBookingService BookingService
+@inject IHotelService HotelService
+@inject NavigationManager NavigationManager
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Réservation Rapide - Debug</PageTitle>
+
+<div class="container mt-4">
+    <div class="alert alert-warning">
+        <h4><i class="oi oi-flash"></i> Mode Debug - Réservation Rapide</h4>
+        <p>Cette page bypasse toutes les vérifications de disponibilité pour tester les réservations.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>?? Réservation Express</h3>
+        </div>
+        <div class="card-body">
+            
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success">
+                    <i class="oi oi-circle-check"></i> @successMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">
+                    <i class="oi oi-warning"></i> @errorMessage
+                </div>
+            }
+
+            <EditForm Model="@bookingModel" OnSubmit="QuickBooking">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Date d'arrivée</label>
+                            <InputDate class="form-control" @bind-Value="bookingModel.StartingDate" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Date de départ</label>
+                            <InputDate class="form-control" @bind-Value="bookingModel.EndingDate" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Room ID (GUID)</label>
+                    <input type="text" class="form-control" @bind="roomIdString" placeholder="Entrez le GUID de la chambre" />
+                    <small class="form-text text-muted">Vous pouvez trouver le Room ID dans la page /rooms ou /debug-api</small>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informations calculées :</h6>
+                        <ul>
+                            <li>Nombre de nuits: @((bookingModel.EndingDate - bookingModel.StartingDate).Days)</li>
+                            <li>Room ID valide: @(Guid.TryParse(roomIdString, out _) ? "? Oui" : "? Non")</li>
+                            <li>Dates valides: @(bookingModel.StartingDate < bookingModel.EndingDate ? "? Oui" : "? Non")</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>État de la réservation :</h6>
+                        @if (IsFormValid())
+                        {
+                            <div class="alert alert-success">Prêt pour la réservation</div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">Formulaire incomplet</div>
+                        }
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-danger btn-lg" disabled="@(!IsFormValid() || isLoading)">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Réservation en cours...</span>
+                        }
+                        else
+                        {
+                            <i class="oi oi-flash"></i> <span>RÉSERVER IMMÉDIATEMENT (sans vérification)</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+
+            <hr class="my-4">
+
+            <h5>Chambres disponibles pour référence :</h5>
+            <button @onclick="LoadRooms" class="btn btn-info mb-3" disabled="@isLoadingRooms">
+                @if (isLoadingRooms)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Charger les chambres
+            </button>
+
+            @if (rooms != null && rooms.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Room ID</th>
+                                <th>Numéro</th>
+                                <th>Type</th>
+                                <th>Prix/nuit</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var room in rooms.Take(5))
+                            {
+                                <tr>
+                                    <td><code style="font-size: 10px;">@room.Id</code></td>
+                                    <td>@room.Number</td>
+                                    <td>@room.Type</td>
+                                    <td>@room.PricePerNight.ToString("C")</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => UseRoom(room.Id)">
+                                            Utiliser
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private BookingCreation bookingModel = new()
+    {
+        StartingDate = DateTime.Today.AddDays(1),
+        EndingDate = DateTime.Today.AddDays(3)
+    };
+    
+    private string roomIdString = "";
+    private string successMessage = "";
+    private string errorMessage = "";
+    private bool isLoading = false;
+    private bool isLoadingRooms = false;
+    private IEnumerable<Room>? rooms;
+
+    private bool IsFormValid()
+    {
+        return bookingModel.StartingDate < bookingModel.EndingDate &&
+               bookingModel.StartingDate >= DateTime.Today &&
+               Guid.TryParse(roomIdString, out _);
+    }
+
+    private void UseRoom(Guid roomId)
+    {
+        roomIdString = roomId.ToString();
+        StateHasChanged();
+    }
+
+    private async Task QuickBooking()
+    {
+        errorMessage = "";
+        successMessage = "";
+
+        if (!IsFormValid())
+        {
+            errorMessage = "Formulaire invalide. Vérifiez les dates et le Room ID.";
+            return;
+        }
+
+        if (!Guid.TryParse(roomIdString, out var roomId))
+        {
+            errorMessage = "Room ID invalide.";
+            return;
+        }
+
+        bookingModel.RoomId = roomId;
+        isLoading = true;
+
+        try
+        {
+            Console.WriteLine("=== QUICK BOOKING STARTED ===");
+            Console.WriteLine($"Room ID: {bookingModel.RoomId}");
+            Console.WriteLine($"Dates: {bookingModel.StartingDate:yyyy-MM-dd} - {bookingModel.EndingDate:yyyy-MM-dd}");
+            
+            var result = await BookingService.CreateBookingAsync(bookingModel);
+
+            if (result)
+            {
+                successMessage = $"? Réservation créée avec succès ! " +
+                    $"Du {bookingModel.StartingDate:dd/MM/yyyy} au {bookingModel.EndingDate:dd/MM/yyyy} " +
+                    $"(Room: {roomId})";
+                
+                // Reset form
+                bookingModel = new BookingCreation
+                {
+                    StartingDate = DateTime.Today.AddDays(1),
+                    EndingDate = DateTime.Today.AddDays(3)
+                };
+                roomIdString = "";
+                
+                Console.WriteLine("=== QUICK BOOKING SUCCESS ===");
+            }
+            else
+            {
+                errorMessage = "? Échec de la création de réservation. Vérifiez les logs de l'API.";
+                Console.WriteLine("=== QUICK BOOKING FAILED ===");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"? Erreur: {ex.Message}";
+            Console.WriteLine($"=== QUICK BOOKING ERROR: {ex.Message} ===");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadRooms()
+    {
+        isLoadingRooms = true;
+        try
+        {
+            var hotels = await HotelService.GetAllHotelsAsync();
+            var skullKingHotel = hotels.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+            
+            if (skullKingHotel != null)
+            {
+                rooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 10);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement des chambres: {ex.Message}";
+        }
+        finally
+        {
+            isLoadingRooms = false;
+        }
+    }
+}

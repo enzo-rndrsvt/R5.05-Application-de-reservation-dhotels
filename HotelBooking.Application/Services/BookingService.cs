@@ -97,6 +97,11 @@ namespace HotelBooking.Application.Services
             return await _bookingRepository.CancelBookingForUserAsync(bookingId, userId);
         }
 
+        public async Task<RoomAvailabilityInfo> CheckRoomAvailabilityAsync(Guid roomId, DateTime startingDate, DateTime endingDate)
+        {
+            return await _bookingRepository.CheckRoomAvailabilityAsync(roomId, startingDate, endingDate);
+        }
+
         private void AddPrice(
             BookingDTO newBooking, RoomDTO room, DiscountDTO discount)
         {

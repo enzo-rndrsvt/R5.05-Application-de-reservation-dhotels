@@ -28,6 +28,11 @@ namespace HotelBooking.Web.Services
 /// Vérifier si une chambre est disponible pour une période donnée
         /// </summary>
         Task<bool> IsRoomAvailableAsync(Guid roomId, DateTime startDate, DateTime endDate);
+
+        /// <summary>
+        /// Obtenir des informations détaillées sur la disponibilité d'une chambre
+        /// </summary>
+        Task<RoomAvailabilityInfo?> GetRoomAvailabilityInfoAsync(Guid roomId, DateTime startDate, DateTime endDate);
         
         /// <summary>
         /// Annuler une réservation (si c'est possible selon les règles métier)

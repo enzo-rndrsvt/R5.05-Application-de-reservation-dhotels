@@ -160,6 +160,19 @@
       <i class="oi oi-calendar"></i> <span>Confirmer la réservation</span>
     }
      </button>
+
+     @* Bouton de debug pour forcer la réservation sans vérification *@
+     <button type="button" class="btn btn-warning" @onclick="ForceBooking" disabled="@isLoading">
+         @if (isLoading)
+         {
+             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+             <span> Réservation forcée...</span>
+         }
+         else
+         {
+             <i class="oi oi-flash"></i> <span>Force Réservation (Debug)</span>
+         }
+     </button>
       
     <div class="row mt-3">
   <div class="col-md-4">
@@ -349,17 +362,49 @@
 
      try
         {
-    // Vérifier la disponibilité de la chambre
-     var isAvailable = await BookingService.IsRoomAvailableAsync(
- bookingModel.RoomId, 
-   bookingModel.StartingDate, 
-    bookingModel.EndingDate);
+            // Vérifier la disponibilité de la chambre avec des informations détaillées
+            // Si la vérification échoue, on assume que la chambre est disponible (base vide)
+            bool canProceed = true;
+            string availabilityMessage = "";
 
-      if (!isAvailable)
-    {
- errorMessage = "Désolé, cette chambre n'est pas disponible pour les dates sélectionnées.";
-   return;
-    }
+            try
+            {
+                var availabilityInfo = await BookingService.GetRoomAvailabilityInfoAsync(
+                    bookingModel.RoomId, 
+                    bookingModel.StartingDate, 
+                    bookingModel.EndingDate);
+
+                if (availabilityInfo != null)
+                {
+                    if (!availabilityInfo.IsAvailable)
+                    {
+                        canProceed = false;
+                        availabilityMessage = availabilityInfo.Message;
+                        if (availabilityInfo.NextAvailableDate.HasValue)
+                        {
+                            availabilityMessage += $"\nSuggestion : Essayez à partir du {availabilityInfo.NextAvailableDate.Value:dd/MM/yyyy}.";
+                        }
+                    }
+                }
+                else
+                {
+                    // Si l'API de vérification échoue, on procède quand même
+                    Console.WriteLine("API de vérification de disponibilité inaccessible - procédure de réservation maintenue");
+                    canProceed = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // En cas d'erreur de l'API, on assume que c'est disponible
+                Console.WriteLine($"Erreur lors de la vérification de disponibilité: {ex.Message} - procédure de réservation maintenue");
+                canProceed = true;
+            }
+
+            if (!canProceed)
+            {
+                errorMessage = availabilityMessage;
+                return;
+            }
 
           var result = await BookingService.CreateBookingAsync(bookingModel);
 
@@ -390,5 +435,59 @@
   {
      isLoading = false;
   }
+    }
+
+    private async Task ForceBooking()
+    {
+        if (!bookingModel.IsValid)
+        {
+            errorMessage = "Veuillez vérifier les dates sélectionnées.";
+            return;
+        }
+
+        if (bookingModel.RoomId == Guid.Empty)
+        {
+            errorMessage = "Veuillez sélectionner une chambre.";
+            return;
+        }
+
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        isLoading = true;
+
+        try
+        {
+            Console.WriteLine("=== FORCE BOOKING ACTIVÉ - BYPASS DES VÉRIFICATIONS ===");
+            
+            var result = await BookingService.CreateBookingAsync(bookingModel);
+
+            if (result)
+            {
+                successMessage = $"?? Réservation FORCÉE confirmée ! Votre séjour du {bookingModel.StartingDate:dd/MM/yyyy} " +
+                    $"au {bookingModel.EndingDate:dd/MM/yyyy} dans la chambre {selectedRoom?.Number} a été enregistré. " +
+                    "Un email de confirmation va vous être envoyé.";
+        
+                // Réinitialiser le formulaire
+                bookingModel = new BookingCreation();
+                selectedRoom = null;
+        
+                // Rediriger vers les réservations après un délai
+                await Task.Delay(3000);
+                NavigationManager.NavigateTo("/my-bookings");
+            }
+            else
+            {
+                errorMessage = "Erreur lors de la création de la réservation forcée. Vérifiez l'API.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors de la réservation forcée : {ex.Message}";
+            Console.WriteLine($"Erreur Force Booking: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 }

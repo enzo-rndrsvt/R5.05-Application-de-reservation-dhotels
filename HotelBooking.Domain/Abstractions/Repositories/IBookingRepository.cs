@@ -60,5 +60,25 @@ namespace HotelBooking.Domain.Abstractions.Repositories
         /// <param name="userId">Id of the user</param>
         /// <returns>True if booking exists and belongs to user</returns>
         Task<bool> BookingBelongsToUserAsync(Guid bookingId, Guid userId);
+
+        /// <summary>
+        /// Get available rooms for a specific date range in a hotel.
+        /// </summary>
+        /// <param name="hotelId">Id of the hotel</param>
+        /// <param name="startingDate">Check-in date</param>
+        /// <param name="endingDate">Check-out date</param>
+        /// <param name="itemsToSkip">Number of items to skip for pagination</param>
+        /// <param name="itemsToTake">Number of items to take for pagination</param>
+        /// <returns>Available rooms with their details</returns>
+        Task<IEnumerable<BookingWithDetailsDTO>> GetAvailableRoomsAsync(Guid hotelId, DateTime startingDate, DateTime endingDate, int itemsToSkip, int itemsToTake);
+
+        /// <summary>
+        /// Check if a specific room is available for booking in the given period.
+        /// </summary>
+        /// <param name="roomId">Id of the room to check</param>
+        /// <param name="startingDate">Check-in date</param>
+        /// <param name="endingDate">Check-out date</param>
+        /// <returns>Room availability information</returns>
+        Task<RoomAvailabilityInfo> CheckRoomAvailabilityAsync(Guid roomId, DateTime startingDate, DateTime endingDate);
     }
 }

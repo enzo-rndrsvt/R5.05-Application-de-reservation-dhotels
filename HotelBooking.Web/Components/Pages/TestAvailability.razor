@@ -1,0 +1,204 @@
+@page "/test-availability"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@using System.Text
+@inject IBookingService BookingService
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Test Disponibilité</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>Test de la disponibilité des chambres</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Room ID:</label>
+                    <input @bind="testRoomId" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label>Date début:</label>
+                    <input @bind="startDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label>Date fin:</label>
+                    <input @bind="endDate" type="date" class="form-control" />
+                </div>
+            </div>
+            <div class="mt-3">
+                <button @onclick="CheckAvailability" class="btn btn-primary" disabled="@isChecking">
+                    @if (isChecking)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span> Vérification...</span>
+                    }
+                    else
+                    {
+                        <span>Vérifier la disponibilité</span>
+                    }
+                </button>
+            </div>
+            
+            @if (availabilityInfo != null)
+            {
+                <div class="mt-4">
+                    <div class="alert @(availabilityInfo.IsAvailable ? "alert-success" : "alert-warning")">
+                        <h5>
+                            @if (availabilityInfo.IsAvailable)
+                            {
+                                <i class="oi oi-circle-check"></i> <span>Chambre disponible</span>
+                            }
+                            else
+                            {
+                                <i class="oi oi-warning"></i> <span>Chambre non disponible</span>
+                            }
+                        </h5>
+                        <p>@availabilityInfo.Message</p>
+                        
+                        @if (!availabilityInfo.IsAvailable && availabilityInfo.Conflicts.Any())
+                        {
+                            <hr>
+                            <h6>Conflits détectés :</h6>
+                            <ul>
+                                @foreach (var conflict in availabilityInfo.Conflicts)
+                                {
+                                    <li>@conflict.Period</li>
+                                }
+                            </ul>
+                        }
+                        
+                        @if (availabilityInfo.NextAvailableDate.HasValue)
+                        {
+                            <hr>
+                            <p><strong>Prochaine disponibilité :</strong> @availabilityInfo.NextAvailableDate.Value.ToString("dd/MM/yyyy")</p>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="mt-3 alert alert-danger">
+                    <h5>Erreur :</h5>
+                    <p>@error</p>
+                </div>
+            }
+
+            <hr class="my-4">
+            
+            <h5>Tests de logique de chevauchement</h5>
+            <div class="mt-3">
+                <button @onclick="RunLogicTests" class="btn btn-info">
+                    Tester la logique de dates
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(logicTestResults))
+            {
+                <div class="mt-3">
+                    <h6>Résultats des tests de logique :</h6>
+                    <pre style="background-color: #f8f9fa; padding: 10px; border-radius: 5px;">@logicTestResults</pre>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string testRoomId = "";
+    private DateTime startDate = DateTime.Today.AddDays(1);
+    private DateTime endDate = DateTime.Today.AddDays(3);
+    private bool isChecking = false;
+    private RoomAvailabilityInfo? availabilityInfo;
+    private string error = "";
+    private string logicTestResults = "";
+
+    private async Task CheckAvailability()
+    {
+        if (string.IsNullOrEmpty(testRoomId) || !Guid.TryParse(testRoomId, out var roomGuid))
+        {
+            error = "Room ID invalide";
+            availabilityInfo = null;
+            return;
+        }
+
+        if (startDate >= endDate)
+        {
+            error = "La date de début doit être avant la date de fin";
+            availabilityInfo = null;
+            return;
+        }
+
+        isChecking = true;
+        error = "";
+        availabilityInfo = null;
+        StateHasChanged();
+
+        try
+        {
+            availabilityInfo = await BookingService.GetRoomAvailabilityInfoAsync(roomGuid, startDate, endDate);
+            
+            if (availabilityInfo == null)
+            {
+                error = "Impossible de récupérer les informations de disponibilité";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"Erreur : {ex.Message}";
+        }
+        finally
+        {
+            isChecking = false;
+            StateHasChanged();
+        }
+    }
+
+    private void RunLogicTests()
+    {
+        var results = new StringBuilder();
+        results.AppendLine("Tests de logique de chevauchement :");
+        results.AppendLine();
+
+        // Test 1 : Réservation du 15 au 16, nouvelle réservation du 16 au 17 (doit être OK)
+        results.AppendLine("Test 1 : Réservation existante 15-16, nouvelle 16-17");
+        var existing1 = new { Start = new DateTime(2024, 1, 15), End = new DateTime(2024, 1, 16) };
+        var new1 = new { Start = new DateTime(2024, 1, 16), End = new DateTime(2024, 1, 17) };
+        bool conflict1 = TestOverlap(existing1.Start, existing1.End, new1.Start, new1.End);
+        results.AppendLine($"Conflit détecté : {conflict1} (devrait être FALSE)");
+        results.AppendLine();
+
+        // Test 2 : Réservation du 15 au 17, nouvelle réservation du 16 au 18 (doit être en conflit)
+        results.AppendLine("Test 2 : Réservation existante 15-17, nouvelle 16-18");
+        var existing2 = new { Start = new DateTime(2024, 1, 15), End = new DateTime(2024, 1, 17) };
+        var new2 = new { Start = new DateTime(2024, 1, 16), End = new DateTime(2024, 1, 18) };
+        bool conflict2 = TestOverlap(existing2.Start, existing2.End, new2.Start, new2.End);
+        results.AppendLine($"Conflit détecté : {conflict2} (devrait être TRUE)");
+        results.AppendLine();
+
+        // Test 3 : Réservation du 15 au 17, nouvelle réservation du 14 au 16 (doit être en conflit)
+        results.AppendLine("Test 3 : Réservation existante 15-17, nouvelle 14-16");
+        var existing3 = new { Start = new DateTime(2024, 1, 15), End = new DateTime(2024, 1, 17) };
+        var new3 = new { Start = new DateTime(2024, 1, 14), End = new DateTime(2024, 1, 16) };
+        bool conflict3 = TestOverlap(existing3.Start, existing3.End, new3.Start, new3.End);
+        results.AppendLine($"Conflit détecté : {conflict3} (devrait être TRUE)");
+        results.AppendLine();
+
+        // Test 4 : Réservation du 15 au 17, nouvelle réservation du 13 au 15 (doit être OK)
+        results.AppendLine("Test 4 : Réservation existante 15-17, nouvelle 13-15");
+        var existing4 = new { Start = new DateTime(2024, 1, 15), End = new DateTime(2024, 1, 17) };
+        var new4 = new { Start = new DateTime(2024, 1, 13), End = new DateTime(2024, 1, 15) };
+        bool conflict4 = TestOverlap(existing4.Start, existing4.End, new4.Start, new4.End);
+        results.AppendLine($"Conflit détecté : {conflict4} (devrait être FALSE)");
+
+        logicTestResults = results.ToString();
+    }
+
+    private bool TestOverlap(DateTime existingStart, DateTime existingEnd, DateTime newStart, DateTime newEnd)
+    {
+        // Même logique que dans BookingExtensions.IntersectsWith
+        return newStart < existingEnd && newEnd > existingStart;
+    }
+}
