@@ -170,6 +170,42 @@ namespace HotelBooking.Api.Controllers
         }
 
         /// <summary>
+        /// Cancel a specific booking for the current user.
+        /// </summary>
+        /// <param name="bookingId">ID of the booking to cancel</param>
+        /// <response code="200">Booking cancelled successfully</response>
+        /// <response code="404">Booking not found or doesn't belong to user</response>
+        /// <response code="400">Booking cannot be cancelled (already started or in the past)</response>
+        [HttpDelete("current-user/bookings/{bookingId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> CancelUserBookingAsync(Guid bookingId)
+        {
+            var userId = new Guid(HttpContext.User.Identity.Name);
+
+            try
+            {
+                var result = await _bookingService.CancelBookingForUserAsync(bookingId, userId);
+
+                if (!result)
+                {
+                    return NotFound("Booking not found or you don't have permission to cancel it.");
+                }
+
+                return Ok(new { message = "Booking cancelled successfully." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error cancelling booking: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Create and store a new hotel review for a user.
         /// </summary>
         /// <param name="newReview">Properties of the new review.</param>

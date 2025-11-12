@@ -302,6 +302,15 @@
             <response code="200">Booking retrieved successfully</response>
             <response code="404">Booking not found or doesn't belong to user</response>
         </member>
+        <member name="M:HotelBooking.Api.Controllers.UserController.CancelUserBookingAsync(System.Guid)">
+            <summary>
+            Cancel a specific booking for the current user.
+            </summary>
+            <param name="bookingId">ID of the booking to cancel</param>
+            <response code="200">Booking cancelled successfully</response>
+            <response code="404">Booking not found or doesn't belong to user</response>
+            <response code="400">Booking cannot be cancelled (already started or in the past)</response>
+        </member>
         <member name="M:HotelBooking.Api.Controllers.UserController.PostHotelReviewAsync(HotelBooking.Api.Models.HotelReviewCreationDTO)">
             <summary>
             Create and store a new hotel review for a user.
