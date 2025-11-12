@@ -81,8 +81,10 @@ namespace HotelBooking.Application.Services
             BookingDTO newBooking, RoomDTO room, DiscountDTO discount)
         {
             var discountPercentage = discount?.AmountPercent ?? 0;
-            var originalPrice =
-                ((newBooking.EndingDate - newBooking.StartingDate).Days + 1) * room.PricePerNight;
+            // Calcul correct : le prix total = prix par nuit × nombre de nuits
+            // Note: si arrivée le 1er et départ le 3, c'est 2 nuits (1-2 et 2-3)
+            var numberOfNights = (newBooking.EndingDate - newBooking.StartingDate).Days;
+            var originalPrice = numberOfNights * room.PricePerNight;
             newBooking.Price =
                 originalPrice - originalPrice * (decimal)(discountPercentage / 100);
         }

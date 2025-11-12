@@ -262,6 +262,14 @@
             <response code="404">The room with the given Id doesn't exist.</response>
             <response code="204">The room is updated successfully.</response>
         </member>
+        <member name="M:HotelBooking.Api.Controllers.RoomController.GetRoomByIdAsync(System.Guid)">
+            <summary>
+            Get room details by ID.
+            </summary>
+            <param name="roomId">ID of the room to retrieve</param>
+            <response code="200">Room retrieved successfully</response>
+            <response code="404">Room not found</response>
+        </member>
         <member name="M:HotelBooking.Api.Controllers.UserController.PostCartItemAsync(HotelBooking.Api.Models.CartItemCreationDTO)">
             <summary>
             Create and store a new cart item for a user.
