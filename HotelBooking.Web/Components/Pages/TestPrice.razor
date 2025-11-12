@@ -1,0 +1,98 @@
+@page "/test-price"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@inject IBookingService BookingService
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Test Calcul Prix</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>Test du calcul des prix</h3>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label>Room ID:</label>
+                <input @bind="testRoomId" class="form-control" />
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Date début:</label>
+                    <input @bind="startDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label>Date fin:</label>
+                    <input @bind="endDate" type="date" class="form-control" />
+                </div>
+            </div>
+            <div class="mt-3">
+                <button @onclick="TestCalculation" class="btn btn-primary">
+                    Tester le calcul
+                </button>
+            </div>
+            
+            @if (isCalculating)
+            {
+                <div class="mt-3">
+                    <div class="spinner-border" role="status"></div>
+                    Calcul en cours...
+                </div>
+            }
+            
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="mt-3 alert alert-info">
+                    <h5>Résultat:</h5>
+                    <pre>@result</pre>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string testRoomId = "";
+    private DateTime startDate = DateTime.Today.AddDays(1);
+    private DateTime endDate = DateTime.Today.AddDays(3);
+    private string result = "";
+    private bool isCalculating = false;
+
+    private async Task TestCalculation()
+    {
+        if (string.IsNullOrEmpty(testRoomId) || !Guid.TryParse(testRoomId, out var roomGuid))
+        {
+            result = "ERREUR: Room ID invalide";
+            return;
+        }
+
+        isCalculating = true;
+        result = "";
+        StateHasChanged();
+
+        try
+        {
+            var calculatedPrice = await BookingService.CalculateEstimatedPriceAsync(roomGuid, startDate, endDate);
+            
+            int nights = (endDate - startDate).Days;
+            
+            result = $"Room ID: {testRoomId}\n" +
+                    $"Date début: {startDate:yyyy-MM-dd}\n" +
+                    $"Date fin: {endDate:yyyy-MM-dd}\n" +
+                    $"Nombre de nuits: {nights}\n" +
+                    $"Prix calculé: {(calculatedPrice?.ToString("C") ?? "NULL")}\n" +
+                    $"Timestamp: {DateTime.Now:HH:mm:ss}";
+        }
+        catch (Exception ex)
+        {
+            result = $"ERREUR: {ex.Message}\n" +
+                    $"Type: {ex.GetType().Name}\n" +
+                    $"Timestamp: {DateTime.Now:HH:mm:ss}";
+        }
+        finally
+        {
+            isCalculating = false;
+            StateHasChanged();
+        }
+    }
+}

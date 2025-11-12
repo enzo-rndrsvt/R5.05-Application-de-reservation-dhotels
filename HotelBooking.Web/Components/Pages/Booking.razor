@@ -264,16 +264,69 @@
         {
     try
     {
+            // Effacer le prix précédent pour montrer le chargement
+            bookingModel.EstimatedPrice = null;
+            StateHasChanged();
+
    bookingModel.EstimatedPrice = await BookingService.CalculateEstimatedPriceAsync(
     bookingModel.RoomId, 
   bookingModel.StartingDate, 
       bookingModel.EndingDate);
+            
+            // Vérifier si le calcul a échoué
+            if (!bookingModel.EstimatedPrice.HasValue)
+            {
+                Console.WriteLine("Le calcul du prix a retourné null, utilisation du calcul local");
+                // Fallback : calculer localement avec les données disponibles
+                int nights = bookingModel.NumberOfNights;
+                if (nights > 0)
+                {
+                    bookingModel.EstimatedPrice = selectedRoom.PricePerNight * nights;
+                    Console.WriteLine($"Prix calculé localement: {bookingModel.EstimatedPrice.Value:C} pour {nights} nuits");
+                }
+                else
+                {
+                    errorMessage = "Veuillez sélectionner des dates valides.";
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Prix calculé par l'API: {bookingModel.EstimatedPrice.Value:C} pour {bookingModel.NumberOfNights} nuits");
+            }
 }
   catch (Exception ex)
     {
-    Console.WriteLine($"Erreur lors du calcul du prix: {ex.Message}");
+    Console.WriteLine($"Erreur lors du calcul du prix: {ex.Message}, utilisation du calcul local");
+            
+            // Fallback : calculer localement
+            try 
+            {
+                int nights = bookingModel.NumberOfNights;
+                if (nights > 0)
+                {
+                    bookingModel.EstimatedPrice = selectedRoom.PricePerNight * nights;
+                    Console.WriteLine($"Prix calculé localement (fallback): {bookingModel.EstimatedPrice.Value:C} pour {nights} nuits");
+                }
+                else
+                {
+                    errorMessage = "Veuillez sélectionner des dates valides.";
+                    bookingModel.EstimatedPrice = null;
+                }
+            }
+            catch
+            {
+                errorMessage = $"Impossible de calculer le prix.";
+                bookingModel.EstimatedPrice = null;
+            }
        }
         }
+        else
+        {
+            // Réinitialiser le prix si les conditions ne sont pas remplies
+            bookingModel.EstimatedPrice = null;
+        }
+        
+        StateHasChanged();
 }
 
  private async Task HandleBooking()

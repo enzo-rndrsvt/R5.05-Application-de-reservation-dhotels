@@ -108,10 +108,12 @@ try
                 
 if (response.IsSuccessStatusCode)
          {
-                 var room = await response.Content.ReadFromJsonAsync<Room>();
+                 var room = await response.Content.ReadFromJsonAsync<RoomDetailsDTO>();
 if (room != null)
       {
             int nights = (endDate - startDate).Days;
+            // Le calcul doit être : prix par nuit × nombre de nuits
+            // PAS multiplié par le nombre de personnes car c'est le prix de la chambre
   return room.PricePerNight * nights;
   }
      }
