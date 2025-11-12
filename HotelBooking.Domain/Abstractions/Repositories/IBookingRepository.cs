@@ -44,5 +44,21 @@ namespace HotelBooking.Domain.Abstractions.Repositories
         /// <param name="userId">Id of the user</param>
         /// <returns>Booking details if found and belongs to user</returns>
         Task<BookingWithDetailsDTO?> GetBookingByIdForUserAsync(Guid bookingId, Guid userId);
+
+        /// <summary>
+        /// Cancel/Delete a booking if it belongs to the user.
+        /// </summary>
+        /// <param name="bookingId">Id of the booking to cancel</param>
+        /// <param name="userId">Id of the user</param>
+        /// <returns>True if booking was cancelled, false if not found or doesn't belong to user</returns>
+        Task<bool> CancelBookingForUserAsync(Guid bookingId, Guid userId);
+
+        /// <summary>
+        /// Check if a booking exists and belongs to a user.
+        /// </summary>
+        /// <param name="bookingId">Id of the booking</param>
+        /// <param name="userId">Id of the user</param>
+        /// <returns>True if booking exists and belongs to user</returns>
+        Task<bool> BookingBelongsToUserAsync(Guid bookingId, Guid userId);
     }
 }

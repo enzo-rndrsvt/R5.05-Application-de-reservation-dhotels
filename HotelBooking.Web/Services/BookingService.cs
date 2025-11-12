@@ -146,19 +146,39 @@ if (room != null)
 
         public async Task<bool> CancelBookingAsync(Guid bookingId)
         {
-     await AddAuthenticationHeader();
+            await AddAuthenticationHeader();
 
-        try
+            try
             {
- // Simulation d'annulation - dans un vrai projet, ceci appellerait l'API
-      var response = await _httpClient.DeleteAsync($"api/users/current-user/bookings/{bookingId}");
-      return response.IsSuccessStatusCode;
-       }
-     catch (Exception ex)
-      {
-       Console.WriteLine($"Erreur lors de l'annulation de la réservation: {ex.Message}");
-          return false;
-       }
+                var response = await _httpClient.DeleteAsync($"api/users/current-user/bookings/{bookingId}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Réservation {bookingId} annulée avec succès");
+                    return true;
+                }
+                else if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine($"Réservation {bookingId} non trouvée ou n'appartient pas à l'utilisateur");
+                    return false;
+                }
+                else if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Impossible d'annuler la réservation {bookingId}: {errorContent}");
+                    return false;
+                }
+                else
+                {
+                    Console.WriteLine($"Erreur lors de l'annulation de la réservation {bookingId}: {response.StatusCode}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de l'annulation de la réservation {bookingId}: {ex.Message}");
+                return false;
+            }
         }
 
         private async Task AddAuthenticationHeader()

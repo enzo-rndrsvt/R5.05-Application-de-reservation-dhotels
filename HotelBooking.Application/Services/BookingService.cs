@@ -77,6 +77,26 @@ namespace HotelBooking.Application.Services
             return await _bookingRepository.GetBookingByIdForUserAsync(bookingId, userId);
         }
 
+        public async Task<bool> CancelBookingForUserAsync(Guid bookingId, Guid userId)
+        {
+            // Vérifier que la réservation appartient bien à l'utilisateur
+            var booking = await _bookingRepository.GetBookingByIdForUserAsync(bookingId, userId);
+            
+            if (booking == null)
+            {
+                return false;
+            }
+
+            // Vérifier que la réservation peut être annulée (par exemple, pas déjà commencée)
+            if (booking.StartingDate <= DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("Cannot cancel a booking that has already started or is in the past.");
+            }
+
+            // Annuler la réservation
+            return await _bookingRepository.CancelBookingForUserAsync(bookingId, userId);
+        }
+
         private void AddPrice(
             BookingDTO newBooking, RoomDTO room, DiscountDTO discount)
         {

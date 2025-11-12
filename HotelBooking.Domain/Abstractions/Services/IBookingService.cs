@@ -35,5 +35,13 @@ namespace HotelBooking.Domain.Abstractions.Services
         /// <param name="userId">Id of the user</param>
         /// <returns>Booking details if found and belongs to user</returns>
         Task<BookingWithDetailsDTO?> GetBookingByIdForUserAsync(Guid bookingId, Guid userId);
+
+        /// <summary>
+        /// Cancel a booking for a user.
+        /// </summary>
+        /// <param name="bookingId">Id of the booking to cancel</param>
+        /// <param name="userId">Id of the user</param>
+        /// <returns>True if booking was cancelled successfully</returns>
+        Task<bool> CancelBookingForUserAsync(Guid bookingId, Guid userId);
     }
 }

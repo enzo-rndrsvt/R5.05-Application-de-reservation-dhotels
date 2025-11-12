@@ -113,5 +113,30 @@ namespace HotelBooking.Infrastructure.Repositories
 
             return booking;
         }
+
+        public async Task<bool> CancelBookingForUserAsync(Guid bookingId, Guid userId)
+        {
+            var booking = await _dbContext.Bookings
+                .Where(b => b.Id == bookingId && b.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            if (booking == null)
+            {
+                _logger.LogWarning("Attempted to cancel booking {BookingId} for user {UserId}, but booking not found or doesn't belong to user", bookingId, userId);
+                return false;
+            }
+
+            _dbContext.Bookings.Remove(booking);
+            await _dbContext.SaveChangesAsync();
+            
+            _logger.LogInformation("Cancelled booking {BookingId} for user {UserId}", bookingId, userId);
+            return true;
+        }
+
+        public async Task<bool> BookingBelongsToUserAsync(Guid bookingId, Guid userId)
+        {
+            return await _dbContext.Bookings
+                .AnyAsync(b => b.Id == bookingId && b.UserId == userId);
+        }
     }
 }

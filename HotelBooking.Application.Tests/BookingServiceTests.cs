@@ -102,5 +102,76 @@ namespace HotelBooking.Application.Tests
 
             return booking;
         }
+
+        [Fact]
+        public async Task CancelBookingForUserAsync_ShouldReturnTrue_WhenBookingExistsAndNotStarted()
+        {
+            // Arrange
+            var bookingId = Guid.NewGuid();
+            var userId = Guid.NewGuid();
+            var futureBooking = _fixture.Build<BookingWithDetailsDTO>()
+                .With(x => x.Id, bookingId)
+                .With(x => x.UserId, userId)
+                .With(x => x.StartingDate, DateTime.UtcNow.AddDays(1)) // Réservation future
+                .Create();
+
+            _bookingRepositoryMock
+                .Setup(x => x.GetBookingByIdForUserAsync(bookingId, userId))
+                .ReturnsAsync(futureBooking);
+            
+            _bookingRepositoryMock
+                .Setup(x => x.CancelBookingForUserAsync(bookingId, userId))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _bookingService.CancelBookingForUserAsync(bookingId, userId);
+
+            // Assert
+            result.Should().BeTrue();
+            _bookingRepositoryMock.Verify(x => x.CancelBookingForUserAsync(bookingId, userId), Times.Once);
+        }
+
+        [Fact]
+        public async Task CancelBookingForUserAsync_ShouldReturnFalse_WhenBookingNotFound()
+        {
+            // Arrange
+            var bookingId = Guid.NewGuid();
+            var userId = Guid.NewGuid();
+
+            _bookingRepositoryMock
+                .Setup(x => x.GetBookingByIdForUserAsync(bookingId, userId))
+                .ReturnsAsync((BookingWithDetailsDTO?)null);
+
+            // Act
+            var result = await _bookingService.CancelBookingForUserAsync(bookingId, userId);
+
+            // Assert
+            result.Should().BeFalse();
+            _bookingRepositoryMock.Verify(x => x.CancelBookingForUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CancelBookingForUserAsync_ShouldThrowInvalidOperationException_WhenBookingAlreadyStarted()
+        {
+            // Arrange
+            var bookingId = Guid.NewGuid();
+            var userId = Guid.NewGuid();
+            var startedBooking = _fixture.Build<BookingWithDetailsDTO>()
+                .With(x => x.Id, bookingId)
+                .With(x => x.UserId, userId)
+                .With(x => x.StartingDate, DateTime.UtcNow.AddDays(-1)) // Réservation déjà commencée
+                .Create();
+
+            _bookingRepositoryMock
+                .Setup(x => x.GetBookingByIdForUserAsync(bookingId, userId))
+                .ReturnsAsync(startedBooking);
+
+            // Act & Assert
+            await _bookingService.Invoking(x => x.CancelBookingForUserAsync(bookingId, userId))
+                .Should().ThrowAsync<InvalidOperationException>()
+                .WithMessage("Cannot cancel a booking that has already started or is in the past.");
+
+            _bookingRepositoryMock.Verify(x => x.CancelBookingForUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
+        }
     }
 }
