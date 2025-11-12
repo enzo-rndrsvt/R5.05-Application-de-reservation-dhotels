@@ -1,69 +1,341 @@
 @page "/booking"
+@page "/booking/{RoomId:guid?}"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@inject IBookingService BookingService
+@inject IHotelService HotelService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Réservation - Hôtel SkullKing</PageTitle>
+<PageTitle>Réservation - SkullKing</PageTitle>
 
 <div class="container mt-4">
-    <div class="row justify-content-center">
-     <div class="col-md-8">
-    <div class="card border-primary">
-     <div class="card-header bg-primary text-white text-center">
-              <h3>????? Réservation au SkullKing ?</h3>
-   <p class="mb-0">Embarquez pour l'aventure !</p>
-   </div>
-       <div class="card-body text-center">
-         <div class="alert alert-info">
- <h4><i class="oi oi-info"></i> Fonctionnalité en développement</h4>
-   <p class="mb-3">Notre système de réservation est en cours de développement par l'équipage technique du SkullKing.</p>
-    <p class="mb-0">En attendant, vous pouvez explorer nos cabines disponibles !</p>
-</div>
+  <div class="row justify-content-center">
+  <div class="col-md-8">
+   <div class="card">
+     <div class="card-header bg-primary text-white">
+   <h3 class="text-center">
+      <i class="oi oi-calendar"></i> Réserver votre séjour
+   </h3>
+ <p class="text-center mb-0">
+    <i class="oi oi-home"></i> Embarquez pour une aventure au SkullKing
+     </p>
+ </div>
+     <div class="card-body">
 
-      <div class="row mt-4">
-      <div class="col-md-6">
-        <div class="card h-100 border-success">
-       <div class="card-body text-center">
-     <i class="oi oi-grid-three-up display-4 text-success mb-3"></i>
-         <h5>Découvrir nos cabines</h5>
-      <p>Explorez toutes les chambres disponibles au SkullKing</p>
-           <a href="/rooms" class="btn btn-success">
-        <i class="oi oi-home"></i> Voir les cabines
-          </a>
-       </div>
-        </div>
-        </div>
- <div class="col-md-6">
-         <div class="card h-100 border-primary">
-            <div class="card-body text-center">
-       <i class="oi oi-home display-4 text-primary mb-3"></i>
-          <h5>Notre hôtel</h5>
-          <p>Découvrez l'hôtel SkullKing et ses services</p>
-   <a href="/hotels" class="btn btn-primary">
-        <i class="oi oi-eye"></i> Découvrir
+  @if (!string.IsNullOrEmpty(successMessage))
+     {
+    <div class="alert alert-success">
+      <i class="oi oi-circle-check"></i> @successMessage
+     </div>
+       }
+
+  @if (!string.IsNullOrEmpty(errorMessage))
+       {
+    <div class="alert alert-danger">
+    <i class="oi oi-warning"></i> @errorMessage
+            </div>
+  }
+
+     @if (rooms == null)
+ {
+     <div class="text-center p-4">
+      <div class="spinner-border text-primary" role="status">
+ <span class="visually-hidden">Chargement...</span>
+  </div>
+     <p class="mt-2">Chargement des chambres disponibles...</p>
+    </div>
+    }
+       else if (!rooms.Any())
+         {
+   <div class="alert alert-warning">
+     <h5><i class="oi oi-warning"></i> Aucune chambre disponible</h5>
+     <p>Aucune chambre n'est actuellement disponible pour la réservation.</p>
+     <a href="/rooms" class="btn btn-primary">
+       <i class="oi oi-grid-three-up"></i> Voir toutes les chambres
    </a>
 </div>
-  </div>
-     </div>
-          </div>
+   }
+   else
+      {
+     <EditForm Model="@bookingModel" OnValidSubmit="HandleBooking" FormName="BookingForm">
+   <DataAnnotationsValidator />
 
-        <div class="mt-4">
-  <h5>??? Prochaines fonctionnalités</h5>
-     <ul class="list-group list-group-flush">
-      <li class="list-group-item">?? Sélection des dates de séjour</li>
-  <li class="list-group-item">????? Choix de la cabine</li>
-     <li class="list-group-item">?? Calcul du prix total avec réductions</li>
-      <li class="list-group-item">?? Confirmation de réservation</li>
-         <li class="list-group-item">?? Email de confirmation</li>
-</ul>
+       <div class="row">
+<div class="col-md-6">
+     <div class="form-group mb-3">
+      <label for="startingDate" class="form-label">
+  <i class="oi oi-calendar"></i> Date d'arrivée
+  </label>
+  <InputDate id="startingDate" class="form-control" @bind-Value="bookingModel.StartingDate" @bind-Value:after="OnDatesChanged" />
+       <ValidationMessage For="@(() => bookingModel.StartingDate)" class="text-danger" />
     </div>
+   </div>
 
-        <div class="mt-4">
-    <a href="/" class="btn btn-outline-secondary">
-       <i class="oi oi-arrow-left"></i> Retour à l'accueil
-          </a>
-     </div>
-  </div>
+  <div class="col-md-6">
+    <div class="form-group mb-3">
+     <label for="endingDate" class="form-label">
+     <i class="oi oi-calendar"></i> Date de départ
+        </label>
+    <InputDate id="endingDate" class="form-control" @bind-Value="bookingModel.EndingDate" @bind-Value:after="OnDatesChanged" />
+      <ValidationMessage For="@(() => bookingModel.EndingDate)" class="text-danger" />
        </div>
+ </div>
      </div>
+
+      <div class="row">
+     <div class="col-12">
+   <div class="form-group mb-3">
+ <label for="roomId" class="form-label">
+      <i class="oi oi-home"></i> Chambre sélectionnée
+  </label>
+  <select id="roomId" class="form-select" @bind="bookingModel.RoomId" @bind:after="OnRoomChanged">
+     <option value="">-- Sélectionner une chambre --</option>
+   @foreach (var room in rooms)
+     {
+        <option value="@room.Id">
+      Chambre @room.Number - @room.Type 
+      (@room.AdultsCapacity adultes, @room.ChildrenCapacity enfants) 
+       - @room.PricePerNight.ToString("C")/nuit
+   </option>
+}
+  </select>
+ <ValidationMessage For="@(() => bookingModel.RoomId)" class="text-danger" />
+   </div>
+   </div>
+       </div>
+
+         @if (bookingModel.RoomId != Guid.Empty && selectedRoom != null)
+    {
+           <div class="card bg-light mb-3">
+    <div class="card-body">
+ <h6><i class="oi oi-info"></i> Détails de la réservation</h6>
+      <div class="row">
+       <div class="col-md-8">
+       <dl class="row mb-0">
+     <dt class="col-4">Chambre :</dt>
+         <dd class="col-8">@selectedRoom.Number - @selectedRoom.Type</dd>
+         
+  <dt class="col-4">Capacité :</dt>
+     <dd class="col-8">@selectedRoom.AdultsCapacity adultes, @selectedRoom.ChildrenCapacity enfants</dd>
+   
+    <dt class="col-4">Prix/nuit :</dt>
+   <dd class="col-8">@selectedRoom.PricePerNight.ToString("C")</dd>
+      
+   <dt class="col-4">Nombre de nuits :</dt>
+    <dd class="col-8">@bookingModel.NumberOfNights nuit(s)</dd>
+      </dl>
+  </div>
+     <div class="col-md-4 text-end">
+ <div class="card bg-primary text-white">
+   <div class="card-body text-center">
+     <h6>Prix total estimé</h6>
+  @if (bookingModel.EstimatedPrice.HasValue)
+   {
+     <h4>@bookingModel.EstimatedPrice.Value.ToString("C")</h4>
+ }
+      else
+     {
+         <div class="spinner-border spinner-border-sm" role="status"></div>
+     }
         </div>
+ </div>
+   </div>
+   </div>
+     </div>
+   </div>
+ }
+
+    <div class="d-grid gap-2 mt-4">
+      <button type="submit" class="btn btn-success btn-lg" disabled="@isLoading">
+      @if (isLoading)
+     {
+      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+       <span> Réservation en cours...</span>
+   }
+        else
+     {
+      <i class="oi oi-calendar"></i> <span>Confirmer la réservation</span>
+    }
+     </button>
+      
+    <div class="row mt-3">
+  <div class="col-md-4">
+      <a href="/rooms" class="btn btn-outline-primary w-100">
+<i class="oi oi-grid-three-up"></i> Autres chambres
+     </a>
+   </div>
+      <div class="col-md-4">
+  <a href="/my-bookings" class="btn btn-outline-secondary w-100">
+           <i class="oi oi-list"></i> Mes réservations
+   </a>
+        </div>
+    <div class="col-md-4">
+     <a href="/" class="btn btn-outline-dark w-100">
+     <i class="oi oi-home"></i> Accueil
+  </a>
+ </div>
+   </div>
+  </div>
+     </EditForm>
+       }
+  </div>
+     </div>
+      </div>
+  </div>
 </div>
+
+@code {
+    [Parameter] public Guid? RoomId { get; set; }
+    
+ [SupplyParameterFromForm]
+    private BookingCreation bookingModel { get; set; } = new();
+    
+     private IEnumerable<Room>? rooms;
+  private Room? selectedRoom;
+ private string successMessage = string.Empty;
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRooms();
+        
+  // Si un ID de chambre est passé en paramètre, le sélectionner
+   if (RoomId.HasValue)
+{
+   bookingModel.RoomId = RoomId.Value;
+   await OnRoomChanged();
+   }
+    }
+
+   private async Task LoadRooms()
+    {
+   try
+     {
+        // Charger toutes les chambres disponibles depuis l'hôtel SkullKing
+     var hotels = await HotelService.GetAllHotelsAsync();
+        var skullKingHotel = hotels.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+        
+      if (skullKingHotel != null)
+        {
+       rooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 50);
+  }
+        else
+        {
+      errorMessage = "L'hôtel SkullKing n'a pas encore été créé.";
+  }
+     }
+   catch (Exception ex)
+    {
+    errorMessage = $"Erreur lors du chargement des chambres: {ex.Message}";
+     }
+  }
+
+ private async Task OnDatesChanged()
+    {
+   if (bookingModel.RoomId != Guid.Empty && bookingModel.IsValid)
+      {
+  await CalculatePrice();
+    }
+ StateHasChanged();
+    }
+
+    private async Task OnRoomChanged()
+    {
+  if (bookingModel.RoomId != Guid.Empty && rooms != null)
+     {
+    selectedRoom = rooms.FirstOrDefault(r => r.Id == bookingModel.RoomId);
+      await CalculatePrice();
+  }
+  else
+ {
+    selectedRoom = null;
+            bookingModel.EstimatedPrice = null;
+ }
+      StateHasChanged();
+    }
+
+   private async Task CalculatePrice()
+    {
+     if (selectedRoom != null && bookingModel.IsValid)
+        {
+    try
+    {
+   bookingModel.EstimatedPrice = await BookingService.CalculateEstimatedPriceAsync(
+    bookingModel.RoomId, 
+  bookingModel.StartingDate, 
+      bookingModel.EndingDate);
+}
+  catch (Exception ex)
+    {
+    Console.WriteLine($"Erreur lors du calcul du prix: {ex.Message}");
+       }
+        }
+}
+
+ private async Task HandleBooking()
+  {
+    if (!bookingModel.IsValid)
+        {
+      errorMessage = "Veuillez vérifier les dates sélectionnées.";
+     return;
+   }
+
+   if (bookingModel.RoomId == Guid.Empty)
+     {
+  errorMessage = "Veuillez sélectionner une chambre.";
+    return;
+ }
+
+  errorMessage = string.Empty;
+   successMessage = string.Empty;
+    isLoading = true;
+
+     try
+        {
+    // Vérifier la disponibilité de la chambre
+     var isAvailable = await BookingService.IsRoomAvailableAsync(
+ bookingModel.RoomId, 
+   bookingModel.StartingDate, 
+    bookingModel.EndingDate);
+
+      if (!isAvailable)
+    {
+ errorMessage = "Désolé, cette chambre n'est pas disponible pour les dates sélectionnées.";
+   return;
+    }
+
+          var result = await BookingService.CreateBookingAsync(bookingModel);
+
+      if (result)
+        {
+     successMessage = $"Réservation confirmée ! Votre séjour du {bookingModel.StartingDate:dd/MM/yyyy} " +
+    $"au {bookingModel.EndingDate:dd/MM/yyyy} dans la chambre {selectedRoom?.Number} a été enregistré. " +
+  "Un email de confirmation va vous être envoyé.";
+     
+      // Réinitialiser le formulaire
+  bookingModel = new BookingCreation();
+      selectedRoom = null;
+  
+        // Rediriger vers les réservations après un délai
+       await Task.Delay(3000);
+    NavigationManager.NavigateTo("/my-bookings");
+ }
+   else
+     {
+    errorMessage = "Erreur lors de la création de la réservation. Veuillez réessayer.";
+      }
+        }
+   catch (Exception ex)
+     {
+    errorMessage = $"Erreur inattendue : {ex.Message}";
+     }
+   finally
+  {
+     isLoading = false;
+  }
+    }
+}

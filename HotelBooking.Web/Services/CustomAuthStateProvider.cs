@@ -51,7 +51,7 @@ namespace HotelBooking.Web.Services
 
                 return new AuthenticationState(user);
             }
-            catch (Exception ex)
+            catch
             {
                 return _anonymous;
             }
@@ -108,7 +108,7 @@ namespace HotelBooking.Web.Services
                 // Ajouter le nom d'affichage
                 claims.Add(new Claim(ClaimTypes.Name, displayName));
             }
-            catch (Exception ex)
+            catch
             {
                 claims.Add(new Claim(ClaimTypes.Name, displayName));
             }

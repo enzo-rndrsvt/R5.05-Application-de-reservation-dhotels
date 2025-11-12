@@ -16,6 +16,7 @@ namespace HotelBooking.Application.Services
     {
         private readonly IBookingRepository _bookingRepository;
         private readonly IValidator<BookingDTO> _bookingValidator;
+        private readonly IValidator<PaginationDTO> _paginationValidator;
         private readonly IHotelDiscountRepository _hotelDiscountRepository;
         private readonly IRoomRepository _roomRepository;
         private readonly IEmailService _emailService;
@@ -25,6 +26,7 @@ namespace HotelBooking.Application.Services
         public BookingService(
             IBookingRepository bookingRepository,
             IValidator<BookingDTO> bookingValidator,
+            IValidator<PaginationDTO> paginationValidator,
             IHotelDiscountRepository hotelDiscountRepository,
             IRoomRepository roomRepository,
             IEmailService emailService,
@@ -33,6 +35,7 @@ namespace HotelBooking.Application.Services
         {
             _bookingRepository = bookingRepository;
             _bookingValidator = bookingValidator;
+            _paginationValidator = paginationValidator;
             _hotelDiscountRepository = hotelDiscountRepository;
             _roomRepository = roomRepository;
             _emailService = emailService;
@@ -52,6 +55,26 @@ namespace HotelBooking.Application.Services
 
             await _bookingRepository.AddAsync(newBooking);
             await SendBookingDetailsEmailAsync(newBooking, room);
+        }
+
+        public async Task<IEnumerable<BookingWithDetailsDTO>> GetBookingsForUserAsync(Guid userId, PaginationDTO pagination)
+        {
+            await _paginationValidator.ValidateAndThrowAsync(pagination);
+            
+            int itemsToSkip = (pagination.PageNumber - 1) * pagination.PageSize;
+            int itemsToTake = pagination.PageSize;
+ 
+            return await _bookingRepository.GetBookingsForUserAsync(userId, itemsToSkip, itemsToTake);
+        }
+
+        public async Task<int> GetBookingsCountForUserAsync(Guid userId)
+        {
+            return await _bookingRepository.GetBookingsCountForUserAsync(userId);
+        }
+
+        public async Task<BookingWithDetailsDTO?> GetBookingByIdForUserAsync(Guid bookingId, Guid userId)
+        {
+            return await _bookingRepository.GetBookingByIdForUserAsync(bookingId, userId);
         }
 
         private void AddPrice(

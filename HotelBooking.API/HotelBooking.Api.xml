@@ -280,6 +280,20 @@
             </summary>
             <param name="newBooking">Properties of the new booking.</param>
         </member>
+        <member name="M:HotelBooking.Api.Controllers.UserController.GetUserBookingsAsync(HotelBooking.Domain.Models.PaginationDTO)">
+            <summary>
+            Get paginated list of bookings for the current user.
+            </summary>
+            <response code="200">The list of user bookings is retrieved successfully.</response>
+        </member>
+        <member name="M:HotelBooking.Api.Controllers.UserController.GetUserBookingByIdAsync(System.Guid)">
+            <summary>
+            Get a specific booking by ID for the current user.
+            </summary>
+            <param name="bookingId">ID of the booking to retrieve</param>
+            <response code="200">Booking retrieved successfully</response>
+            <response code="404">Booking not found or doesn't belong to user</response>
+        </member>
         <member name="M:HotelBooking.Api.Controllers.UserController.PostHotelReviewAsync(HotelBooking.Api.Models.HotelReviewCreationDTO)">
             <summary>
             Create and store a new hotel review for a user.
