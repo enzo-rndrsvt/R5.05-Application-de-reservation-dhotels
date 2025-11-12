@@ -32,6 +32,9 @@ namespace HotelBooking.Infrastructure.Tables
         /// <inheritdoc cref="RoomDTO.HotelId"/>
         public Guid HotelId { get; set; }
 
+        /// <inheritdoc cref="RoomDTO.ImageUrl"/>
+        public string? ImageUrl { get; set; }
+
         public HotelTable Hotel { get; set; }
 
         public List<CartItemTable> CartItems { get; } = new();

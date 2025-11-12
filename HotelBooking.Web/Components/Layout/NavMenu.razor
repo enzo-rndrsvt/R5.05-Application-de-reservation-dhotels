@@ -45,34 +45,41 @@
  </div>
     
   <!-- Section Administration - Visible uniquement pour les Admins -->
-    <AuthorizeView Roles="Admin" Context="adminContext">
-   <Authorized>
-    <hr class="text-white-50 my-2" />
-     <div class="nav-item px-3">
-  <div class="text-white-50 small">
-    <i class="oi oi-wrench"></i> Administration 
-   <span class="badge bg-danger ms-1">ADMIN</span>
-    </div>
-      </div>
-    <div class="nav-item px-3">
-      <NavLink class="nav-link" href="admin/setup">
-    <span class="oi oi-wrench" aria-hidden="true"></span> Configuration
-    <small class="d-block">Hôtel & Chambres</small>
-    </NavLink>
-     </div>
- <div class="nav-item px-3">
-    <NavLink class="nav-link" href="admin/rooms/create">
-  <span class="oi oi-plus" aria-hidden="true"></span> Créer chambre
-   <small class="d-block">Nouvelle cabine</small>
-    </NavLink>
-    </div>
-    <div class="nav-item px-3">
-       <NavLink class="nav-link" href="test-price">
-           <span class="oi oi-calculator" aria-hidden="true"></span> Test Prix
-           <small class="d-block">Debug prix</small>
-       </NavLink>
-    </div>
-    <div class="nav-item px-3">
+    <AuthorizeView Roles="Admin">
+        <Authorized Context="adminContext">
+            <hr class="border-light">
+            <div class="nav-item px-3">
+                <div class="nav-link text-light">
+                    <span class="oi oi-shield text-warning" aria-hidden="true"></span>
+                    <strong>ADMINISTRATION</strong>
+                </div>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/setup">
+                    <span class="oi oi-wrench" aria-hidden="true"></span> Configuration
+                    <small class="d-block">Gestion générale</small>
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/rooms/create">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Nouvelle Chambre
+                    <small class="d-block">Créer une cabine</small>
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/database">
+                    <span class="oi oi-hard-drive" aria-hidden="true"></span> Base de Données
+                    <small class="d-block">Migrations & Maintenance</small>
+                </NavLink>
+            </div>
+            <hr class="border-light">
+            <div class="nav-item px-3">
+                <div class="nav-link text-light">
+                    <span class="oi oi-bug text-info" aria-hidden="true"></span>
+                    <strong>DEBUG & TESTS</strong>
+                </div>
+            </div>
+            <div class="nav-item px-3">
        <NavLink class="nav-link" href="test-availability">
            <span class="oi oi-calendar" aria-hidden="true"></span> Test Disponibilité
            <small class="d-block">Debug disponibilité</small>
@@ -91,12 +98,12 @@
        </NavLink>
     </div>
     <div class="nav-item px-3">
-       <NavLink class="nav-link" href="test-cancel">
-           <span class="oi oi-x" aria-hidden="true"></span> Test Annulation
-           <small class="d-block">Debug annulation</small>
+       <NavLink class="nav-link" href="test-images">
+           <span class="oi oi-image" aria-hidden="true"></span> Test Images
+           <small class="d-block">Upload d'images</small>
        </NavLink>
     </div>
- </Authorized>
+        </Authorized>
     </AuthorizeView>
       
  <hr class="text-white-50 my-2" />

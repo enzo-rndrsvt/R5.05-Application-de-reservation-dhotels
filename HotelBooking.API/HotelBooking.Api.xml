@@ -649,6 +649,11 @@
             Id of the hotel that contains the room.
             </summary>
         </member>
+        <member name="P:HotelBooking.Api.Models.Room.RoomCreationDTO.ImageUrl">
+            <summary>
+            URL or path to the room's image.
+            </summary>
+        </member>
         <member name="T:HotelBooking.Api.Models.Room.RoomUpdateDTO">
             <summary>
             Model to update room.

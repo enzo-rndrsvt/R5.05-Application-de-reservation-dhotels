@@ -33,5 +33,10 @@ namespace HotelBooking.Domain.Models.Room
         /// Id of the hotel that contains the room.
         /// </summary>
         public Guid HotelId { get; set; }
+
+        /// <summary>
+        /// URL or path to the room's image.
+        /// </summary>
+        public string? ImageUrl { get; set; }
     }
 }

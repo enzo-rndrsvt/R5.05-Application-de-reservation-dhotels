@@ -29,5 +29,8 @@ namespace HotelBooking.Domain.Models.Room
         /// The highest available discount at the moment.
         /// </summary>
         public DiscountDTO CurrentDiscount { get; set; }
+
+        /// <inheritdoc cref="RoomDTO.ImageUrl"/>
+        public string? ImageUrl { get; set; }
     }
 }

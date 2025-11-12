@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Http;
 
 namespace HotelBooking.Web.Models
 {
@@ -29,5 +31,15 @@ namespace HotelBooking.Web.Models
 
  [Required(ErrorMessage = "L'ID de l'hôtel est requis")]
         public Guid HotelId { get; set; }
+        
+        /// <summary>
+        /// Image uploaded for the room
+        /// </summary>
+        public IBrowserFile? RoomImage { get; set; }
+        
+        /// <summary>
+        /// URL of the uploaded image (set after upload)
+        /// </summary>
+        public string? ImageUrl { get; set; }
     }
 }

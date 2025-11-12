@@ -10,6 +10,7 @@ namespace HotelBooking.Web.Models
         public string BriefDescription { get; set; } = string.Empty;
         public decimal PricePerNight { get; set; }
         public Discount? CurrentDiscount { get; set; }
+        public string? ImageUrl { get; set; }
     }
 
     public class Discount

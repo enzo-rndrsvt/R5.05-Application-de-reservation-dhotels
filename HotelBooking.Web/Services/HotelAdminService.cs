@@ -37,7 +37,20 @@ namespace HotelBooking.Web.Services
 
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/admin/rooms", roomData);
+                // Créer l'objet à envoyer (sans l'image pour l'instant)
+                var roomToSend = new
+                {
+                    roomData.Number,
+                    roomData.Type,
+                    roomData.AdultsCapacity,
+                    roomData.ChildrenCapacity,
+                    roomData.BriefDescription,
+                    roomData.PricePerNight,
+                    roomData.HotelId,
+                    roomData.ImageUrl // L'URL de l'image déjà uploadée
+                };
+
+                var response = await _httpClient.PostAsJsonAsync("api/admin/rooms", roomToSend);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)

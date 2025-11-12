@@ -1,0 +1,373 @@
+@page "/admin/database"
+@using Microsoft.AspNetCore.Components.Authorization
+@using HotelBooking.Web.Services
+@inject IDatabaseManagementService DatabaseService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+
+<PageTitle>Administration Base de Données - SkullKing</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="text-center">
+                        <i class="oi oi-hard-drive"></i> Administration Base de Données
+                    </h3>
+                    <p class="text-center mb-0">
+                        <i class="oi oi-warning"></i> Zone d'administration avancée - Accès Administrateur requis
+                    </p>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Alerte de sécurité -->
+                    <div class="alert alert-warning mb-4">
+                        <h5><i class="oi oi-shield"></i> Zone Sensible</h5>
+                        <p>
+                            Ces opérations affectent directement la base de données. 
+                            Assurez-vous de comprendre les implications avant d'exécuter des commandes.
+                        </p>
+                        <p class="mb-0">
+                            <strong>Recommandation :</strong> Effectuez une sauvegarde avant toute modification majeure.
+                        </p>
+                    </div>
+
+                    <!-- Messages de retour -->
+                    @if (!string.IsNullOrEmpty(successMessage))
+                    {
+                        <div class="alert alert-success">
+                            <i class="oi oi-circle-check"></i> @successMessage
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            <i class="oi oi-warning"></i> @errorMessage
+                        </div>
+                    }
+
+                    <!-- Actions de base de données -->
+                    <div class="row">
+                        
+                        <!-- Section Migrations -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h5><i class="oi oi-layers"></i> Migrations</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Appliquer les migrations en attente à la base de données.</p>
+                                    
+                                    <div class="mb-3">
+                                        <h6>Actions disponibles :</h6>
+                                        <ul>
+                                            <li>Mise à jour vers la dernière migration</li>
+                                            <li>Ajout de la colonne ImageUrl aux chambres</li>
+                                            <li>Application des nouveaux index</li>
+                                        </ul>
+                                    </div>
+
+                                    <button class="btn btn-primary w-100" @onclick="ApplyMigrations" disabled="@isLoading">
+                                        @if (isLoading)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                        }
+                                        <i class="oi oi-data-transfer-upload"></i> Appliquer les migrations
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Données de test -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5><i class="oi oi-spreadsheet"></i> Données de Test</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Ajouter des données de démonstration pour tester l'application.</p>
+                                    
+                                    <div class="mb-3">
+                                        <h6>Sera créé :</h6>
+                                        <ul>
+                                            <li>Hôtel SkullKing avec chambres</li>
+                                            <li>Images par défaut pour les chambres</li>
+                                            <li>Données de réservation d'exemple</li>
+                                        </ul>
+                                    </div>
+
+                                    <button class="btn btn-info w-100" @onclick="SeedTestData" disabled="@isLoading">
+                                        @if (isLoading)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                        }
+                                        <i class="oi oi-plus"></i> Ajouter des données de test
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Nettoyage -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5><i class="oi oi-trash"></i> Nettoyage</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Nettoyer les données temporaires et les fichiers d'upload orphelins.</p>
+                                    
+                                    <div class="mb-3">
+                                        <h6>Actions de nettoyage :</h6>
+                                        <ul>
+                                            <li>Images non utilisées</li>
+                                            <li>Réservations expirées</li>
+                                            <li>Sessions utilisateur anciennes</li>
+                                        </ul>
+                                    </div>
+
+                                    <button class="btn btn-warning w-100" @onclick="CleanupData" disabled="@isLoading">
+                                        @if (isLoading)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                        }
+                                        <i class="oi oi-brush"></i> Nettoyer les données
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Sauvegarde -->
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h5><i class="oi oi-cloud-download"></i> Sauvegarde</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Créer une sauvegarde des données importantes.</p>
+                                    
+                                    <div class="mb-3">
+                                        <h6>Inclura :</h6>
+                                        <ul>
+                                            <li>Structure de la base de données</li>
+                                            <li>Données utilisateur et réservations</li>
+                                            <li>Configuration des hôtels</li>
+                                        </ul>
+                                    </div>
+
+                                    <button class="btn btn-success w-100" @onclick="CreateBackup" disabled="@isLoading">
+                                        @if (isLoading)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                        }
+                                        <i class="oi oi-cloud-download"></i> Créer une sauvegarde
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section informations système -->
+                    <div class="card bg-light mt-4">
+                        <div class="card-header">
+                            <h5><i class="oi oi-info"></i> Informations Système</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6>Base de Données</h6>
+                                    <p>SQL Server<br>
+                                    État : <span class="badge bg-success">Connecté</span></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6>Dernière Migration</h6>
+                                    <p>AddImageUrlToRooms<br>
+                                    <small class="text-muted">2024-12-11 15:18:00</small></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6>Stockage Images</h6>
+                                    <p>/wwwroot/uploads/<br>
+                                    <span class="badge bg-info">Local</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation rapide -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-dark text-white">
+                                <div class="card-body text-center">
+                                    <h5><i class="oi oi-compass"></i> Navigation Admin</h5>
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                                        <a href="/admin/setup" class="btn btn-outline-light">
+                                            <i class="oi oi-wrench"></i> Configuration Générale
+                                        </a>
+                                        <a href="/admin/rooms/create" class="btn btn-outline-light">
+                                            <i class="oi oi-grid-three-up"></i> Créer une Chambre
+                                        </a>
+                                        <a href="/test-images" class="btn btn-outline-light">
+                                            <i class="oi oi-image"></i> Test Images
+                                        </a>
+                                        <a href="/debug-api" class="btn btn-outline-light">
+                                            <i class="oi oi-bug"></i> Debug API
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string successMessage = string.Empty;
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+
+    private async Task ApplyMigrations()
+    {
+        if (!await ConfirmAction("Êtes-vous sûr de vouloir appliquer les migrations ? Cette action modifiera la structure de la base de données."))
+            return;
+
+        isLoading = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var result = await DatabaseService.ApplyMigrationsAsync();
+            
+            if (result)
+            {
+                successMessage = "? Migrations appliquées avec succès ! La colonne ImageUrl a été ajoutée à la table Rooms.";
+            }
+            else
+            {
+                errorMessage = "? Erreur lors de l'application des migrations. Consultez les logs pour plus de détails.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"? Erreur lors de l'application des migrations : {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SeedTestData()
+    {
+        if (!await ConfirmAction("Voulez-vous ajouter des données de test ? Cela créera des hôtels, chambres et réservations d'exemple."))
+            return;
+
+        isLoading = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var result = await DatabaseService.SeedTestDataAsync();
+            
+            if (result)
+            {
+                successMessage = "? Données de test ajoutées ! L'hôtel SkullKing avec des chambres d'exemple a été créé.";
+            }
+            else
+            {
+                errorMessage = "? Erreur lors de l'ajout des données de test. Consultez les logs pour plus de détails.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"? Erreur lors de l'ajout des données de test : {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CleanupData()
+    {
+        if (!await ConfirmAction("Voulez-vous nettoyer les données temporaires ? Cela supprimera les fichiers et données non utilisés."))
+            return;
+
+        isLoading = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var result = await DatabaseService.CleanupDataAsync();
+            
+            if (result)
+            {
+                successMessage = "? Nettoyage effectué ! Les données temporaires ont été supprimées.";
+            }
+            else
+            {
+                errorMessage = "? Erreur lors du nettoyage. Consultez les logs pour plus de détails.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"? Erreur lors du nettoyage : {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CreateBackup()
+    {
+        if (!await ConfirmAction("Voulez-vous créer une sauvegarde de la base de données ? Cela peut prendre quelques minutes."))
+            return;
+
+        isLoading = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var backupPath = await DatabaseService.CreateBackupAsync();
+            
+            if (!string.IsNullOrEmpty(backupPath))
+            {
+                successMessage = $"? Sauvegarde créée ! Fichier: {Path.GetFileName(backupPath)}";
+            }
+            else
+            {
+                errorMessage = "? Erreur lors de la création de la sauvegarde. Consultez les logs pour plus de détails.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"? Erreur lors de la sauvegarde : {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<bool> ConfirmAction(string message)
+    {
+        return await JSRuntime.InvokeAsync<bool>("confirm", message);
+    }
+}
