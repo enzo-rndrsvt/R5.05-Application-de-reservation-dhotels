@@ -43,5 +43,14 @@ namespace HotelBooking.Domain.Abstractions.Services
         /// <param name="userId">Id of the user</param>
         /// <returns>True if booking was cancelled successfully</returns>
         Task<bool> CancelBookingForUserAsync(Guid bookingId, Guid userId);
+
+        /// <summary>
+        /// Check if a room is available for booking in the given period.
+        /// </summary>
+        /// <param name="roomId">Id of the room to check</param>
+        /// <param name="startingDate">Check-in date</param>
+        /// <param name="endingDate">Check-out date</param>
+        /// <returns>Room availability information with detailed feedback</returns>
+        Task<RoomAvailabilityInfo> CheckRoomAvailabilityAsync(Guid roomId, DateTime startingDate, DateTime endingDate);
     }
 }

@@ -318,6 +318,16 @@
             <param name="newReview">Properties of the new review.</param>
             <response code="201">The review is created successfully.</response>
         </member>
+        <member name="M:HotelBooking.Api.Controllers.UserController.CheckRoomAvailabilityAsync(System.Guid,System.String,System.String)">
+            <summary>
+            Check room availability for a specific period.
+            </summary>
+            <param name="roomId">ID of the room to check</param>
+            <param name="startDate">Check-in date (YYYY-MM-DD)</param>
+            <param name="endDate">Check-out date (YYYY-MM-DD)</param>
+            <response code="200">Room availability information retrieved successfully</response>
+            <response code="400">Invalid parameters</response>
+        </member>
         <member name="M:HotelBooking.Api.Controllers.UserProfileController.GetCurrentUserProfile">
             <summary>
             Get current user profile information.

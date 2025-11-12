@@ -36,7 +36,9 @@ namespace HotelBooking.Infrastructure.Tests
         }
 
         [Theory]
-        [InlineData("2000-01-10", "2000-01-12", "2000-01-08", "2000-01-9")]
+        [InlineData("2000-01-10", "2000-01-12", "2000-01-08", "2000-01-10")] // Se termine exactement quand l'autre commence
+        [InlineData("2000-01-10", "2000-01-12", "2000-01-12", "2000-01-14")] // Commence exactement quand l'autre se termine
+        [InlineData("2000-01-10", "2000-01-12", "2000-01-08", "2000-01-09")]
         [InlineData("2000-01-10", "2000-01-12", "2000-01-13", "2000-01-14")]
         public void IntersectsWith_ReturnsFalseFor_NotIntersectingInterval(
             string bookingStartingDateString,
@@ -65,7 +67,6 @@ namespace HotelBooking.Infrastructure.Tests
         [Theory]
         [InlineData("2000-01-10", "2000-01-12", "2000-01-10")]
         [InlineData("2000-01-10", "2000-01-12", "2000-01-11")]
-        [InlineData("2000-01-10", "2000-01-12", "2000-01-12")]
         public void IntersectsWith_ReturnsTrueFor_IntersectingDate(
             string bookingStartingDateString,
             string bookingEndingDateString,
@@ -89,7 +90,8 @@ namespace HotelBooking.Infrastructure.Tests
         }
 
         [Theory]
-        [InlineData("2000-01-10", "2000-01-12", "2000-01-9")]
+        [InlineData("2000-01-10", "2000-01-12", "2000-01-09")]
+        [InlineData("2000-01-10", "2000-01-12", "2000-01-12")] // La date de fin n'est pas incluse
         [InlineData("2000-01-10", "2000-01-12", "2000-01-13")]
         public void IntersectsWith_ReturnsFalseFor_NotIntersectingDate(
             string bookingStartingDateString,
