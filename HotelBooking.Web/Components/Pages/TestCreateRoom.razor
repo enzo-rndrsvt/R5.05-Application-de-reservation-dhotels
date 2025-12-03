@@ -1,4 +1,4 @@
-@page "/test-create-room"
+Ôªø@page "/test-create-room"
 @using HotelBooking.Web.Models
 @using HotelBooking.Web.Services
 @inject IHotelAdminService HotelAdminService
@@ -7,36 +7,36 @@
 @inject IHttpClientFactory HttpClientFactory
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 
-<PageTitle>Test CrÈation Chambre</PageTitle>
+<PageTitle>Test Cr√©ation Chambre</PageTitle>
 
 <div class="container mt-4">
     <div class="card">
         <div class="card-header bg-warning">
-            <h3>?? Test CrÈation Chambre (Debug Mode)</h3>
+            <h3>üß™ Test Cr√©ation Chambre (Debug Mode)</h3>
         </div>
         <div class="card-body">
             
             @if (!string.IsNullOrEmpty(successMessage))
             {
                 <div class="alert alert-success">
-                    ? @successMessage
+                    ‚úÖ @successMessage
                 </div>
             }
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
                 <div class="alert alert-danger">
-                    ? @errorMessage
+                    ‚ùå @errorMessage
                 </div>
             }
 
             <div class="row">
                 <div class="col-md-6">
-                    <h5>CrÈation SimplifiÈe</h5>
+                    <h5>Cr√©ation Simplifi√©e</h5>
                     <div class="mb-3">
-                        <label>HÙtel</label>
+                        <label>H√¥tel</label>
                         <select class="form-select" @bind="testRoom.HotelId">
-                            <option value="">-- SÈlectionner --</option>
+                            <option value="">-- S√©lectionner --</option>
                             @if (hotels != null)
                             {
                                 @foreach (var hotel in hotels)
@@ -48,7 +48,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label>NumÈro</label>
+                        <label>Num√©ro</label>
                         <input type="number" class="form-control" @bind="testRoom.Number" />
                     </div>
                     
@@ -77,7 +77,7 @@
                         {
                             <span class="spinner-border spinner-border-sm me-2"></span>
                         }
-                        ?? CrÈer Chambre Test
+                        üöÄ Cr√©er Chambre Test
                     </button>
                 </div>
                 
@@ -92,12 +92,12 @@
                         }
                         @if (!debugLogs.Any())
                         {
-                            <div class="text-muted">Logs d'debug apparaÓtront ici...</div>
+                            <div class="text-muted">Logs d'debug appara√Ætront ici...</div>
                         }
                     </div>
                     
                     <button class="btn btn-secondary w-100 mt-2" @onclick="ClearLogs">
-                        ??? Vider Logs
+                        üóëÔ∏è Vider Logs
                     </button>
                 </div>
             </div>
@@ -107,16 +107,16 @@
                     <h6>Actions Rapides</h6>
                     <div class="d-flex gap-2">
                         <button class="btn btn-info" @onclick="LoadHotels">
-                            ?? Charger HÙtels
+                            üè® Charger H√¥tels
                         </button>
                         <button class="btn btn-success" @onclick="FillTestData">
-                            ?? DonnÈes Test
+                            üìù Donn√©es Test
                         </button>
                         <button class="btn btn-warning" @onclick="TestApiAuth">
-                            ?? Test Auth API
+                            üîê Test Auth API
                         </button>
                         <a href="/admin/rooms/create" class="btn btn-outline-primary">
-                            ?? Page Normale
+                            üìã Page Normale
                         </a>
                     </div>
                 </div>
@@ -141,11 +141,11 @@
 
     private async Task LoadHotels()
     {
-        AddLog("Chargement des hÙtels...", LogType.Info);
+        AddLog("Chargement des h√¥tels...", LogType.Info);
         try
         {
             hotels = await HotelAdminService.GetHotelsForRoomCreationAsync();
-            AddLog($"? {hotels?.Count() ?? 0} hÙtels chargÈs", LogType.Success);
+            AddLog($"‚úÖ {hotels?.Count() ?? 0} h√¥tels charg√©s", LogType.Success);
             
             if (hotels?.Any() == true)
             {
@@ -157,28 +157,28 @@
         }
         catch (Exception ex)
         {
-            AddLog($"? Erreur chargement hÙtels: {ex.Message}", LogType.Error);
+            AddLog($"‚ùå Erreur chargement h√¥tels: {ex.Message}", LogType.Error);
         }
     }
 
     private void FillTestData()
     {
-        AddLog("Remplissage donnÈes test", LogType.Info);
+        AddLog("Remplissage donn√©es test", LogType.Info);
         
         testRoom.Number = new Random().Next(100, 999);
         testRoom.Type = "Standard";
         testRoom.AdultsCapacity = 2;
         testRoom.ChildrenCapacity = 1;
-        testRoom.BriefDescription = "Chambre de test crÈÈe automatiquement";
+        testRoom.BriefDescription = "Chambre de test cr√©√©e automatiquement";
         testRoom.PricePerNight = 75.50m;
         
         if (hotels?.Any() == true)
         {
             testRoom.HotelId = hotels.First().Id;
-            AddLog($"HÙtel sÈlectionnÈ: {hotels.First().Name}", LogType.Info);
+            AddLog($"H√¥tel s√©lectionn√©: {hotels.First().Name}", LogType.Info);
         }
         
-        AddLog("? DonnÈes test remplies", LogType.Success);
+        AddLog("‚úÖ Donn√©es test remplies", LogType.Success);
         StateHasChanged();
     }
 
@@ -188,16 +188,16 @@
         successMessage = "";
         isLoading = true;
 
-        AddLog("=== D…BUT CR…ATION CHAMBRE ===", LogType.Info);
-        AddLog($"DonnÈes: NumÈro={testRoom.Number}, Type={testRoom.Type}", LogType.Data);
+        AddLog("=== D√âBUT CR√âATION CHAMBRE ===", LogType.Info);
+        AddLog($"Donn√©es: Num√©ro={testRoom.Number}, Type={testRoom.Type}", LogType.Data);
         AddLog($"HotelId={testRoom.HotelId}, Prix={testRoom.PricePerNight}", LogType.Data);
 
         try
         {
             if (testRoom.HotelId == Guid.Empty)
             {
-                var message = "Aucun hÙtel sÈlectionnÈ";
-                AddLog($"? {message}", LogType.Error);
+                var message = "Aucun h√¥tel s√©lectionn√©";
+                AddLog($"‚ùå {message}", LogType.Error);
                 errorMessage = message;
                 return;
             }
@@ -208,28 +208,28 @@
             var result = await HotelAdminService.CreateRoomAsync(testRoom);
             
             var duration = (DateTime.Now - startTime).TotalMilliseconds;
-            AddLog($"RÈponse reÁue en {duration:F0}ms: {result}", LogType.Info);
+            AddLog($"R√©ponse re√ßue en {duration:F0}ms: {result}", LogType.Info);
 
             if (result)
             {
-                successMessage = $"? Chambre {testRoom.Number} crÈÈe avec succËs!";
-                AddLog("?? SUCCESS: Chambre crÈÈe!", LogType.Success);
+                successMessage = $"‚úÖ Chambre {testRoom.Number} cr√©√©e avec succ√®s!";
+                AddLog("üéâ SUCCESS: Chambre cr√©√©e!", LogType.Success);
                 
                 // Reset form
                 testRoom = new RoomCreation();
             }
             else
             {
-                errorMessage = "? L'API a retournÈ false";
-                AddLog("? …CHEC: CreateRoomAsync a retournÈ false", LogType.Error);
-                AddLog("?? VÈrifiez la console du navigateur (F12) pour plus de dÈtails", LogType.Warning);
-                AddLog("?? VÈrifiez aussi les logs de l'API cÙtÈ serveur", LogType.Warning);
+                errorMessage = "‚ùå L'API a retourn√© false";
+                AddLog("‚ùå √âCHEC: CreateRoomAsync a retourn√© false", LogType.Error);
+                AddLog("üí° V√©rifiez la console du navigateur (F12) pour plus de d√©tails", LogType.Warning);
+                AddLog("üí° V√©rifiez aussi les logs de l'API c√¥t√© serveur", LogType.Warning);
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"?? Exception: {ex.Message}";
-            AddLog($"?? EXCEPTION: {ex.Message}", LogType.Error);
+            errorMessage = $"üí• Exception: {ex.Message}";
+            AddLog($"üí• EXCEPTION: {ex.Message}", LogType.Error);
             AddLog($"Type: {ex.GetType().Name}", LogType.Error);
             if (ex.StackTrace != null && ex.StackTrace.Length > 200)
             {
@@ -239,7 +239,7 @@
         finally
         {
             isLoading = false;
-            AddLog("=== FIN CR…ATION ===", LogType.Info);
+            AddLog("=== FIN CR√âATION ===", LogType.Info);
             StateHasChanged();
         }
     }
@@ -250,25 +250,25 @@
         
         try
         {
-            // Test simple: essayer de rÈcupÈrer les chambres admin
+            // Test simple: essayer de r√©cup√©rer les chambres admin
             var httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
             
-            // RÈcupÈrer et ajouter le token
+            // R√©cup√©rer et ajouter le token
             var token = await LocalStorageService.GetItemAsync<string>("authToken");
             if (!string.IsNullOrEmpty(token))
             {
                 httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                AddLog($"?? Token ajoutÈ: {token.Substring(0, Math.Min(20, token.Length))}...", LogType.Info);
+                AddLog($"üîë Token ajout√©: {token.Substring(0, Math.Min(20, token.Length))}...", LogType.Info);
             }
             else
             {
-                AddLog("? Aucun token trouvÈ !", LogType.Error);
+                AddLog("‚ùå Aucun token trouv√© !", LogType.Error);
                 return;
             }
 
             // Test GET sur endpoint admin
-            AddLog("?? Test GET /api/admin/rooms...", LogType.Info);
+            AddLog("üì° Test GET /api/admin/rooms...", LogType.Info);
             var response = await httpClient.GetAsync("api/admin/rooms?Page=1&PageSize=1");
             
             AddLog($"Status: {response.StatusCode} ({(int)response.StatusCode})", 
@@ -281,21 +281,21 @@
                 
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
-                    AddLog("?? PROBL»ME: Token invalide ou expirÈ !", LogType.Error);
+                    AddLog("üö® PROBL√àME: Token invalide ou expir√© !", LogType.Error);
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
                 {
-                    AddLog("?? PROBL»ME: Pas de rÙle Admin !", LogType.Error);
+                    AddLog("üö® PROBL√àME: Pas de r√¥le Admin !", LogType.Error);
                 }
             }
             else
             {
-                AddLog("? Autorisation API OK !", LogType.Success);
+                AddLog("‚úÖ Autorisation API OK !", LogType.Success);
             }
         }
         catch (Exception ex)
         {
-            AddLog($"?? Exception test auth: {ex.Message}", LogType.Error);
+            AddLog($"üí• Exception test auth: {ex.Message}", LogType.Error);
         }
     }
 

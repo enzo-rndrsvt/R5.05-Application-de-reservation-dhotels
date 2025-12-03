@@ -33,13 +33,61 @@ namespace HotelBooking.Web.Models
         public Guid HotelId { get; set; }
         
         /// <summary>
-        /// Image uploaded for the room
-        /// </summary>
-        public IBrowserFile? RoomImage { get; set; }
-        
-        /// <summary>
-        /// URL of the uploaded image (set after upload)
+        /// URL de l'image principale (pour la compatibilité ascendante)
         /// </summary>
         public string? ImageUrl { get; set; }
+
+        /// <summary>
+        /// Collection des URL d'images téléchargées (jusqu'à 5 images)
+        /// </summary>
+        public List<string> ImageUrls { get; set; } = new();
+
+        /// <summary>
+        /// Fichier d'image principal à télécharger (compatibilité ascendante)
+        /// </summary>
+        public IBrowserFile? RoomImage { get; set; }
+
+        /// <summary>
+        /// Fichiers d'images multiples à télécharger (jusqu'à 5 images)
+        /// </summary>
+        public List<IBrowserFile> RoomImages { get; set; } = new();
+
+        /// <summary>
+        /// Obtenir toutes les URL d'images téléchargées
+        /// </summary>
+        public List<string> AllImageUrls
+        {
+            get
+            {
+                var allImages = new List<string>();
+                
+                if (ImageUrls?.Any() == true)
+                {
+                    allImages.AddRange(ImageUrls.Where(url => !string.IsNullOrEmpty(url)));
+                }
+                
+                if (!string.IsNullOrEmpty(ImageUrl) && !allImages.Contains(ImageUrl))
+                {
+                    allImages.Insert(0, ImageUrl);
+                }
+                
+                return allImages.Take(5).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Vérifier si la chambre a des images téléchargées
+        /// </summary>
+        public bool HasImages => !string.IsNullOrEmpty(ImageUrl) || (ImageUrls?.Any() == true);
+
+        /// <summary>
+        /// Obtenir le nombre total d'images
+        /// </summary>
+        public int ImageCount => AllImageUrls.Count;
+
+        /// <summary>
+        /// Vérifier si nous pouvons ajouter plus d'images (max 5)
+        /// </summary>
+        public bool CanAddMoreImages => ImageCount < 5;
     }
 }
