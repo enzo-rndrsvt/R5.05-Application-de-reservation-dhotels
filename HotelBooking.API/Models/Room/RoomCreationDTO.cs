@@ -1,4 +1,6 @@
-﻿namespace HotelBooking.Api.Models.Room
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace HotelBooking.Api.Models.Room
 {
     /// <summary>
     /// Model for creating new room.
@@ -49,5 +51,10 @@
         /// URL or path to the room's image.
         /// </summary>
         public string? ImageUrl { get; set; }
+
+        /// <summary>
+        /// Collection of image URLs (up to 5 images)
+        /// </summary>
+        public List<string> ImageUrls { get; set; } = new();
     }
 }

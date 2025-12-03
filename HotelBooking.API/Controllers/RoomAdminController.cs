@@ -100,6 +100,15 @@ namespace HotelBooking.Api.Controllers
             Console.WriteLine($"Reçu RoomCreationDTO: Number={newRoom.Number}, Type={newRoom.Type}");
             Console.WriteLine($"HotelId={newRoom.HotelId}, Price={newRoom.PricePerNight}");
             Console.WriteLine($"ImageUrl={newRoom.ImageUrl ?? "NULL"}");
+            Console.WriteLine($"ImageUrls Count={newRoom.ImageUrls?.Count ?? 0}");
+            
+            if (newRoom.ImageUrls?.Any() == true)
+            {
+                for (int i = 0; i < newRoom.ImageUrls.Count; i++)
+                {
+                    Console.WriteLine($"  ImageUrls[{i}]: {newRoom.ImageUrls[i]}");
+                }
+            }
             
             try
             {
@@ -275,6 +284,63 @@ namespace HotelBooking.Api.Controllers
             roomPatchDocument.ApplyTo(roomToPartiallyUpdate, ModelState);
 
             return roomToPartiallyUpdate;
+        }
+
+        /// <summary>
+        /// TESTING: Add multiple test images to an existing room
+        /// </summary>
+        [HttpPost("{roomId}/add-test-images")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> AddTestImagesToRoomAsync(Guid roomId)
+        {
+            try
+            {
+                Console.WriteLine($"=== ADDING TEST IMAGES TO ROOM {roomId} ===");
+                
+                // Vérifier que la chambre existe
+                var existingRoom = await _roomService.GetByIdAsync(roomId);
+                
+                // Ajouter des URLs d'images de test
+                var testImageUrls = new List<string>
+                {
+                    "/images/pirate-cabin1.jpg",
+                    "/images/pirate-cabin2.jpg", 
+                    "/images/pirate-cabin3.jpg",
+                    "/images/ocean-view.jpg"
+                };
+
+                // Mettre à jour avec les images multiples
+                existingRoom.ImageUrls = testImageUrls;
+                existingRoom.ImageUrl = testImageUrls.First(); // Image principale
+                
+                Console.WriteLine($"Adding {testImageUrls.Count} test images");
+                foreach (var img in testImageUrls.Select((url, i) => new { url, i }))
+                {
+                    Console.WriteLine($"  Image {img.i + 1}: {img.url}");
+                }
+                
+                await _roomService.UpdateAsync(existingRoom);
+                
+                Console.WriteLine("Test images added successfully!");
+                
+                return Ok(new { 
+                    success = true, 
+                    message = $"{testImageUrls.Count} images de test ajoutées à la chambre {existingRoom.Number}",
+                    images = testImageUrls,
+                    roomNumber = existingRoom.Number,
+                    roomType = existingRoom.Type
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Chambre non trouvée");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur ajout images test: {ex.Message}");
+                return BadRequest($"Erreur: {ex.Message}");
+            }
         }
     }
 }

@@ -72,6 +72,28 @@
                         <textarea class="form-control" @bind="testRoom.BriefDescription" rows="2"></textarea>
                     </div>
                     
+                    <!-- Section Images -->
+                    <div class="mb-3">
+                        <label>Images de test</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-info" @onclick="AddTestImages">
+                                📷 Ajouter images test
+                            </button>
+                            @if (testRoom.ImageCount > 0)
+                            {
+                                <button type="button" class="btn btn-outline-warning" @onclick="ClearImages">
+                                    🗑️ Vider (@testRoom.ImageCount)
+                                </button>
+                            }
+                        </div>
+                        @if (testRoom.HasImages)
+                        {
+                            <div class="mt-2">
+                                <small class="text-success">@testRoom.ImageCount image(s) de test ajoutée(s)</small>
+                            </div>
+                        }
+                    </div>
+                    
                     <button class="btn btn-primary w-100" @onclick="CreateTestRoom" disabled="@isLoading">
                         @if (isLoading)
                         {
@@ -179,6 +201,39 @@
         }
         
         AddLog("✅ Données test remplies", LogType.Success);
+        StateHasChanged();
+    }
+
+    private void AddTestImages()
+    {
+        // Ajouter quelques URLs d'images de test
+        var testImageUrls = new List<string>
+        {
+            "/images/room1.jpg",
+            "/images/room2.jpg", 
+            "/images/room3.jpg",
+            "/images/room4.jpg",
+            "/images/room5.jpg"
+        };
+
+        testRoom.ImageUrls.Clear();
+        var imagesToAdd = testImageUrls.Take(3).ToList(); // Ajouter 3 images de test
+        testRoom.ImageUrls.AddRange(imagesToAdd);
+        
+        if (!string.IsNullOrEmpty(testRoom.ImageUrls.FirstOrDefault()))
+        {
+            testRoom.ImageUrl = testRoom.ImageUrls.First();
+        }
+
+        AddLog($"✅ {imagesToAdd.Count} images de test ajoutées", LogType.Success);
+        StateHasChanged();
+    }
+
+    private void ClearImages()
+    {
+        testRoom.ImageUrls.Clear();
+        testRoom.ImageUrl = null;
+        AddLog("🗑️ Images supprimées", LogType.Info);
         StateHasChanged();
     }
 

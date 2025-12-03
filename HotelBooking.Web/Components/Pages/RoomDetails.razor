@@ -270,24 +270,50 @@
         {
             errorMessage = null;
             
+            Console.WriteLine($"=== DEBUG LoadRoomDetails pour RoomId: {RoomId} ===");
+            
             // Pour l'instant, on utilise la liste des chambres et on trouve celle qui correspond
             // TODO: Créer un endpoint API spécifique GetRoomByIdAsync
             var hotels = await HotelService.GetAllHotelsAsync();
             
+            Console.WriteLine($"Nombre d'hôtels trouvés: {hotels?.Count() ?? 0}");
+            
             foreach (var hotel in hotels)
             {
                 var rooms = await HotelService.GetHotelRoomsAsync(hotel.Id, 1, 100);
-                room = rooms.FirstOrDefault(r => r.Id == RoomId);
-                if (room != null) break;
+                Console.WriteLine($"Hôtel {hotel.Name}: {rooms?.Count() ?? 0} chambres");
+                
+                room = rooms?.FirstOrDefault(r => r.Id == RoomId);
+                if (room != null) 
+                {
+                    Console.WriteLine($"Chambre trouvée: {room.Number} - {room.Type}");
+                    Console.WriteLine($"ImageUrl: {room.ImageUrl ?? "NULL"}");
+                    Console.WriteLine($"ImageUrls count: {room.ImageUrls?.Count ?? 0}");
+                    Console.WriteLine($"AllImageUrls count: {room.AllImageUrls?.Count ?? 0}");
+                    
+                    if (room.AllImageUrls?.Any() == true)
+                    {
+                        for (int i = 0; i < room.AllImageUrls.Count; i++)
+                        {
+                            Console.WriteLine($"  AllImageUrls[{i}]: {room.AllImageUrls[i]}");
+                        }
+                    }
+                    
+                    break;
+                }
             }
 
             if (room == null)
             {
                 errorMessage = "Cette cabine n'a pas été trouvée. Elle a peut-être été supprimée ou n'existe pas.";
+                Console.WriteLine("ERREUR: Chambre non trouvée");
             }
+            
+            Console.WriteLine("=== FIN DEBUG LoadRoomDetails ===");
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"EXCEPTION LoadRoomDetails: {ex.Message}");
             errorMessage = $"Erreur lors du chargement de la cabine : {ex.Message}";
         }
     }

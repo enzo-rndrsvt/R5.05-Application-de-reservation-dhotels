@@ -39,7 +39,7 @@ namespace HotelBooking.Web.Services
 
             try
             {
-                // Créer l'objet à envoyer (sans l'image pour l'instant)
+                // Créer l'objet à envoyer avec support des images multiples
                 var roomToSend = new
                 {
                     roomData.Number,
@@ -49,10 +49,12 @@ namespace HotelBooking.Web.Services
                     roomData.BriefDescription,
                     roomData.PricePerNight,
                     roomData.HotelId,
-                    roomData.ImageUrl // L'URL de l'image déjà uploadée
+                    ImageUrl = roomData.AllImageUrls.FirstOrDefault(), // Image principale pour rétrocompatibilité
+                    ImageUrls = roomData.AllImageUrls // Toutes les images
                 };
 
                 Console.WriteLine($"Données à envoyer: {System.Text.Json.JsonSerializer.Serialize(roomToSend)}");
+                Console.WriteLine($"Nombre d'images: {roomData.AllImageUrls.Count}");
                 Console.WriteLine($"URL de l'API: {_httpClient.BaseAddress}api/admin/rooms");
                 
                 // Vérifier les headers d'auth

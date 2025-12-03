@@ -267,6 +267,11 @@
             <response code="404">The room with the given Id doesn't exist.</response>
             <response code="204">The room is updated successfully.</response>
         </member>
+        <member name="M:HotelBooking.Api.Controllers.RoomAdminController.AddTestImagesToRoomAsync(System.Guid)">
+            <summary>
+            TESTING: Add multiple test images to an existing room
+            </summary>
+        </member>
         <member name="M:HotelBooking.Api.Controllers.RoomController.GetRoomByIdAsync(System.Guid)">
             <summary>
             Get room details by ID.
@@ -659,6 +664,11 @@
             URL or path to the room's image.
             </summary>
         </member>
+        <member name="P:HotelBooking.Api.Models.Room.RoomCreationDTO.ImageUrls">
+            <summary>
+            Collection of image URLs (up to 5 images)
+            </summary>
+        </member>
         <member name="T:HotelBooking.Api.Models.Room.RoomUpdateDTO">
             <summary>
             Model to update room.
@@ -784,6 +794,12 @@
             <summary>
             Hold properties to show for the client.
             </summary>
+        </member>
+        <member name="T:HotelBooking.Api.Profiles.RoomProfile">
+            <inheritdoc cref="T:AutoMapper.Profile"/>
+        </member>
+        <member name="M:HotelBooking.Api.Profiles.RoomProfile.#ctor">
+            <inheritdoc cref="T:AutoMapper.Profile"/>
         </member>
     </members>
 </doc>

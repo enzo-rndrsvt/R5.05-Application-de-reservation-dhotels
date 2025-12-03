@@ -24,7 +24,22 @@ namespace HotelBooking.Infrastructure.Repositories.Room
 
         public async Task<Guid> AddAsync(RoomDTO newRoom)
         {
-            var entityEntry = await _dbContext.Rooms.AddAsync(_mapper.Map<RoomTable>(newRoom));
+            // Convert ImageUrls list to comma-separated string for storage
+            var roomTable = _mapper.Map<RoomTable>(newRoom);
+            
+            // Si on a plusieurs images, les stocker comme une liste séparée par virgules
+            if (newRoom.ImageUrls?.Any() == true)
+            {
+                roomTable.ImageUrl = string.Join(",", newRoom.ImageUrls);
+                Console.WriteLine($"Storing multiple images as: {roomTable.ImageUrl}");
+            }
+            else if (!string.IsNullOrEmpty(newRoom.ImageUrl))
+            {
+                roomTable.ImageUrl = newRoom.ImageUrl;
+                Console.WriteLine($"Storing single image as: {roomTable.ImageUrl}");
+            }
+
+            var entityEntry = await _dbContext.Rooms.AddAsync(roomTable);
             await _dbContext.SaveChangesAsync();
 
             _logger.LogInformation("Created room with Id: {id}", entityEntry.Entity.Id);
