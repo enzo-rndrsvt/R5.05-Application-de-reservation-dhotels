@@ -62,9 +62,18 @@
                     <h4><i class="oi oi-info"></i> Aucune cabine disponible</h4>
                     <p>Le SkullKing n'a pas encore de cabines configurées.</p>
                     <hr>
-                    <div class="mt-3">
-                        <a href="/admin/setup" class="btn btn-primary">
+                    <p class="mb-2"><strong>Diagnostic :</strong></p>
+                    <ul>
+                        <li>Hôtel SkullKing trouvé : ? @skullKingHotel?.Name</li>
+                        <li>ID Hôtel : @skullKingHotel?.Id</li>
+                        <li>Nombre de chambres retournées : @(rooms?.Count() ?? 0)</li>
+                    </ul>
+                    <div class="mt-3 d-flex gap-2">
+                        <a href="/admin/rooms/create" class="btn btn-primary">
                             <i class="oi oi-plus"></i> Créer des cabines
+                        </a>
+                        <a href="/debug-rooms" class="btn btn-warning">
+                            <i class="oi oi-bug"></i> Diagnostic avancé
                         </a>
                     </div>
                 </div>
@@ -302,21 +311,55 @@
     {
         try
         {
+            Console.WriteLine("=== DEBUG ROOMS LOADING ===");
+            
             // Récupérer l'hôtel SkullKing
             var hotels = await HotelService.GetAllHotelsAsync();
-            skullKingHotel = hotels.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+            Console.WriteLine($"Hôtels trouvés: {hotels?.Count() ?? 0}");
+            
+            if (hotels != null && hotels.Any())
+            {
+                foreach (var hotel in hotels)
+                {
+                    Console.WriteLine($"Hôtel: {hotel.Name} (ID: {hotel.Id})");
+                }
+            }
+            
+            skullKingHotel = hotels?.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+            Console.WriteLine($"SkullKing trouvé: {skullKingHotel?.Name ?? "NULL"}");
 
             if (skullKingHotel == null)
             {
                 errorMessage = "L'hôtel SkullKing n'a pas encore été créé.";
+                Console.WriteLine("ERREUR: Aucun hôtel SkullKing trouvé");
                 return;
             }
 
             // Récupérer toutes les chambres de l'hôtel SkullKing
-            rooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 50);
+            Console.WriteLine($"Chargement des chambres pour l'hôtel {skullKingHotel.Id}...");
+            var loadedRooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 50);
+            Console.WriteLine($"Chambres trouvées: {loadedRooms?.Count() ?? 0}");
+            
+            if (loadedRooms != null && loadedRooms.Any())
+            {
+                foreach (var room in loadedRooms.Take(3))
+                {
+                    Console.WriteLine($"Chambre: {room.Number} - {room.Type} (ID: {room.Id})");
+                }
+                if (loadedRooms.Count() > 3)
+                {
+                    Console.WriteLine($"... et {loadedRooms.Count() - 3} autres chambres");
+                }
+            }
+            
+            rooms = loadedRooms;
+            Console.WriteLine($"Rooms assignées: {rooms?.Count() ?? 0}");
+            Console.WriteLine("=== FIN DEBUG ROOMS ===");
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"EXCEPTION dans LoadSkullKingHotelAndRooms: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
             errorMessage = $"Erreur lors du chargement des cabines du SkullKing: {ex.Message}";
         }
     }

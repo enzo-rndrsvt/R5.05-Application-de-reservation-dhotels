@@ -283,37 +283,62 @@ private string successMessage = string.Empty;
       errorMessage = string.Empty;
    successMessage = string.Empty;
      isLoading = true;
+        
+        Console.WriteLine("=== DEBUG CREATION CHAMBRE ===");
+        Console.WriteLine($"HotelId sélectionné: {roomModel.HotelId}");
+        Console.WriteLine($"Numéro chambre: {roomModel.Number}");
+        Console.WriteLine($"Type: {roomModel.Type}");
+        Console.WriteLine($"Capacité adultes: {roomModel.AdultsCapacity}");
+        Console.WriteLine($"Capacité enfants: {roomModel.ChildrenCapacity}");
+        Console.WriteLine($"Prix: {roomModel.PricePerNight}");
+        Console.WriteLine($"Description: {roomModel.BriefDescription}");
+        Console.WriteLine($"ImageUrl: {roomModel.ImageUrl ?? "NULL"}");
 
         try
      {
 if (roomModel.HotelId == Guid.Empty)
       {
     errorMessage = "Veuillez sélectionner un hôtel.";
-           return;
+                Console.WriteLine("ERREUR: Aucun hôtel sélectionné");
+                return;
     }
 
+      Console.WriteLine("Appel de CreateRoomAsync...");
       var result = await HotelAdminService.CreateRoomAsync(roomModel);
+      Console.WriteLine($"Résultat CreateRoomAsync: {result}");
 
     if (result)
      {
      successMessage = $"La chambre {roomModel.Number} ({roomModel.Type}) a été créée avec succès ! " +
       $"Les pirates peuvent maintenant réserver cette cabine pour {roomModel.PricePerNight:C} par nuit.";
         
+  Console.WriteLine("SUCCESS: Chambre créée avec succès");
+        
   // Réinitialiser le formulaire
 roomModel = new RoomCreation();
    }
          else
         {
-    errorMessage = "Erreur lors de la création de la chambre. Vérifiez vos droits d'administrateur et les données saisies.";
+    errorMessage = "Erreur lors de la création de la chambre. L'API a retourné false.";
+    Console.WriteLine("ERREUR: CreateRoomAsync a retourné false");
       }
       }
    catch (Exception ex)
 {
+         Console.WriteLine($"EXCEPTION: {ex.Message}");
+         Console.WriteLine($"StackTrace: {ex.StackTrace}");
          errorMessage = $"Erreur inattendue : {ex.Message}";
-   }
+            
+            // Si c'est une exception HTTP, essayons d'avoir plus de détails
+            if (ex is HttpRequestException httpEx)
+            {
+                errorMessage += $" (HTTP: {httpEx.Message})";
+            }
+        }
         finally
    {
     isLoading = false;
+            Console.WriteLine("=== FIN DEBUG CREATION ===");
         }
     }
 

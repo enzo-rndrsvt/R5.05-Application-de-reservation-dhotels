@@ -34,6 +34,8 @@ namespace HotelBooking.Web.Services
         public async Task<bool> CreateRoomAsync(RoomCreation roomData)
         {
             await AddAuthenticationHeader();
+            
+            Console.WriteLine("=== DEBUG HotelAdminService.CreateRoomAsync ===");
 
             try
             {
@@ -50,12 +52,47 @@ namespace HotelBooking.Web.Services
                     roomData.ImageUrl // L'URL de l'image déjà uploadée
                 };
 
+                Console.WriteLine($"Données à envoyer: {System.Text.Json.JsonSerializer.Serialize(roomToSend)}");
+                Console.WriteLine($"URL de l'API: {_httpClient.BaseAddress}api/admin/rooms");
+                
+                // Vérifier les headers d'auth
+                var authHeader = _httpClient.DefaultRequestHeaders.Authorization;
+                Console.WriteLine($"Header d'auth: {authHeader?.Scheme} {(authHeader?.Parameter != null ? authHeader.Parameter.Substring(0, Math.Min(10, authHeader.Parameter.Length)) : "NULL")}...");
+
                 var response = await _httpClient.PostAsJsonAsync("api/admin/rooms", roomToSend);
+                
+                Console.WriteLine($"Status Code: {response.StatusCode}");
+                Console.WriteLine($"Is Success: {response.IsSuccessStatusCode}");
+                Console.WriteLine($"Reason Phrase: {response.ReasonPhrase}");
+                
+                // TOUJOURS lire le contenu de la réponse pour avoir les détails
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Contenu de la réponse: {errorContent}");
+                
+                // Si c'est un 400 Bad Request, analyser les erreurs de validation
+                if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    Console.WriteLine("=== ERREUR VALIDATION DÉTECTÉE ===");
+                    Console.WriteLine($"Détails de validation: {errorContent}");
+                }
+                
+                // Si c'est un 401/403, problème d'autorisation
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    Console.WriteLine("=== ERREUR AUTORISATION - 401 UNAUTHORIZED ===");
+                }
+                
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    Console.WriteLine("=== ERREUR AUTORISATION - 403 FORBIDDEN ===");
+                }
+                
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la création de la chambre: {ex.Message}");
+                Console.WriteLine($"Exception dans CreateRoomAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 return false;
             }
         }

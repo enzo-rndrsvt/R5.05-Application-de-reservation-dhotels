@@ -48,61 +48,83 @@
     <AuthorizeView Roles="Admin">
         <Authorized Context="adminContext">
             <hr class="border-light">
-            <div class="nav-item px-3">
-                <div class="nav-link text-light">
-                    <span class="oi oi-shield text-warning" aria-hidden="true"></span>
-                    <strong>ADMINISTRATION</strong>
+            
+            <!-- Titre Administration -->
+            <div class="nav-item px-3 mb-2">
+                <div class="nav-link text-warning">
+                    <span class="oi oi-shield" aria-hidden="true"></span>
+                    <strong> ADMINISTRATION</strong>
                 </div>
             </div>
+            
+            <!-- Liens d'administration -->
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="admin/setup">
                     <span class="oi oi-wrench" aria-hidden="true"></span> Configuration
-                    <small class="d-block">Gestion générale</small>
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="admin/rooms/create">
                     <span class="oi oi-plus" aria-hidden="true"></span> Nouvelle Chambre
-                    <small class="d-block">Créer une cabine</small>
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="admin/database">
                     <span class="oi oi-hard-drive" aria-hidden="true"></span> Base de Données
-                    <small class="d-block">Migrations & Maintenance</small>
                 </NavLink>
             </div>
-            <hr class="border-light">
-            <div class="nav-item px-3">
-                <div class="nav-link text-light">
-                    <span class="oi oi-bug text-info" aria-hidden="true"></span>
-                    <strong>DEBUG & TESTS</strong>
+            
+            <hr class="border-light my-2">
+            
+            <!-- Titre Debug -->
+            <div class="nav-item px-3 mb-2">
+                <div class="nav-link text-info">
+                    <span class="oi oi-bug" aria-hidden="true"></span>
+                    <strong> DEBUG & TESTS</strong>
                 </div>
             </div>
+            
+            <!-- Liens de debug -->
             <div class="nav-item px-3">
-       <NavLink class="nav-link" href="test-availability">
-           <span class="oi oi-calendar" aria-hidden="true"></span> Test Disponibilité
-           <small class="d-block">Debug disponibilité</small>
-       </NavLink>
-    </div>
-    <div class="nav-item px-3">
-       <NavLink class="nav-link" href="debug-api">
-           <span class="oi oi-bug" aria-hidden="true"></span> Debug API
-           <small class="d-block">Diagnostic API</small>
-       </NavLink>
-    </div>
-    <div class="nav-item px-3">
-       <NavLink class="nav-link" href="quick-book">
-           <span class="oi oi-flash" aria-hidden="true"></span> Réservation Express
-           <small class="d-block">Bypass vérifications</small>
-       </NavLink>
-    </div>
-    <div class="nav-item px-3">
-       <NavLink class="nav-link" href="test-images">
-           <span class="oi oi-image" aria-hidden="true"></span> Test Images
-           <small class="d-block">Upload d'images</small>
-       </NavLink>
-    </div>
+                <NavLink class="nav-link" href="test-availability">
+                    <span class="oi oi-calendar" aria-hidden="true"></span> Test Disponibilité
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="debug-api">
+                    <span class="oi oi-bug" aria-hidden="true"></span> Debug API
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="debug-rooms">
+                    <span class="oi oi-home" aria-hidden="true"></span> Debug Chambres
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="quick-book">
+                    <span class="oi oi-flash" aria-hidden="true"></span> Réservation Express
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="test-images">
+                    <span class="oi oi-image" aria-hidden="true"></span> Test Images
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="test-admin">
+                    <span class="oi oi-shield" aria-hidden="true"></span> Test Admin
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="test-create-room">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Test Création
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="quick-test-api">
+                    <span class="oi oi-flash" aria-hidden="true"></span> Quick Test API
+                </NavLink>
+            </div>
         </Authorized>
     </AuthorizeView>
       

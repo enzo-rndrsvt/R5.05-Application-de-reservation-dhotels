@@ -96,16 +96,107 @@ namespace HotelBooking.Api.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> PostAsync(RoomCreationDTO newRoom)
         {
+            Console.WriteLine("=== DEBUG API PostAsync (Room) ===");
+            Console.WriteLine($"Reçu RoomCreationDTO: Number={newRoom.Number}, Type={newRoom.Type}");
+            Console.WriteLine($"HotelId={newRoom.HotelId}, Price={newRoom.PricePerNight}");
+            Console.WriteLine($"ImageUrl={newRoom.ImageUrl ?? "NULL"}");
+            
             try
             {
-                await _roomService.AddAsync(_mapper.Map<RoomDTO>(newRoom));
+                var roomDTO = _mapper.Map<RoomDTO>(newRoom);
+                Console.WriteLine($"Mapped to RoomDTO: {System.Text.Json.JsonSerializer.Serialize(roomDTO)}");
+                
+                await _roomService.AddAsync(roomDTO);
+                Console.WriteLine("Room ajoutée avec succès !");
+                
+                return Created();
             }
             catch (ValidationException ex)
             {
+                Console.WriteLine($"ValidationException: {ex.Message}");
                 return BadRequest(ex.GetErrorsForClient());
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception générale: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                
+                // Si c'est une erreur de base de données liée à ImageUrl, retourner un message spécifique
+                if (ex.Message.Contains("Invalid column name 'ImageUrl'") || 
+                    ex.Message.Contains("ImageUrl") ||
+                    ex.InnerException?.Message.Contains("ImageUrl") == true)
+                {
+                    return BadRequest($"ERREUR BASE DE DONNÉES: La colonne ImageUrl n'existe pas. Veuillez appliquer la migration. Détails: {ex.Message}");
+                }
+                
+                // Retourner l'erreur pour debugging
+                return BadRequest($"Erreur interne: {ex.Message}");
+            }
+        }
 
-            return Created();
+        /// <summary>
+        /// EMERGENCY: Fix database schema by adding ImageUrl column
+        /// </summary>
+        [HttpPost("emergency-fix-imageurl")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> EmergencyFixImageUrlAsync()
+        {
+            try
+            {
+                Console.WriteLine("=== EMERGENCY FIX IMAGEURL ===");
+                
+                // Utiliser le RoomService pour tester si on peut créer une chambre test avec ImageUrl
+                var testRoom = new RoomDTO 
+                {
+                    Id = Guid.NewGuid(),
+                    Number = 99999, // Numéro test unique
+                    Type = "EMERGENCY_TEST",
+                    AdultsCapacity = 1,
+                    ChildrenCapacity = 0,
+                    BriefDescription = "Test urgence ImageUrl",
+                    PricePerNight = 1.00m,
+                    CreationDate = DateTime.Now,
+                    ModificationDate = DateTime.Now,
+                    HotelId = Guid.Parse("415d2c20-3590-4111-e70b-08de1d4a02ab"), // SkullKing
+                    ImageUrl = null // Test avec NULL d'abord
+                };
+
+                // Essayer d'ajouter puis supprimer immédiatement
+                var roomId = await _roomService.AddAsync(testRoom);
+                await _roomService.DeleteAsync(roomId);
+                
+                Console.WriteLine("Test réussi - la colonne ImageUrl existe !");
+                
+                return Ok(new { 
+                    success = true, 
+                    message = "La base de données est correctement configurée. La colonne ImageUrl existe.",
+                    action = "NO_FIX_NEEDED"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Test échoué: {ex.Message}");
+                
+                if (ex.Message.Contains("Invalid column name 'ImageUrl'") || 
+                    ex.InnerException?.Message.Contains("Invalid column name 'ImageUrl'") == true)
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "CONFIRMÉ: La colonne ImageUrl n'existe pas dans la base de données.",
+                        error = ex.Message,
+                        solution = "Vous devez exécuter le script SQL manuellement ou appliquer les migrations EF.",
+                        action = "MANUAL_FIX_REQUIRED"
+                    });
+                }
+                
+                return BadRequest(new { 
+                    success = false, 
+                    message = "Erreur lors du test",
+                    error = ex.Message,
+                    action = "UNKNOWN_ERROR"
+                });
+            }
         }
 
         /// <summary>

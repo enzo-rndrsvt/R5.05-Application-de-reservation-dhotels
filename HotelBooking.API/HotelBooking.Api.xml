@@ -245,6 +245,11 @@
             </summary>
             <param name="newRoom">Properties of the new room.</param>
         </member>
+        <member name="M:HotelBooking.Api.Controllers.RoomAdminController.EmergencyFixImageUrlAsync">
+            <summary>
+            EMERGENCY: Fix database schema by adding ImageUrl column
+            </summary>
+        </member>
         <member name="M:HotelBooking.Api.Controllers.RoomAdminController.DeleteAsync(System.Guid)">
             <summary>
             Delete a room with a specific Id.
