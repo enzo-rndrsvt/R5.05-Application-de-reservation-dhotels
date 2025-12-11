@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Bootstrap Simple</title>
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Test Bootstrap Direct</h1>
+        
+        <div id="testCarousel" class="carousel slide">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div style="height: 200px; background: red; color: white; display: flex; align-items: center; justify-content: center;">
+                        Slide 1
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div style="height: 200px; background: blue; color: white; display: flex; align-items: center; justify-content: center;">
+                        Slide 2
+                    </div>
+                </div>
+            </div>
+            
+            <button class="carousel-control-prev" type="button" data-bs-target="#testCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#testCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+        </div>
+        
+        <div class="mt-3">
+            <button onclick="testIt()" class="btn btn-primary">Test Bootstrap</button>
+            <button onclick="goTo(1)" class="btn btn-secondary">Go to Slide 2</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+    
+    <script src="bootstrap/bootstrap.bundle.min.js"></script>
+    <script>
+        function testIt() {
+            const result = document.getElementById('result');
+            if (typeof bootstrap !== 'undefined') {
+                result.innerHTML = '<p style="color: green;">? Bootstrap works!</p>';
+                console.log('Bootstrap:', bootstrap);
+            } else {
+                result.innerHTML = '<p style="color: red;">? Bootstrap NOT working!</p>';
+                console.error('Bootstrap undefined');
+            }
+        }
+        
+        function goTo(index) {
+            if (typeof bootstrap !== 'undefined') {
+                const carousel = document.getElementById('testCarousel');
+                const instance = bootstrap.Carousel.getOrCreateInstance(carousel);
+                instance.to(index);
+            }
+        }
+        
+        // Auto test
+        document.addEventListener('DOMContentLoaded', testIt);
+    </script>
+</body>
+</html>

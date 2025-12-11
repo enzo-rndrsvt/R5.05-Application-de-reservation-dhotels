@@ -24,26 +24,34 @@ namespace HotelBooking.Infrastructure.Repositories.Room
 
         public async Task<Guid> AddAsync(RoomDTO newRoom)
         {
-            // Convert ImageUrls list to comma-separated string for storage
-            var roomTable = _mapper.Map<RoomTable>(newRoom);
-            
-            // Si on a plusieurs images, les stocker comme une liste séparée par virgules
-            if (newRoom.ImageUrls?.Any() == true)
+            try
             {
-                roomTable.ImageUrl = string.Join(",", newRoom.ImageUrls);
-                Console.WriteLine($"Storing multiple images as: {roomTable.ImageUrl}");
+                // Convert ImageUrls list to comma-separated string for storage
+                var roomTable = _mapper.Map<RoomTable>(newRoom);
+                
+                // Si on a plusieurs images, les stocker comme une liste séparée par virgules
+                if (newRoom.ImageUrls?.Any() == true)
+                {
+                    roomTable.ImageUrl = string.Join(",", newRoom.ImageUrls);
+                    Console.WriteLine($"Storing multiple images as: {roomTable.ImageUrl}");
+                }
+                else if (!string.IsNullOrEmpty(newRoom.ImageUrl))
+                {
+                    roomTable.ImageUrl = newRoom.ImageUrl;
+                    Console.WriteLine($"Storing single image as: {roomTable.ImageUrl}");
+                }
+
+                var entityEntry = await _dbContext.Rooms.AddAsync(roomTable);
+                await _dbContext.SaveChangesAsync();
+
+                _logger.LogInformation("Created room with Id: {id}", entityEntry.Entity.Id);
+                return entityEntry.Entity.Id;
             }
-            else if (!string.IsNullOrEmpty(newRoom.ImageUrl))
+            catch (Exception ex)
             {
-                roomTable.ImageUrl = newRoom.ImageUrl;
-                Console.WriteLine($"Storing single image as: {roomTable.ImageUrl}");
+                _logger.LogError(ex, "Error creating room");
+                throw;
             }
-
-            var entityEntry = await _dbContext.Rooms.AddAsync(roomTable);
-            await _dbContext.SaveChangesAsync();
-
-            _logger.LogInformation("Created room with Id: {id}", entityEntry.Entity.Id);
-            return entityEntry.Entity.Id;
         }
 
         public async Task DeleteAsync(Guid id)
@@ -73,8 +81,32 @@ namespace HotelBooking.Infrastructure.Repositories.Room
 
         public async Task UpdateAsync(RoomDTO room)
         {
-            _dbContext.Rooms.Update(_mapper.Map<RoomTable>(room));
-            await _dbContext.SaveChangesAsync();
+            try
+            {
+                var roomTable = _mapper.Map<RoomTable>(room);
+                
+                // Appliquer la même logique que pour AddAsync
+                if (room.ImageUrls?.Any() == true)
+                {
+                    roomTable.ImageUrl = string.Join(",", room.ImageUrls);
+                    Console.WriteLine($"Updating with multiple images as: {roomTable.ImageUrl}");
+                }
+                else if (!string.IsNullOrEmpty(room.ImageUrl))
+                {
+                    roomTable.ImageUrl = room.ImageUrl;
+                    Console.WriteLine($"Updating with single image as: {roomTable.ImageUrl}");
+                }
+                
+                _dbContext.Rooms.Update(roomTable);
+                await _dbContext.SaveChangesAsync();
+                
+                _logger.LogInformation("Updated room with Id: {id}", room.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating room with Id: {id}", room.Id);
+                throw;
+            }
         }
     }
 }

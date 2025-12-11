@@ -60,6 +60,9 @@
                                 }
                                 ?? Test via API (permanent)
                             </button>
+                            <button class="btn btn-info" @onclick="DebugRoomData" disabled="@isLoading">
+                                ?? Debug Données BDD
+                            </button>
                             <a href="/room/@RoomId" class="btn btn-primary">
                                 ??? Voir page détails
                             </a>
@@ -187,6 +190,52 @@
         catch (Exception ex)
         {
             message = $"? Exception: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DebugRoomData()
+    {
+        if (room == null) return;
+
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+            
+            // Ajouter le token d'auth
+            var token = await LocalStorage.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+
+            var response = await httpClient.GetAsync($"api/admin/rooms/{RoomId}/debug");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                message = $"?? Debug BDD: {content}";
+                Console.WriteLine("=== DEBUG ROOM DATA ===");
+                Console.WriteLine(content);
+                Console.WriteLine("=== END DEBUG ===");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                message = $"? Erreur debug ({response.StatusCode}): {errorContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"? Exception debug: {ex.Message}";
         }
         finally
         {

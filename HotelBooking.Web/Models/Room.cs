@@ -34,25 +34,38 @@ namespace HotelBooking.Web.Models
         public string? PrimaryImageUrl => ImageUrls.FirstOrDefault() ?? ImageUrl;
 
         /// <summary>
-        /// Get all available images (combines ImageUrl and ImageUrls)
+        /// Get all available images (ImageUrls parsed from database, no duplicates)
         /// </summary>
         public List<string> AllImageUrls
         {
             get
             {
-                var allImages = new List<string>();
-
+                // Si ImageUrls existe et contient des images valides, les utiliser
                 if (ImageUrls?.Any() == true)
                 {
-                    allImages.AddRange(ImageUrls.Where(url => !string.IsNullOrEmpty(url)));
+                    var validUrls = ImageUrls
+                        .Where(url => !string.IsNullOrWhiteSpace(url) && url.Trim().Length > 3)
+                        .Select(url => url.Trim())
+                        .Distinct() // Éviter les doublons
+                        .Take(5) // Maximum 5 images
+                        .ToList();
+                    
+                    if (validUrls.Any())
+                    {
+                        Console.WriteLine($"Room {Number}: Using ImageUrls - Count={validUrls.Count}");
+                        return validUrls;
+                    }
                 }
 
-                if (!string.IsNullOrEmpty(ImageUrl) && !allImages.Contains(ImageUrl))
+                // Fallback: utiliser ImageUrl si ImageUrls est vide
+                if (!string.IsNullOrWhiteSpace(ImageUrl) && ImageUrl.Trim().Length > 3)
                 {
-                    allImages.Insert(0, ImageUrl);
+                    Console.WriteLine($"Room {Number}: Fallback to single ImageUrl");
+                    return new List<string> { ImageUrl.Trim() };
                 }
 
-                return allImages.Take(5).ToList();
+                Console.WriteLine($"Room {Number}: No valid images found");
+                return new List<string>();
             }
         }
 

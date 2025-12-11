@@ -1,0 +1,156 @@
+@page "/debug-database-public"
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>Test Base de Données (Public)</PageTitle>
+
+<div class="container mt-4">
+    <h2>?? Test Base de Données (Sans Authentification)</h2>
+    
+    <div class="alert alert-info">
+        <h6>?? Test Public</h6>
+        <p>Cette page teste la base de données sans nécessiter d'être connecté.</p>
+        <p>Utilisez-la si vous avez des problèmes d'authentification.</p>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(debugMessage))
+    {
+        <div class="alert alert-info">
+            @debugMessage
+        </div>
+    }
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>Test de l'Intégrité de la Base de Données (Public)</h5>
+        </div>
+        <div class="card-body">
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" @onclick="TestDatabase" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm"></span>
+                    }
+                    ?? Tester la Base de Données (Public)
+                </button>
+            </div>
+            
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="mt-3">
+                    <h6>Résultat :</h6>
+                    <pre style="background-color: #f8f9fa; padding: 1rem; border-radius: 5px; max-height: 400px; overflow-y: auto;">@result</pre>
+                </div>
+            }
+            
+            @if (showSqlScript)
+            {
+                <div class="mt-3">
+                    <h6>? Solution SQL à Appliquer :</h6>
+                    <div class="alert alert-warning">
+                        <p><strong>Exécutez ce script dans SQL Server Management Studio :</strong></p>
+                    </div>
+                    <div style="background-color: #1e1e1e; color: #dcdcdc; padding: 1rem; border-radius: 5px; font-family: 'Courier New', monospace;">
+                        <pre>-- Script de correction rapide
+ALTER TABLE Rooms ADD ImageUrl NVARCHAR(MAX);
+
+UPDATE Rooms 
+SET ImageUrl = 'https://picsum.photos/800/600?random=' + CAST(Number AS NVARCHAR(10))
+WHERE ImageUrl IS NULL;
+
+-- Vérifier le résultat
+SELECT TOP 3 Id, Number, Type, ImageUrl FROM Rooms;</pre>
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn btn-success" @onclick="TestDatabaseAfterFix">
+                            ?? Re-tester après correction SQL
+                        </button>
+                    </div>
+                </div>
+            }
+            
+            <div class="mt-3">
+                <h6>Instructions :</h6>
+                <ol>
+                    <li>Cliquez sur "Tester la Base de Données" pour diagnostiquer</li>
+                    <li>Si erreur "colonne ImageUrl n'existe pas" ? Appliquez le script SQL ci-dessus</li>
+                    <li>Retestez après avoir exécuté le script</li>
+                    <li>Une fois corrigé, vous pourrez créer des chambres</li>
+                </ol>
+            </div>
+            
+            <div class="mt-3">
+                <h6>Liens utiles après correction :</h6>
+                <div class="d-flex gap-2">
+                    <a href="/admin/rooms/create" class="btn btn-success btn-sm">? Créer une chambre</a>
+                    <a href="/admin/test-images" class="btn btn-info btn-sm">??? Test images multiples</a>
+                    <a href="/rooms" class="btn btn-primary btn-sm">?? Voir les chambres</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? debugMessage;
+    private string? result;
+    private bool isLoading = false;
+    private bool showSqlScript = false;
+
+    private async Task TestDatabase()
+    {
+        await RunDatabaseTest(false);
+    }
+    
+    private async Task TestDatabaseAfterFix()
+    {
+        showSqlScript = false;
+        await RunDatabaseTest(true);
+    }
+
+    private async Task RunDatabaseTest(bool isRetry)
+    {
+        isLoading = true;
+        result = null;
+        debugMessage = isRetry ? "Re-test en cours après correction..." : "Test en cours...";
+        StateHasChanged();
+
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+            
+            // Pas besoin de token d'authentification pour cet endpoint
+            var response = await httpClient.GetAsync("api/admin/rooms/test-database");
+            
+            var content = await response.Content.ReadAsStringAsync();
+            
+            if (response.IsSuccessStatusCode)
+            {
+                debugMessage = "? Test réussi - Base de données OK !";
+                showSqlScript = false;
+            }
+            else
+            {
+                debugMessage = "? Problème détecté avec la base de données";
+                
+                // Analyser la réponse pour voir s'il faut montrer le script SQL
+                if (content.Contains("MISSING_IMAGEURL_COLUMN") || content.Contains("ImageUrl"))
+                {
+                    showSqlScript = true;
+                }
+            }
+            
+            result = $"Status: {response.StatusCode}\n\nRéponse:\n{content}";
+        }
+        catch (Exception ex)
+        {
+            debugMessage = $"? Erreur lors du test: {ex.Message}";
+            result = $"Exception:\n{ex.ToString()}";
+            showSqlScript = true; // Montrer le script en cas d'erreur
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

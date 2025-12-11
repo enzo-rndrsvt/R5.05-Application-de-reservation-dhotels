@@ -272,6 +272,16 @@
             TESTING: Add multiple test images to an existing room
             </summary>
         </member>
+        <member name="M:HotelBooking.Api.Controllers.RoomAdminController.DebugRoomAsync(System.Guid)">
+            <summary>
+            DEBUG: Get detailed room information including image URLs breakdown
+            </summary>
+        </member>
+        <member name="M:HotelBooking.Api.Controllers.RoomAdminController.TestDatabaseSchemaAsync">
+            <summary>
+            PUBLIC: Test database schema without authentication (for debugging)
+            </summary>
+        </member>
         <member name="M:HotelBooking.Api.Controllers.RoomController.GetRoomByIdAsync(System.Guid)">
             <summary>
             Get room details by ID.

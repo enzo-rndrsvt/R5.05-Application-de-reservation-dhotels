@@ -301,16 +301,20 @@ namespace HotelBooking.Api.Controllers
                 // Vérifier que la chambre existe
                 var existingRoom = await _roomService.GetByIdAsync(roomId);
                 
-                // Ajouter des URLs d'images de test
+                // Ajouter des URLs d'images de test avec des images placeholder réelles
                 var testImageUrls = new List<string>
                 {
-                    "/images/pirate-cabin1.jpg",
-                    "/images/pirate-cabin2.jpg", 
-                    "/images/pirate-cabin3.jpg",
-                    "/images/ocean-view.jpg"
+                    "https://picsum.photos/800/600?random=1&t=room",
+                    "https://picsum.photos/800/600?random=2&t=pirate", 
+                    "https://picsum.photos/800/600?random=3&t=cabin",
+                    "https://picsum.photos/800/600?random=4&t=ocean"
                 };
 
-                // Mettre à jour avec les images multiples
+                // Nettoyer les anciennes images d'abord
+                existingRoom.ImageUrls = new List<string>();
+                existingRoom.ImageUrl = null;
+
+                // Mettre à jour avec les nouvelles images
                 existingRoom.ImageUrls = testImageUrls;
                 existingRoom.ImageUrl = testImageUrls.First(); // Image principale
                 
@@ -340,6 +344,160 @@ namespace HotelBooking.Api.Controllers
             {
                 Console.WriteLine($"Erreur ajout images test: {ex.Message}");
                 return BadRequest($"Erreur: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// DEBUG: Get detailed room information including image URLs breakdown
+        /// </summary>
+        [HttpGet("{roomId}/debug")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DebugRoomAsync(Guid roomId)
+        {
+            try
+            {
+                var room = await _roomService.GetByIdAsync(roomId);
+                
+                // Analyser le champ ImageUrl brut
+                var rawImageUrl = room.ImageUrl;
+                var imageUrls = room.ImageUrls ?? new List<string>();
+                
+                var debugInfo = new
+                {
+                    RoomId = roomId,
+                    Number = room.Number,
+                    Type = room.Type,
+                    Raw_ImageUrl = rawImageUrl,
+                    Raw_ImageUrl_Length = rawImageUrl?.Length ?? 0,
+                    Raw_Contains_Comma = rawImageUrl?.Contains(',') ?? false,
+                    ImageUrls_Count = imageUrls.Count,
+                    ImageUrls_List = imageUrls,
+                    Parsed_URLs = string.IsNullOrEmpty(rawImageUrl) ? 
+                        new List<string>() : 
+                        (rawImageUrl.Contains(',') ? 
+                            rawImageUrl.Split(',').Select(s => s.Trim()).ToList() : 
+                            new List<string> { rawImageUrl }),
+                    Analysis = new
+                    {
+                        HasRawImageUrl = !string.IsNullOrEmpty(rawImageUrl),
+                        HasImageUrls = imageUrls.Any(),
+                        PotentialDuplicates = imageUrls.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key),
+                        EmptyOrWhitespace = imageUrls.Where(url => string.IsNullOrWhiteSpace(url)),
+                        TooShort = imageUrls.Where(url => url != null && url.Length < 4)
+                    }
+                };
+                
+                Console.WriteLine($"DEBUG Room {roomId}:");
+                Console.WriteLine($"  Raw ImageUrl: {rawImageUrl}");
+                Console.WriteLine($"  ImageUrls Count: {imageUrls.Count}");
+                
+                return Ok(debugInfo);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Chambre non trouvée");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Erreur: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// PUBLIC: Test database schema without authentication (for debugging)
+        /// </summary>
+        [HttpGet("test-database")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> TestDatabaseSchemaAsync()
+        {
+            try
+            {
+                Console.WriteLine("=== PUBLIC DATABASE SCHEMA TEST ===");
+                
+                // Test simple: compter le nombre de chambres
+                var roomCount = await _roomService.GetCountAsync();
+                Console.WriteLine($"Room count: {roomCount}");
+                
+                // Test plus poussé: essayer de récupérer une chambre
+                var rooms = await _roomAdminService.GetByPageAsync(new Domain.Models.PaginationDTO { PageNumber = 1, PageSize = 1 });
+                var firstRoom = rooms.FirstOrDefault();
+                
+                if (firstRoom != null)
+                {
+                    Console.WriteLine($"Found room: {firstRoom.Number} - {firstRoom.Type}");
+                    
+                    // Essayer d'accéder aux propriétés liées aux images
+                    var roomDetails = await _roomService.GetByIdAsync(firstRoom.Id);
+                    
+                    return Ok(new { 
+                        success = true, 
+                        message = "✅ Base de données accessible - Schéma OK",
+                        roomCount = roomCount,
+                        testRoom = new {
+                            firstRoom.Id,
+                            firstRoom.Number,
+                            firstRoom.Type,
+                            ImageUrl = roomDetails.ImageUrl,
+                            ImageUrlsCount = roomDetails.ImageUrls?.Count ?? 0
+                        },
+                        schemaStatus = "SCHEMA_OK"
+                    });
+                }
+                else
+                {
+                    return Ok(new { 
+                        success = true, 
+                        message = "✅ Base de données accessible mais aucune chambre trouvée",
+                        roomCount = roomCount,
+                        schemaStatus = "NO_ROOMS"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Database test failed: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                // Analyser le type d'erreur
+                var errorMessage = ex.Message;
+                var innerErrorMessage = ex.InnerException?.Message ?? "";
+                
+                if (errorMessage.Contains("Invalid column name 'ImageUrl'") || 
+                    innerErrorMessage.Contains("Invalid column name 'ImageUrl'"))
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "❌ CONFIRMÉ: La colonne ImageUrl n'existe pas dans la table Rooms",
+                        error = errorMessage,
+                        innerError = innerErrorMessage,
+                        schemaStatus = "MISSING_IMAGEURL_COLUMN",
+                        solution = "Exécutez le script fix-imageurl-column.sql"
+                    });
+                }
+                else if (errorMessage.Contains("Invalid object name 'Rooms'") || 
+                         innerErrorMessage.Contains("Invalid object name 'Rooms'"))
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "❌ ERREUR CRITIQUE: La table Rooms n'existe pas",
+                        error = errorMessage,
+                        schemaStatus = "MISSING_ROOMS_TABLE",
+                        solution = "Appliquez toutes les migrations Entity Framework"
+                    });
+                }
+                else
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "❌ Erreur de base de données",
+                        error = errorMessage,
+                        innerError = innerErrorMessage,
+                        schemaStatus = "DATABASE_ERROR"
+                    });
+                }
             }
         }
     }

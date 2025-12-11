@@ -50,58 +50,69 @@
                     <div class="card-body p-0">
                         @if (room.AllImageUrls.Any())
                         {
-                            <div id="roomCarousel" class="carousel slide" data-bs-ride="carousel">
+                            var validImages = room.AllImageUrls.Where(url => !string.IsNullOrWhiteSpace(url)).ToList();
+                            var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}"; // ID unique par chambre
+                            
+                            <div id="@carouselId" class="carousel slide" data-bs-ride="carousel">
                                 <div class="carousel-inner">
-                                    @for (int i = 0; i < room.AllImageUrls.Count; i++)
+                                    @for (int i = 0; i < validImages.Count; i++)
                                     {
                                         <div class="carousel-item @(i == 0 ? "active" : "")">
-                                            <img src="@room.AllImageUrls[i]" 
+                                            <img src="@validImages[i]" 
                                                  class="d-block w-100" 
                                                  style="height: 500px; object-fit: cover;" 
-                                                 alt="Cabine @room.Number - Image @(i + 1)" />
+                                                 alt="Cabine @room.Number - Image @(i + 1)"
+                                                 onerror="console.log('Image failed to load: @validImages[i]'); this.style.display='none';" />
                                         </div>
                                     }
                                 </div>
                                 
-                                @if (room.AllImageUrls.Count > 1)
+                                @if (validImages.Count > 1)
                                 {
-                                    <!-- Contrôles du carousel -->
-                                    <button class="carousel-control-prev" type="button" data-bs-target="#roomCarousel" data-bs-slide="prev">
+                                    <!-- Contrôles du carousel avec événements manuels -->
+                                    <button class="carousel-control-prev" type="button" @onclick="PreviousSlide">
                                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                         <span class="visually-hidden">Précédent</span>
                                     </button>
-                                    <button class="carousel-control-next" type="button" data-bs-target="#roomCarousel" data-bs-slide="next">
+                                    <button class="carousel-control-next" type="button" @onclick="NextSlide">
                                         <span class="carousel-control-next-icon" aria-hidden="true"></span>
                                         <span class="visually-hidden">Suivant</span>
                                     </button>
                                     
                                     <!-- Indicateurs -->
                                     <div class="carousel-indicators">
-                                        @for (int i = 0; i < room.AllImageUrls.Count; i++)
+                                        @for (int i = 0; i < validImages.Count; i++)
                                         {
+                                            var index = i;
                                             <button type="button" 
-                                                    data-bs-target="#roomCarousel" 
-                                                    data-bs-slide-to="@i" 
-                                                    class="@(i == 0 ? "active" : "")" 
+                                                    @onclick="() => GoToSlide(index)"
+                                                    class="@(i == currentSlideIndex ? "active" : "")" 
+                                                    aria-current="@(i == currentSlideIndex ? "true" : "false")"
                                                     aria-label="Image @(i + 1)"></button>
                                         }
                                     </div>
                                 }
+                                
+                                <!-- Badge informatif sans debug -->
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-dark bg-opacity-75">@validImages.Count / @validImages.Count</span>
+                                </div>
                             </div>
                             
-                            <!-- Miniatures -->
-                            @if (room.AllImageUrls.Count > 1)
+                            <!-- Miniatures cliquables -->
+                            @if (validImages.Count > 1)
                             {
                                 <div class="row mt-3 px-3">
-                                    @for (int i = 0; i < room.AllImageUrls.Count; i++)
+                                    @for (int i = 0; i < validImages.Count; i++)
                                     {
                                         var index = i; // Capture for onclick
                                         <div class="col-2 mb-2">
-                                            <img src="@room.AllImageUrls[i]" 
-                                                 class="img-thumbnail cursor-pointer" 
-                                                 style="height: 80px; object-fit: cover; cursor: pointer;" 
+                                            <img src="@validImages[i]" 
+                                                 class="img-thumbnail cursor-pointer border-2 @(i == currentSlideIndex ? "border-primary" : "border-secondary")" 
+                                                 style="height: 80px; object-fit: cover; cursor: pointer; transition: all 0.3s ease;" 
                                                  @onclick="() => GoToSlide(index)"
-                                                 alt="Miniature @(i + 1)" />
+                                                 alt="Image @(i + 1)"
+                                                 title="Cliquez pour voir l'image @(i + 1)" />
                                         </div>
                                     }
                                 </div>
@@ -250,6 +261,7 @@
 
     private Room? room;
     private string? errorMessage;
+    private int currentSlideIndex = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -261,6 +273,43 @@
         if (room?.Id != RoomId)
         {
             await LoadRoomDetails();
+            currentSlideIndex = 0; // Reset slide index for new room
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && room != null && room.AllImageUrls.Count > 1)
+        {
+            try
+            {
+                // Attendre que le DOM soit complètement rendu
+                await Task.Delay(200);
+                
+                var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}";
+                
+                Console.WriteLine($"?? Attempting to initialize carousel: {carouselId}");
+                
+                // Essayer d'initialiser le carrousel spécifique
+                var success = await JSRuntime.InvokeAsync<bool>("initializeRoomCarousel", carouselId);
+                
+                if (success)
+                {
+                    Console.WriteLine($"? Carousel {carouselId} initialized successfully for room {room.Number}");
+                }
+                else
+                {
+                    Console.WriteLine($"? Failed to initialize carousel {carouselId} for room {room.Number}");
+                    
+                    // Fallback: essayer l'initialisation générale
+                    await JSRuntime.InvokeVoidAsync("initializeCarousels");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"? Error initializing carousel: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
         }
     }
 
@@ -340,9 +389,54 @@
         }
     }
 
-    private void GoToSlide(int index)
+    private async Task GoToSlide(int index)
     {
-        // Utiliser JavaScript pour aller à la slide spécifique
-        JSRuntime.InvokeVoidAsync("goToCarouselSlide", "roomCarousel", index);
+        try
+        {
+            if (room == null || index < 0 || index >= room.AllImageUrls.Count) return;
+            
+            currentSlideIndex = index;
+            
+            // Obtenir l'ID du carrousel de cette chambre
+            var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}";
+            
+            Console.WriteLine($"GoToSlide called: carouselId={carouselId}, index={index}");
+            
+            // Utiliser JavaScript pour aller à la slide spécifique
+            await JSRuntime.InvokeVoidAsync("goToCarouselSlide", carouselId, index);
+            
+            // Mettre à jour l'interface
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GoToSlide: {ex.Message}");
+        }
+    }
+    
+    private async Task NextSlide()
+    {
+        if (room == null) return;
+        
+        var nextIndex = currentSlideIndex + 1;
+        if (nextIndex >= room.AllImageUrls.Count)
+        {
+            nextIndex = 0; // Revenir au début
+        }
+        
+        await GoToSlide(nextIndex);
+    }
+    
+    private async Task PreviousSlide()
+    {
+        if (room == null) return;
+        
+        var prevIndex = currentSlideIndex - 1;
+        if (prevIndex < 0)
+        {
+            prevIndex = room.AllImageUrls.Count - 1; // Aller à la fin
+        }
+        
+        await GoToSlide(prevIndex);
     }
 }
