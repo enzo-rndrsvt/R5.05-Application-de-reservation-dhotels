@@ -1,0 +1,130 @@
+/* CSS pour la page de création de chambre avec images multiples */
+
+/* Zone de drop pour les images */
+.border-dashed {
+    border-style: dashed !important;
+    transition: all 0.3s ease;
+}
+
+.border-dashed:hover {
+    border-color: #007bff !important;
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Galerie d'images avec overlay */
+.image-gallery-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.image-gallery-item:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Boutons overlay sur les images */
+.image-overlay-btn {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.image-gallery-item:hover .image-overlay-btn {
+    opacity: 1;
+}
+
+/* Badge image principale */
+.badge-primary-image {
+    background: linear-gradient(45deg, #ffd700, #ffed4a) !important;
+    color: #333 !important;
+    font-weight: bold;
+}
+
+/* Animation pour l'upload */
+.upload-progress {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Style pour les boutons de réorganisation */
+.reorder-buttons {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.image-gallery-item:hover .reorder-buttons {
+    opacity: 1;
+}
+
+/* Amélioration du progress bar */
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+    background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+/* Messages de succès avec animation */
+.success-message {
+    animation: slideInDown 0.3s ease;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .image-gallery-item {
+        margin-bottom: 1rem;
+    }
+    
+    .reorder-buttons {
+        opacity: 1; /* Toujours visible sur mobile */
+    }
+    
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+}
+
+/* Hover effect pour la zone d'upload */
+.upload-zone {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-zone:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    border-color: #007bff;
+}
+
+/* Style pour les badges de comptage */
+.image-counter {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+}

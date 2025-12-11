@@ -30,6 +30,8 @@ builder.Services.AddScoped<IHotelAdminService, HotelAdminService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
+builder.Services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 // Ajouter l'authentification et l'autorisation

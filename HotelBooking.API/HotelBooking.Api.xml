@@ -245,6 +245,11 @@
             </summary>
             <param name="newRoom">Properties of the new room.</param>
         </member>
+        <member name="M:HotelBooking.Api.Controllers.RoomAdminController.EmergencyFixImageUrlAsync">
+            <summary>
+            EMERGENCY: Fix database schema by adding ImageUrl column
+            </summary>
+        </member>
         <member name="M:HotelBooking.Api.Controllers.RoomAdminController.DeleteAsync(System.Guid)">
             <summary>
             Delete a room with a specific Id.
@@ -261,6 +266,21 @@
             <param name="roomPatchDocument">Patch operations for (Number, AdultsCapacity, ChildrenCapacity).</param>
             <response code="404">The room with the given Id doesn't exist.</response>
             <response code="204">The room is updated successfully.</response>
+        </member>
+        <member name="M:HotelBooking.Api.Controllers.RoomAdminController.AddTestImagesToRoomAsync(System.Guid)">
+            <summary>
+            TESTING: Add multiple test images to an existing room
+            </summary>
+        </member>
+        <member name="M:HotelBooking.Api.Controllers.RoomAdminController.DebugRoomAsync(System.Guid)">
+            <summary>
+            DEBUG: Get detailed room information including image URLs breakdown
+            </summary>
+        </member>
+        <member name="M:HotelBooking.Api.Controllers.RoomAdminController.TestDatabaseSchemaAsync">
+            <summary>
+            PUBLIC: Test database schema without authentication (for debugging)
+            </summary>
         </member>
         <member name="M:HotelBooking.Api.Controllers.RoomController.GetRoomByIdAsync(System.Guid)">
             <summary>
@@ -649,6 +669,16 @@
             Id of the hotel that contains the room.
             </summary>
         </member>
+        <member name="P:HotelBooking.Api.Models.Room.RoomCreationDTO.ImageUrl">
+            <summary>
+            URL or path to the room's image.
+            </summary>
+        </member>
+        <member name="P:HotelBooking.Api.Models.Room.RoomCreationDTO.ImageUrls">
+            <summary>
+            Collection of image URLs (up to 5 images)
+            </summary>
+        </member>
         <member name="T:HotelBooking.Api.Models.Room.RoomUpdateDTO">
             <summary>
             Model to update room.
@@ -774,6 +804,12 @@
             <summary>
             Hold properties to show for the client.
             </summary>
+        </member>
+        <member name="T:HotelBooking.Api.Profiles.RoomProfile">
+            <inheritdoc cref="T:AutoMapper.Profile"/>
+        </member>
+        <member name="M:HotelBooking.Api.Profiles.RoomProfile.#ctor">
+            <inheritdoc cref="T:AutoMapper.Profile"/>
         </member>
     </members>
 </doc>

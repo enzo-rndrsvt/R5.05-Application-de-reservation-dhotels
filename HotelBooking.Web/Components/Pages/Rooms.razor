@@ -62,9 +62,18 @@
                     <h4><i class="oi oi-info"></i> Aucune cabine disponible</h4>
                     <p>Le SkullKing n'a pas encore de cabines configurées.</p>
                     <hr>
-                    <div class="mt-3">
-                        <a href="/admin/setup" class="btn btn-primary">
+                    <p class="mb-2"><strong>Diagnostic :</strong></p>
+                    <ul>
+                        <li>Hôtel SkullKing trouvé : ? @skullKingHotel?.Name</li>
+                        <li>ID Hôtel : @skullKingHotel?.Id</li>
+                        <li>Nombre de chambres retournées : @(rooms?.Count() ?? 0)</li>
+                    </ul>
+                    <div class="mt-3 d-flex gap-2">
+                        <a href="/admin/rooms/create" class="btn btn-primary">
                             <i class="oi oi-plus"></i> Créer des cabines
+                        </a>
+                        <a href="/debug-rooms" class="btn btn-warning">
+                            <i class="oi oi-bug"></i> Diagnostic avancé
                         </a>
                     </div>
                 </div>
@@ -81,6 +90,35 @@
                     {
                         <div class="col-md-6 col-lg-4 mb-4">
                             <div class="card h-100 shadow-sm border-primary">
+                                <!-- Image de la chambre -->
+                                <div class="position-relative">
+                                    @if (room.HasImages)
+                                    {
+                                        <div class="card-img-top-container" style="height: 200px; overflow: hidden;">
+                                            <img src="@room.PrimaryImageUrl" alt="Cabine @room.Number" 
+                                                 class="card-img-top" 
+                                                 style="width: 100%; height: 200px; object-fit: cover;" />
+                                        </div>
+                                        
+                                        @if (room.ImageCount > 1)
+                                        {
+                                            <span class="badge bg-dark position-absolute" style="top: 10px; right: 10px;">
+                                                <i class="oi oi-camera-slr"></i> @room.ImageCount
+                                            </span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                             style="height: 200px;">
+                                            <div class="text-center text-muted">
+                                                <i class="oi oi-image" style="font-size: 3rem;"></i>
+                                                <p class="mt-2">Aucune image</p>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
                                 <div class="card-header text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
                                     <h5 class="mb-0">
                                         <i class="oi oi-home"></i> Cabine @room.Number
@@ -137,9 +175,9 @@
                                         <a href="/booking/@room.Id" class="btn btn-success">
                                             <i class="oi oi-calendar"></i> Réserver
                                         </a>
-                                        <button class="btn btn-outline-primary" @onclick="() => ShowRoomDetails(room.Id)">
-                                            <i class="oi oi-eye"></i> Détails
-                                        </button>
+                                        <a href="/room/@room.Id" class="btn btn-primary">
+                                            <i class="oi oi-eye"></i> Voir les détails
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -173,86 +211,10 @@
     </AuthorizeView>
 </div>
 
-<!-- Modal pour les détails de chambre -->
-@if (showModal && selectedRoom != null)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-   <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-                <div class="modal-header">
-         <h5 class="modal-title">
-       <i class="oi oi-home"></i> Cabine @selectedRoom.Number - @selectedRoom.Type
-  </h5>
-  <button type="button" class="btn-close" @onclick="CloseModal"></button>
- </div>
- <div class="modal-body">
-     <div class="row">
-           <div class="col-md-6">
-          <h6><i class="oi oi-info"></i> Informations de la cabine</h6>
-         <dl class="row">
-       <dt class="col-4">Type :</dt>
-    <dd class="col-8">@selectedRoom.Type</dd>
-     
-         <dt class="col-4">Capacité adultes :</dt>
-             <dd class="col-8">@selectedRoom.AdultsCapacity matelots</dd>
-          
-          <dt class="col-4">Capacité enfants :</dt>
-                    <dd class="col-8">@selectedRoom.ChildrenCapacity moussaillons</dd>
-    </dl>
-         </div>
-    <div class="col-md-6">
-  <h6><i class="oi oi-dollar"></i> Tarification</h6>
-             @if (selectedRoom.CurrentDiscount != null)
-         {
-      <div class="alert alert-warning">
-         <strong>Réduction de @selectedRoom.CurrentDiscount.Percentage% !</strong>
-   </div>
-      <dl class="row">
-      <dt class="col-6">Prix original :</dt>
-    <dd class="col-6"><del>@selectedRoom.PricePerNight.ToString("C")</del></dd>
-      
-         <dt class="col-6"><strong>Prix réduit :</strong></dt>
- <dd class="col-6"><strong>@CalculateDiscountedPrice(selectedRoom.PricePerNight, selectedRoom.CurrentDiscount.Percentage).ToString("C")</strong></dd>
- </dl>
-               }
-     else
-        {
-   <dl class="row">
-      <dt class="col-6">Prix par nuit :</dt>
-    <dd class="col-6"><strong>@selectedRoom.PricePerNight.ToString("C")</strong></dd>
-    </dl>
-}
-              </div>
-            </div>
-        
-              <hr>
-       
-    <div class="row">
-                <div class="col-12">
-         <h6><i class="oi oi-document"></i> Description</h6>
-      <p>@selectedRoom.BriefDescription</p>
-  </div>
-                </div>
-        </div>
-                <div class="modal-footer">
-     <a href="/booking/@selectedRoom.Id" class="btn btn-success">
-  <i class="oi oi-calendar"></i> Réserver cette cabine
- </a>
-   <button type="button" class="btn btn-secondary" @onclick="CloseModal">
-            <i class="oi oi-x"></i> Fermer
-           </button>
-          </div>
-          </div>
-        </div>
-    </div>
-}
-
 @code {
     private IEnumerable<Room>? rooms;
     private string? errorMessage;
     private HotelForUser? skullKingHotel;
-    private Room? selectedRoom;
-    private bool showModal = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -263,21 +225,55 @@
     {
         try
         {
+            Console.WriteLine("=== DEBUG ROOMS LOADING ===");
+            
             // Récupérer l'hôtel SkullKing
             var hotels = await HotelService.GetAllHotelsAsync();
-            skullKingHotel = hotels.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+            Console.WriteLine($"Hôtels trouvés: {hotels?.Count() ?? 0}");
+            
+            if (hotels != null && hotels.Any())
+            {
+                foreach (var hotel in hotels)
+                {
+                    Console.WriteLine($"Hôtel: {hotel.Name} (ID: {hotel.Id})");
+                }
+            }
+            
+            skullKingHotel = hotels?.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+            Console.WriteLine($"SkullKing trouvé: {skullKingHotel?.Name ?? "NULL"}");
 
             if (skullKingHotel == null)
             {
                 errorMessage = "L'hôtel SkullKing n'a pas encore été créé.";
+                Console.WriteLine("ERREUR: Aucun hôtel SkullKing trouvé");
                 return;
             }
 
             // Récupérer toutes les chambres de l'hôtel SkullKing
-            rooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 50);
+            Console.WriteLine($"Chargement des chambres pour l'hôtel {skullKingHotel.Id}...");
+            var loadedRooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 50);
+            Console.WriteLine($"Chambres trouvées: {loadedRooms?.Count() ?? 0}");
+            
+            if (loadedRooms != null && loadedRooms.Any())
+            {
+                foreach (var room in loadedRooms.Take(3))
+                {
+                    Console.WriteLine($"Chambre: {room.Number} - {room.Type} (ID: {room.Id})");
+                }
+                if (loadedRooms.Count() > 3)
+                {
+                    Console.WriteLine($"... et {loadedRooms.Count() - 3} autres chambres");
+                }
+            }
+            
+            rooms = loadedRooms;
+            Console.WriteLine($"Rooms assignées: {rooms?.Count() ?? 0}");
+            Console.WriteLine("=== FIN DEBUG ROOMS ===");
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"EXCEPTION dans LoadSkullKingHotelAndRooms: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
             errorMessage = $"Erreur lors du chargement des cabines du SkullKing: {ex.Message}";
         }
     }
@@ -285,27 +281,5 @@
     private decimal CalculateDiscountedPrice(decimal originalPrice, decimal discountPercentage)
     {
         return originalPrice * (1 - discountPercentage / 100);
-    }
-
-    private void ShowRoomDetails(Guid roomId)
-    {
-        if (rooms != null)
-        {
-            selectedRoom = rooms.FirstOrDefault(r => r.Id == roomId);
-            showModal = true;
-            StateHasChanged();
-        }
-    }
-
-    private void CloseModal()
-    {
-        showModal = false;
-        selectedRoom = null;
-        StateHasChanged();
-    }
-
-    private void ReserveRoom(Guid roomId)
-    {
-        NavigationManager.NavigateTo($"/booking/{roomId}");
     }
 }

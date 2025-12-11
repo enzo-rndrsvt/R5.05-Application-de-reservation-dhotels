@@ -1,0 +1,105 @@
+/* Styles pour les images de test et placeholders */
+
+.image-placeholder {
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 2rem;
+}
+
+.carousel-debug-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+}
+
+.room-card-image-count {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+/* Animation pour les carrousels */
+.carousel-item img {
+    transition: transform 0.3s ease;
+}
+
+.carousel-item img:hover {
+    transform: scale(1.02);
+}
+
+/* Miniatures */
+.img-thumbnail.cursor-pointer {
+    transition: all 0.2s ease;
+    border-width: 2px !important;
+}
+
+.img-thumbnail.cursor-pointer:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.img-thumbnail.border-primary {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+.img-thumbnail.border-secondary {
+    border-color: #6c757d !important;
+}
+
+/* Amélioration des contrôles de carrousel */
+.carousel-control-prev,
+.carousel-control-next {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.carousel-control-prev {
+    left: 15px;
+}
+
+.carousel-control-next {
+    right: 15px;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+/* Indicateurs de carrousel */
+.carousel-indicators {
+    bottom: 15px;
+}
+
+.carousel-indicators [data-bs-target] {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0 4px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.carousel-indicators [data-bs-target].active {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.4);
+}

@@ -2,7 +2,9 @@
 @using HotelBooking.Web.Models
 @using HotelBooking.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
 @inject IHotelAdminService HotelAdminService
+@inject IImageUploadService ImageUploadService
 @inject NavigationManager NavigationManager
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
 
@@ -155,6 +157,122 @@
     <div class="form-text">Exemple : "Cabine spacieuse avec vue sur les sept mers, équipée d'un hamac confortable et d'un coffre au trésor."</div>
      </div>
 
+     <div class="form-group mb-4">
+         <label class="form-label">
+             <i class="oi oi-image"></i> Images de la chambre (jusqu'à 5)
+         </label>
+         <div class="card">
+             <div class="card-body">
+                 <!-- Zone d'upload d'images multiples -->
+                 <div class="mb-3">
+                     <InputFile class="form-control" OnChange="OnImagesSelected" accept="image/*" multiple />
+                     <div class="form-text">
+                         Formats acceptés: JPG, PNG, GIF, WebP. Taille max: 5MB par image. Maximum 5 images.
+                     </div>
+                     @if (roomModel.ImageCount > 0)
+                     {
+                         <div class="mt-2">
+                             <small class="text-success">
+                                 <i class="oi oi-circle-check"></i> @roomModel.ImageCount image(s) uploadée(s)
+                             </small>
+                         </div>
+                     }
+                 </div>
+                 
+                 @if (isUploadingImages)
+                 {
+                     <div class="text-center">
+                         <div class="spinner-border text-primary" role="status">
+                             <span class="visually-hidden">Upload en cours...</span>
+                         </div>
+                         <p class="mt-2">Upload des images en cours... (@uploadProgress/@totalUpload)</p>
+                         <div class="progress">
+                             <div class="progress-bar" role="progressbar" style="width: @(Math.Round(uploadProgress * 100.0 / Math.Max(totalUpload, 1), 1))%"></div>
+                         </div>
+                     </div>
+                 }
+                 
+                 @if (!string.IsNullOrEmpty(imageUploadError))
+                 {
+                     <div class="alert alert-danger">
+                         <i class="oi oi-warning"></i> @imageUploadError
+                     </div>
+                 }
+                 
+                 <!-- Aperçu des images uploadées -->
+                 @if (roomModel.AllImageUrls.Any())
+                 {
+                     <div class="mb-3">
+                         <h6>Images uploadées (@roomModel.ImageCount/5) :</h6>
+                         <div class="row">
+                             @for (int i = 0; i < roomModel.AllImageUrls.Count; i++)
+                             {
+                                 var index = i; // Capture pour onclick
+                                 var imageUrl = roomModel.AllImageUrls[i];
+                                 <div class="col-md-4 col-lg-3 mb-3">
+                                     <div class="card">
+                                         <img src="@imageUrl" alt="Image @(index + 1)" 
+                                              class="card-img-top" 
+                                              style="height: 150px; object-fit: cover;" />
+                                         <div class="card-body p-2">
+                                             <div class="d-flex justify-content-between align-items-center">
+                                                 <small class="text-muted">Image @(index + 1)</small>
+                                                 <div class="btn-group btn-group-sm">
+                                                     @if (index > 0)
+                                                     {
+                                                         <button type="button" class="btn btn-outline-primary" 
+                                                                 @onclick="() => MoveImageUp(index)" title="Monter">
+                                                             <i class="oi oi-arrow-top"></i>
+                                                         </button>
+                                                     }
+                                                     @if (index < roomModel.AllImageUrls.Count - 1)
+                                                     {
+                                                         <button type="button" class="btn btn-outline-primary" 
+                                                                 @onclick="() => MoveImageDown(index)" title="Descendre">
+                                                             <i class="oi oi-arrow-bottom"></i>
+                                                         </button>
+                                                     }
+                                                     <button type="button" class="btn btn-outline-danger" 
+                                                             @onclick="() => RemoveImage(index)" title="Supprimer">
+                                                         <i class="oi oi-trash"></i>
+                                                     </button>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             }
+                         </div>
+                         @if (roomModel.AllImageUrls.Any())
+                         {
+                             <div class="alert alert-info">
+                                 <i class="oi oi-info"></i> 
+                                 <strong>Astuce :</strong> La première image sera l'image principale visible dans la liste des chambres.
+                                 Utilisez les flèches pour réorganiser l'ordre des images.
+                             </div>
+                         }
+                     </div>
+                 }
+                 
+                 @if (roomModel.CanAddMoreImages && !isUploadingImages)
+                 {
+                     <div class="text-center">
+                         <p class="text-muted">
+                             <i class="oi oi-plus"></i> Vous pouvez ajouter @(5 - roomModel.ImageCount) image(s) supplémentaire(s)
+                         </p>
+                     </div>
+                 }
+                 else if (roomModel.ImageCount >= 5)
+                 {
+                     <div class="alert alert-warning">
+                         <i class="oi oi-info"></i> Limite atteinte : 5 images maximum par chambre.
+                     </div>
+                 }
+             </div>
+         </div>
+         <div class="form-text">Les images seront visibles par tous les clients lors de la réservation.</div>
+     </div>
+
    <div class="d-grid gap-2">
    <button type="submit" class="btn btn-success btn-lg" disabled="@isLoading">
   @if (isLoading)
@@ -198,10 +316,14 @@
     [SupplyParameterFromForm]
     private RoomCreation roomModel { get; set; } = new();
     
-  private IEnumerable<HotelForUser>? hotels;
-private string successMessage = string.Empty;
+    private IEnumerable<HotelForUser>? hotels;
+    private string successMessage = string.Empty;
     private string errorMessage = string.Empty;
     private bool isLoading = false;
+    private bool isUploadingImages = false;
+    private string imageUploadError = string.Empty;
+    private int uploadProgress = 0;
+    private int totalUpload = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -225,37 +347,231 @@ private string successMessage = string.Empty;
       errorMessage = string.Empty;
    successMessage = string.Empty;
      isLoading = true;
+        
+        Console.WriteLine("=== DEBUG CREATION CHAMBRE ===");
+        Console.WriteLine($"HotelId sélectionné: {roomModel.HotelId}");
+        Console.WriteLine($"Numéro chambre: {roomModel.Number}");
+        Console.WriteLine($"Type: {roomModel.Type}");
+        Console.WriteLine($"Capacité adultes: {roomModel.AdultsCapacity}");
+        Console.WriteLine($"Capacité enfants: {roomModel.ChildrenCapacity}");
+        Console.WriteLine($"Prix: {roomModel.PricePerNight}");
+        Console.WriteLine($"Description: {roomModel.BriefDescription}");
+        Console.WriteLine($"Images: {roomModel.ImageCount} images uploadées");
+        
+        foreach (var img in roomModel.AllImageUrls.Select((url, i) => new { url, i }))
+        {
+            Console.WriteLine($"  Image {img.i + 1}: {img.url}");
+        }
 
         try
      {
 if (roomModel.HotelId == Guid.Empty)
       {
     errorMessage = "Veuillez sélectionner un hôtel.";
-           return;
+                Console.WriteLine("ERREUR: Aucun hôtel sélectionné");
+                return;
     }
 
+      Console.WriteLine("Appel de CreateRoomAsync...");
       var result = await HotelAdminService.CreateRoomAsync(roomModel);
+      Console.WriteLine($"Résultat CreateRoomAsync: {result}");
 
     if (result)
      {
      successMessage = $"La chambre {roomModel.Number} ({roomModel.Type}) a été créée avec succès ! " +
       $"Les pirates peuvent maintenant réserver cette cabine pour {roomModel.PricePerNight:C} par nuit.";
         
+  Console.WriteLine("SUCCESS: Chambre créée avec succès");
+        
   // Réinitialiser le formulaire
 roomModel = new RoomCreation();
    }
          else
         {
-    errorMessage = "Erreur lors de la création de la chambre. Vérifiez vos droits d'administrateur et les données saisies.";
+    errorMessage = "Erreur lors de la création de la chambre. L'API a retourné false.";
+    Console.WriteLine("ERREUR: CreateRoomAsync a retourné false");
       }
       }
    catch (Exception ex)
 {
+         Console.WriteLine($"EXCEPTION: {ex.Message}");
+         Console.WriteLine($"StackTrace: {ex.StackTrace}");
          errorMessage = $"Erreur inattendue : {ex.Message}";
-   }
+            
+            // Si c'est une exception HTTP, essayons d'avoir plus de détails
+            if (ex is HttpRequestException httpEx)
+            {
+                errorMessage += $" (HTTP: {httpEx.Message})";
+            }
+        }
         finally
    {
     isLoading = false;
+            Console.WriteLine("=== FIN DEBUG CREATION ===");
         }
+    }
+
+    private async Task OnImagesSelected(InputFileChangeEventArgs e)
+    {
+        imageUploadError = string.Empty;
+        var files = e.GetMultipleFiles(5); // Max 5 files
+        
+        if (!files.Any())
+            return;
+
+        // Vérifier qu'on ne dépasse pas 5 images au total
+        var remainingSlots = 5 - roomModel.ImageCount;
+        if (files.Count > remainingSlots)
+        {
+            imageUploadError = $"Vous ne pouvez ajouter que {remainingSlots} image(s) supplémentaire(s). Limite: 5 images maximum.";
+            return;
+        }
+
+        isUploadingImages = true;
+        totalUpload = files.Count;
+        uploadProgress = 0;
+        StateHasChanged();
+
+        var uploadedUrls = new List<string>();
+
+        try
+        {
+            foreach (var file in files)
+            {
+                // Vérifier que le fichier est valide
+                if (!ImageUploadService.IsValidImage(file))
+                {
+                    imageUploadError = $"Fichier '{file.Name}' invalide. Vérifiez le format (JPG, PNG, GIF, WebP) et la taille (max 5MB).";
+                    break;
+                }
+
+                try
+                {
+                    // Upload de l'image
+                    var imageUrl = await ImageUploadService.UploadImageAsync(file, "rooms");
+                    
+                    if (!string.IsNullOrEmpty(imageUrl))
+                    {
+                        uploadedUrls.Add(imageUrl);
+                        uploadProgress++;
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        imageUploadError = $"Erreur lors de l'upload de '{file.Name}'. Veuillez réessayer.";
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    imageUploadError = $"Erreur lors de l'upload de '{file.Name}': {ex.Message}";
+                    break;
+                }
+            }
+
+            // Ajouter les URLs uploadées à la collection
+            if (uploadedUrls.Any() && string.IsNullOrEmpty(imageUploadError))
+            {
+                roomModel.ImageUrls.AddRange(uploadedUrls);
+                
+                // Si c'était la première image, la mettre aussi dans ImageUrl pour rétrocompatibilité
+                if (string.IsNullOrEmpty(roomModel.ImageUrl) && uploadedUrls.Any())
+                {
+                    roomModel.ImageUrl = uploadedUrls.First();
+                }
+            }
+        }
+        finally
+        {
+            isUploadingImages = false;
+            uploadProgress = 0;
+            totalUpload = 0;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RemoveImage(int index)
+    {
+        if (index >= 0 && index < roomModel.AllImageUrls.Count)
+        {
+            var imageUrl = roomModel.AllImageUrls[index];
+            
+            try
+            {
+                // Supprimer du serveur
+                await ImageUploadService.DeleteImageAsync(imageUrl);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la suppression de l'image: {ex.Message}");
+                // Continuer même si la suppression échoue
+            }
+
+            // Retirer de la collection
+            if (roomModel.ImageUrls.Contains(imageUrl))
+            {
+                roomModel.ImageUrls.Remove(imageUrl);
+            }
+            
+            // Si c'était l'image principale, mettre à jour
+            if (roomModel.ImageUrl == imageUrl)
+            {
+                roomModel.ImageUrl = roomModel.ImageUrls.FirstOrDefault();
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private void MoveImageUp(int index)
+    {
+        if (index > 0 && index < roomModel.ImageUrls.Count)
+        {
+            var imageUrl = roomModel.ImageUrls[index];
+            roomModel.ImageUrls.RemoveAt(index);
+            roomModel.ImageUrls.Insert(index - 1, imageUrl);
+            
+            // Mettre à jour l'image principale si nécessaire
+            if (index - 1 == 0)
+            {
+                roomModel.ImageUrl = imageUrl;
+            }
+            else if (index == 1)
+            {
+                roomModel.ImageUrl = roomModel.ImageUrls.FirstOrDefault();
+            }
+            
+            StateHasChanged();
+        }
+    }
+
+    private void MoveImageDown(int index)
+    {
+        if (index >= 0 && index < roomModel.ImageUrls.Count - 1)
+        {
+            var imageUrl = roomModel.ImageUrls[index];
+            roomModel.ImageUrls.RemoveAt(index);
+            roomModel.ImageUrls.Insert(index + 1, imageUrl);
+            
+            // Mettre à jour l'image principale si nécessaire
+            if (index == 0)
+            {
+                roomModel.ImageUrl = roomModel.ImageUrls.FirstOrDefault();
+            }
+            else if (index + 1 == 0)
+            {
+                roomModel.ImageUrl = imageUrl;
+            }
+            
+            StateHasChanged();
+        }
+    }
+
+    private void ClearImageUploadState()
+    {
+        isUploadingImages = false;
+        imageUploadError = string.Empty;
+        uploadProgress = 0;
+        totalUpload = 0;
     }
 }

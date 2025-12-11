@@ -1,0 +1,172 @@
+@page "/test-admin"
+@using Microsoft.AspNetCore.Components.Authorization
+@using HotelBooking.Web.Services
+@inject ILocalStorageService LocalStorage
+@inject IHttpClientFactory HttpClientFactory
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Test Admin Rights</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-info">
+            <h3>?? Test des Droits Administrateur</h3>
+        </div>
+        <div class="card-body">
+            
+            <AuthorizeView Roles="Admin">
+                <Authorized>
+                    <div class="alert alert-success">
+                        ? Vous êtes connecté en tant qu'<strong>administrateur</strong>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="alert alert-danger">
+                        ? Vous n'êtes PAS administrateur
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+
+            <h5>Tests de connexion :</h5>
+            
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <button class="btn btn-primary w-100" @onclick="TestAuthToken">
+                        ?? Vérifier Token Auth
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-info w-100" @onclick="TestApiCall">
+                        ?? Test Appel API Admin
+                    </button>
+                </div>
+            </div>
+
+            @if (results.Any())
+            {
+                <div class="mt-4">
+                    <h6>Résultats :</h6>
+                    <div class="bg-dark text-light p-3 rounded" style="font-family: monospace; font-size: 12px;">
+                        @foreach (var result in results)
+                        {
+                            <div style="color: @(result.IsSuccess ? "#28a745" : "#dc3545");">
+                                [@result.Timestamp.ToString("HH:mm:ss")] @result.Message
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="mt-4">
+                <AuthorizeView>
+                    <Authorized>
+                        <h6>Informations utilisateur :</h6>
+                        <ul>
+                            <li><strong>Nom :</strong> @context.User.Identity?.Name</li>
+                            <li><strong>Est authentifié :</strong> @context.User.Identity?.IsAuthenticated</li>
+                            <li><strong>Rôles :</strong> @string.Join(", ", context.User.Claims.Where(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role").Select(c => c.Value))</li>
+                            <li><strong>Toutes les claims :</strong></li>
+                            <ul>
+                                @foreach (var claim in context.User.Claims.Take(10))
+                                {
+                                    <li><small>@claim.Type: @claim.Value</small></li>
+                                }
+                            </ul>
+                        </ul>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<TestResult> results = new();
+
+    private async Task TestAuthToken()
+    {
+        try
+        {
+            var token = await LocalStorage.GetItemAsync<string>("authToken");
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                AddResult("? Aucun token trouvé dans le localStorage", false);
+                return;
+            }
+
+            AddResult($"? Token trouvé: {token.Substring(0, Math.Min(20, token.Length))}...", true);
+            
+            // Décoder le token (basique)
+            try
+            {
+                var parts = token.Split('.');
+                if (parts.Length == 3)
+                {
+                    var payload = parts[1];
+                    // Add padding if needed
+                    var padded = payload + new string('=', (4 - payload.Length % 4) % 4);
+                    var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(padded));
+                    AddResult($"?? Payload JWT: {decoded.Substring(0, Math.Min(100, decoded.Length))}...", true);
+                }
+            }
+            catch
+            {
+                AddResult("?? Impossible de décoder le token JWT", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            AddResult($"?? Erreur: {ex.Message}", false);
+        }
+    }
+
+    private async Task TestApiCall()
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+            
+            // Ajouter le token
+            var token = await LocalStorage.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                AddResult("?? Token ajouté aux headers", true);
+            }
+
+            // Test call simple
+            var response = await httpClient.GetAsync("api/admin/rooms?Page=1&PageSize=5");
+            
+            AddResult($"?? Réponse API: {response.StatusCode}", response.IsSuccessStatusCode);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                AddResult($"?? Contenu erreur: {content}", false);
+            }
+            else
+            {
+                AddResult("? Appel API admin réussi !", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            AddResult($"?? Erreur API: {ex.Message}", false);
+        }
+    }
+
+    private void AddResult(string message, bool isSuccess)
+    {
+        results.Add(new TestResult { Message = message, IsSuccess = isSuccess, Timestamp = DateTime.Now });
+        StateHasChanged();
+    }
+
+    public class TestResult
+    {
+        public string Message { get; set; } = "";
+        public bool IsSuccess { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+}

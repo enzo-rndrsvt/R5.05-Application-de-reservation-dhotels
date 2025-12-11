@@ -1,0 +1,377 @@
+@page "/debug-rooms"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@inject IHotelService HotelService
+@inject IJSRuntime JSRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Debug Chambres</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-warning">
+            <h3>?? Diagnostic des Chambres</h3>
+            <p>Outils de diagnostic pour identifier pourquoi les chambres ne s'affichent pas</p>
+        </div>
+        <div class="card-body">
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Tests Disponibles</h5>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" @onclick="TestGetAllHotels" disabled="@isLoading">
+                            @if (isLoading) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                            1. Tester GetAllHotelsAsync()
+                        </button>
+                        
+                        <button class="btn btn-info" @onclick="TestFindSkullKing" disabled="@isLoading">
+                            @if (isLoading) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                            2. Rechercher SkullKing
+                        </button>
+                        
+                        <button class="btn btn-success" @onclick="TestLoadRooms" disabled="@isLoading || selectedHotelId == Guid.Empty">
+                            @if (isLoading) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                            3. Charger Chambres (@selectedHotelName)
+                        </button>
+                        
+                        <button class="btn btn-warning" @onclick="ClearResults">
+                            ??? Vider les résultats
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>Résultats en Temps Réel</h5>
+                    <div class="bg-dark text-light p-3 rounded" style="height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;">
+                        @foreach (var log in debugLogs)
+                        {
+                            <div style="color: @GetLogColor(log.Type);">
+                                [@log.Timestamp.ToString("HH:mm:ss")] @log.Message
+                            </div>
+                        }
+                        
+                        @if (!debugLogs.Any())
+                        {
+                            <div class="text-muted">Aucun log pour le moment. Cliquez sur un bouton de test.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Résumé des résultats -->
+            @if (summaryData != null)
+            {
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>?? Résumé des Données</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h4 class="text-primary">@summaryData.TotalHotels</h4>
+                                            <p>Hôtels trouvés</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h4 class="text-success">@(summaryData.SkullKingFound ? "?" : "?")</h4>
+                                            <p>SkullKing trouvé</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h4 class="text-info">@summaryData.TotalRooms</h4>
+                                            <p>Chambres trouvées</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <h4 class="text-warning">@summaryData.LastTestDuration</h4>
+                                            <p>Durée test (ms)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(summaryData.ErrorMessage))
+                                {
+                                    <div class="alert alert-danger mt-3">
+                                        <strong>Erreur détectée :</strong> @summaryData.ErrorMessage
+                                    </div>
+                                }
+                                
+                                @if (summaryData.SkullKingId != Guid.Empty)
+                                {
+                                    <div class="alert alert-info mt-3">
+                                        <strong>ID SkullKing :</strong> <code>@summaryData.SkullKingId</code>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Actions rapides -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6>?? Actions Rapides</h6>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="/rooms" class="btn btn-outline-primary">
+                                    ?? Voir Page Chambres
+                                </a>
+                                <a href="/admin/setup" class="btn btn-outline-success">
+                                    ?? Configuration Admin
+                                </a>
+                                <a href="/admin/rooms/create" class="btn btn-outline-info">
+                                    ? Créer Chambre
+                                </a>
+                                <button class="btn btn-outline-dark" @onclick="ExportLogs">
+                                    ?? Exporter Logs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isLoading = false;
+    private List<DebugLog> debugLogs = new();
+    private Guid selectedHotelId = Guid.Empty;
+    private string selectedHotelName = "";
+    private SummaryData? summaryData = null;
+
+    private async Task TestGetAllHotels()
+    {
+        AddLog("?? Test GetAllHotelsAsync démarré", LogType.Info);
+        isLoading = true;
+        var startTime = DateTime.Now;
+        
+        try
+        {
+            var hotels = await HotelService.GetAllHotelsAsync();
+            var duration = (DateTime.Now - startTime).TotalMilliseconds;
+            
+            AddLog($"? GetAllHotelsAsync terminé en {duration:F0}ms", LogType.Success);
+            AddLog($"?? Nombre d'hôtels trouvés: {hotels?.Count() ?? 0}", LogType.Info);
+            
+            if (hotels != null && hotels.Any())
+            {
+                foreach (var hotel in hotels)
+                {
+                    AddLog($"?? Hôtel: {hotel.Name} (ID: {hotel.Id})", LogType.Data);
+                }
+            }
+            else
+            {
+                AddLog("?? Aucun hôtel trouvé dans la base de données", LogType.Warning);
+            }
+
+            UpdateSummary(hotels?.Count() ?? 0, false, 0, duration, "");
+        }
+        catch (Exception ex)
+        {
+            var duration = (DateTime.Now - startTime).TotalMilliseconds;
+            AddLog($"? Erreur GetAllHotelsAsync: {ex.Message}", LogType.Error);
+            UpdateSummary(0, false, 0, duration, ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TestFindSkullKing()
+    {
+        AddLog("?? Recherche de l'hôtel SkullKing", LogType.Info);
+        isLoading = true;
+        var startTime = DateTime.Now;
+        
+        try
+        {
+            var hotels = await HotelService.GetAllHotelsAsync();
+            var duration = (DateTime.Now - startTime).TotalMilliseconds;
+            
+            if (hotels == null || !hotels.Any())
+            {
+                AddLog("? Aucun hôtel disponible pour la recherche", LogType.Error);
+                UpdateSummary(0, false, 0, duration, "Aucun hôtel trouvé");
+                return;
+            }
+
+            AddLog($"?? Recherche dans {hotels.Count()} hôtels...", LogType.Info);
+            
+            var skullKing = hotels.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+            
+            if (skullKing != null)
+            {
+                AddLog($"?? SkullKing trouvé ! Nom: {skullKing.Name}", LogType.Success);
+                AddLog($"?? ID: {skullKing.Id}", LogType.Data);
+                AddLog($"? Rating: {skullKing.StarRating}", LogType.Data);
+                AddLog($"?? Chambres: {skullKing.NumberOfRooms}", LogType.Data);
+                
+                selectedHotelId = skullKing.Id;
+                selectedHotelName = skullKing.Name;
+                
+                UpdateSummary(hotels.Count(), true, 0, duration, "", skullKing.Id);
+            }
+            else
+            {
+                AddLog("? Aucun hôtel SkullKing trouvé", LogType.Error);
+                AddLog("?? Noms d'hôtels disponibles:", LogType.Info);
+                foreach (var hotel in hotels.Take(5))
+                {
+                    AddLog($"   - {hotel.Name}", LogType.Data);
+                }
+                
+                UpdateSummary(hotels.Count(), false, 0, duration, "SkullKing introuvable");
+            }
+        }
+        catch (Exception ex)
+        {
+            var duration = (DateTime.Now - startTime).TotalMilliseconds;
+            AddLog($"?? Erreur lors de la recherche: {ex.Message}", LogType.Error);
+            UpdateSummary(0, false, 0, duration, ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TestLoadRooms()
+    {
+        if (selectedHotelId == Guid.Empty)
+        {
+            AddLog("?? Aucun hôtel sélectionné. Faites d'abord le test SkullKing", LogType.Warning);
+            return;
+        }
+
+        AddLog($"?? Chargement des chambres pour {selectedHotelName}", LogType.Info);
+        isLoading = true;
+        var startTime = DateTime.Now;
+        
+        try
+        {
+            var rooms = await HotelService.GetHotelRoomsAsync(selectedHotelId, 1, 50);
+            var duration = (DateTime.Now - startTime).TotalMilliseconds;
+            
+            AddLog($"? Chargement terminé en {duration:F0}ms", LogType.Success);
+            AddLog($"?? Nombre de chambres: {rooms?.Count() ?? 0}", LogType.Info);
+            
+            if (rooms != null && rooms.Any())
+            {
+                foreach (var room in rooms.Take(5))
+                {
+                    AddLog($"?? Chambre {room.Number} ({room.Type}) - {room.PricePerNight:C}", LogType.Data);
+                    if (!string.IsNullOrEmpty(room.ImageUrl))
+                    {
+                        AddLog($"   ??? Image: {room.ImageUrl}", LogType.Data);
+                    }
+                }
+                if (rooms.Count() > 5)
+                {
+                    AddLog($"   ... et {rooms.Count() - 5} autres chambres", LogType.Data);
+                }
+            }
+            else
+            {
+                AddLog("?? Aucune chambre trouvée pour cet hôtel", LogType.Warning);
+            }
+
+            UpdateSummary(summaryData?.TotalHotels ?? 0, summaryData?.SkullKingFound ?? false, 
+                         rooms?.Count() ?? 0, duration, "", summaryData?.SkullKingId ?? Guid.Empty);
+        }
+        catch (Exception ex)
+        {
+            var duration = (DateTime.Now - startTime).TotalMilliseconds;
+            AddLog($"?? Erreur chargement chambres: {ex.Message}", LogType.Error);
+            UpdateSummary(summaryData?.TotalHotels ?? 0, summaryData?.SkullKingFound ?? false, 
+                         0, duration, ex.Message, summaryData?.SkullKingId ?? Guid.Empty);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ClearResults()
+    {
+        debugLogs.Clear();
+        summaryData = null;
+        selectedHotelId = Guid.Empty;
+        selectedHotelName = "";
+        StateHasChanged();
+    }
+
+    private async Task ExportLogs()
+    {
+        var logsText = string.Join("\n", debugLogs.Select(l => $"[{l.Timestamp:HH:mm:ss}] {l.Message}"));
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", logsText);
+        AddLog("?? Logs copiés dans le presse-papier", LogType.Success);
+    }
+
+    private void AddLog(string message, LogType type)
+    {
+        debugLogs.Add(new DebugLog { Message = message, Type = type, Timestamp = DateTime.Now });
+        // Garder seulement les 50 derniers logs
+        if (debugLogs.Count > 50)
+        {
+            debugLogs.RemoveAt(0);
+        }
+        StateHasChanged();
+    }
+
+    private string GetLogColor(LogType type) => type switch
+    {
+        LogType.Success => "#28a745",
+        LogType.Error => "#dc3545",
+        LogType.Warning => "#ffc107",
+        LogType.Info => "#17a2b8",
+        LogType.Data => "#6c757d",
+        _ => "#ffffff"
+    };
+
+    private void UpdateSummary(int totalHotels, bool skullKingFound, int totalRooms, double duration, string error, Guid skullKingId = default)
+    {
+        summaryData = new SummaryData
+        {
+            TotalHotels = totalHotels,
+            SkullKingFound = skullKingFound,
+            TotalRooms = totalRooms,
+            LastTestDuration = $"{duration:F0}ms",
+            ErrorMessage = error,
+            SkullKingId = skullKingId
+        };
+    }
+
+    public enum LogType { Info, Success, Error, Warning, Data }
+
+    public class DebugLog
+    {
+        public string Message { get; set; } = "";
+        public LogType Type { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+
+    public class SummaryData
+    {
+        public int TotalHotels { get; set; }
+        public bool SkullKingFound { get; set; }
+        public int TotalRooms { get; set; }
+        public string LastTestDuration { get; set; } = "";
+        public string ErrorMessage { get; set; } = "";
+        public Guid SkullKingId { get; set; }
+    }
+}

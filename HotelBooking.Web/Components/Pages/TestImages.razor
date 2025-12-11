@@ -1,0 +1,205 @@
+@page "/test-images"
+@using HotelBooking.Web.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject IImageUploadService ImageUploadService
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Test Upload Images</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>??? Test d'Upload d'Images</h3>
+            <p>Testez le service d'upload d'images pour les chambres</p>
+        </div>
+        <div class="card-body">
+            
+            <!-- Formulaire d'upload -->
+            <div class="mb-4">
+                <h5>Upload d'image</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <InputFile class="form-control" OnChange="OnImageSelected" accept="image/*" />
+                        <div class="form-text">
+                            Formats: JPG, PNG, GIF, WebP - Max: 5MB
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        @if (isUploading)
+                        {
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Upload...</span>
+                                </div>
+                                <p>Upload en cours...</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger mt-3">
+                        <i class="oi oi-warning"></i> @errorMessage
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(lastUploadedUrl))
+                {
+                    <div class="alert alert-success mt-3">
+                        <i class="oi oi-circle-check"></i> Image uploadée avec succès !
+                        <p><strong>URL:</strong> <code>@lastUploadedUrl</code></p>
+                    </div>
+                }
+            </div>
+
+            <!-- Images uploadées -->
+            <div class="mb-4">
+                <h5>Images uploadées (@uploadedImages.Count)</h5>
+                
+                @if (uploadedImages.Any())
+                {
+                    <div class="row">
+                        @foreach (var imageInfo in uploadedImages)
+                        {
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    <img src="@imageInfo.Url" alt="Test" class="card-img-top" style="height: 200px; object-fit: cover;" />
+                                    <div class="card-body">
+                                        <p class="card-text">
+                                            <small class="text-muted">
+                                                Uploadée à @imageInfo.UploadTime.ToString("HH:mm:ss")<br>
+                                                Taille: @imageInfo.FileSize
+                                            </small>
+                                        </p>
+                                        <button class="btn btn-danger btn-sm" @onclick="() => DeleteImage(imageInfo)">
+                                            <i class="oi oi-trash"></i> Supprimer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="oi oi-info"></i> Aucune image uploadée pour cette session
+                    </div>
+                }
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex gap-2">
+                <button class="btn btn-warning" @onclick="ClearImages" disabled="@(!uploadedImages.Any())">
+                    <i class="oi oi-reload"></i> Vider la liste
+                </button>
+                
+                <a href="/admin/rooms/create" class="btn btn-primary">
+                    <i class="oi oi-grid-three-up"></i> Créer une chambre
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isUploading = false;
+    private string errorMessage = "";
+    private string lastUploadedUrl = "";
+    private List<ImageInfo> uploadedImages = new();
+
+    private async Task OnImageSelected(InputFileChangeEventArgs e)
+    {
+        errorMessage = "";
+        var file = e.File;
+
+        if (file == null) return;
+
+        // Validation
+        if (!ImageUploadService.IsValidImage(file))
+        {
+            errorMessage = "Fichier image invalide. Vérifiez le format et la taille.";
+            return;
+        }
+
+        isUploading = true;
+        StateHasChanged();
+
+        try
+        {
+            var url = await ImageUploadService.UploadImageAsync(file, "test");
+            
+            if (!string.IsNullOrEmpty(url))
+            {
+                lastUploadedUrl = url;
+                uploadedImages.Add(new ImageInfo 
+                { 
+                    Url = url, 
+                    UploadTime = DateTime.Now,
+                    FileSize = FormatFileSize(file.Size),
+                    FileName = file.Name
+                });
+            }
+            else
+            {
+                errorMessage = "Erreur lors de l'upload";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur: {ex.Message}";
+        }
+        finally
+        {
+            isUploading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteImage(ImageInfo imageInfo)
+    {
+        try
+        {
+            var success = await ImageUploadService.DeleteImageAsync(imageInfo.Url);
+            if (success)
+            {
+                uploadedImages.Remove(imageInfo);
+                if (lastUploadedUrl == imageInfo.Url)
+                {
+                    lastUploadedUrl = "";
+                }
+            }
+            else
+            {
+                errorMessage = "Impossible de supprimer l'image";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors de la suppression: {ex.Message}";
+        }
+    }
+
+    private void ClearImages()
+    {
+        uploadedImages.Clear();
+        lastUploadedUrl = "";
+        errorMessage = "";
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024:F1} KB";
+        return $"{bytes / (1024 * 1024):F1} MB";
+    }
+
+    private class ImageInfo
+    {
+        public string Url { get; set; } = "";
+        public DateTime UploadTime { get; set; }
+        public string FileSize { get; set; } = "";
+        public string FileName { get; set; } = "";
+    }
+}

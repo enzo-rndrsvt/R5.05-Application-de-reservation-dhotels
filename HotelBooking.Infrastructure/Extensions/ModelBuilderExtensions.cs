@@ -129,6 +129,8 @@ namespace HotelBooking.Infrastructure.Extensions
                 room => room.Type, RoomConstants.MaxTypeLength);
             modelBuilder.ConfigureStringLength<RoomTable>(
                 room => room.BriefDescription, RoomConstants.MaxBriefDescriptionLength);
+            modelBuilder.ConfigureStringLength<RoomTable>(
+                room => room.ImageUrl, 500); // Max 500 caractères pour l'URL de l'image
 
             return modelBuilder;
         }
