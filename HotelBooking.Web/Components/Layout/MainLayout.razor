@@ -59,6 +59,17 @@
                             <span>Contact</span>
                         </NavLink>
                     </li>
+
+                    <AuthorizeView Roles="Admin">
+                        <li class="nav-item">
+                            <NavLink class="nav-link custom-link" href="admin/setup">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff9900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="min-width: 18px; margin-right: 8px;">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                                <span style="color: #ff9900;">Admin</span>
+                            </NavLink>
+                        </li>
+                    </AuthorizeView>
                 </ul>
 
                 <div class="d-flex align-items-center">
@@ -100,6 +111,58 @@
     <main class="main-content">
         @Body
     </main>
+
+    <footer id="contact" class="bg-darker-950 border-top border-slate-800 py-5">
+        <div class="container">
+            <div class="row g-4 mb-5">
+                <div class="col-md-3 col-12">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <i class="oi oi-skull fs-2 text-amber-500"></i>
+                        <div>
+                            <div class="text-amber-500 tracking-wider fw-bold">SKULL KING</div>
+                            <div class="text-slate-400 small">Hôtel & Aventures</div>
+                        </div>
+                    </div>
+                    <p class="text-slate-400 small">L'hôtel pirate le plus légendaire des Caraïbes.</p>
+                </div>
+                <div class="col-md-3 col-12">
+                    <h3 class="text-amber-500 fs-5 fw-bold mb-3">Contact</h3>
+                    <div class="d-flex flex-column gap-2 small">
+                        <div class="d-flex align-items-center gap-2 text-slate-400 hover-text-amber transition-colors pointer">
+                            <i class="oi oi-phone"></i> <span>+33 1 23 45 67 89</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-slate-400 hover-text-amber transition-colors pointer">
+                            <i class="oi oi-envelope-closed"></i> <span>contact@skullking.fr</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-slate-400">
+                            <i class="oi oi-map-marker"></i> <span>Île de la Tortue, Caraïbes</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-12">
+                    <h3 class="text-amber-500 fs-5 fw-bold mb-3">Liens Rapides</h3>
+                    <div class="d-flex flex-column gap-2 small">
+                        <a href="/rooms" class="text-slate-400 text-decoration-none hover-text-amber transition-colors">Nos Chambres</a>
+                        <a href="#experiences" class="text-slate-400 text-decoration-none hover-text-amber transition-colors">Expériences</a>
+                        <a href="/booking" class="text-slate-400 text-decoration-none hover-text-amber transition-colors">Réservations</a>
+                    </div>
+                </div>
+                <div class="col-md-3 col-12">
+                    <h3 class="text-amber-500 fs-5 fw-bold mb-3">Suivez-nous</h3>
+                    <div class="d-flex gap-3">
+                        <div class="social-icon pointer"><i class="oi oi-thumb-up"></i></div>
+                        <div class="social-icon pointer"><i class="oi oi-camera-slr"></i></div>
+                        <div class="social-icon pointer"><i class="oi oi-chat"></i></div>
+                    </div>
+                </div>
+            </div>
+            <hr class="border-slate-800 my-4" />
+            <div class="text-center text-slate-500 small">
+                <p class="mb-0">&copy; 2025 Hôtel Skull King. Tous droits réservés.</p>
+                <p class="mt-1">Où les légendes prennent vie</p>
+            </div>
+        </div>
+    </footer>
 </div>
 
 <div id="blazor-error-ui">
@@ -225,5 +288,35 @@
 
     .main-content {
         flex: 1;
+    }
+
+    /* FOOTER */
+    .social-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #1f2732;
+        border: 1px solid var(--color-slate-800);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-slate-400);
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+        .social-icon:hover {
+            border-color: var(--color-amber-500);
+            color: var(--color-amber-500);
+            transform: scale(1.1);
+        }
+
+    .hover-text-amber:hover {
+        color: var(--color-amber-500) !important;
+        cursor: pointer;
+    }
+
+    .pointer {
+        cursor: pointer;
     }
 </style>
