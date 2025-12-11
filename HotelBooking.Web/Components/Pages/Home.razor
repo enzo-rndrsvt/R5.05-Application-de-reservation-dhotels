@@ -1,190 +1,703 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Components.Authorization
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@inject IHotelService HotelService
+@inject NavigationManager NavigationManager
 
-<PageTitle>Hôtel SkullKing - L'hôtel des pirates</PageTitle>
+<PageTitle>Hôtel Skull King - L'hôtel des pirates</PageTitle>
 
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-12 text-center">
-  <h1 class="display-4"><strong>Bienvenue à l'Hôtel SkullKing</strong></h1>
-     <p class="lead">L'hôtel des pirates - Lit à Paris pour vrais pirates</p>
-  <div class="mb-4">
-       @for (int i = 0; i < 5; i++)
-    {
-          <span class="fs-3 text-warning">★</span>
-       }
-        <p class="text-muted">Hôtel 5 étoiles - Propriétaire: Becks</p>
-     </div>
+<div class="hero-section text-center position-relative d-flex flex-column justify-content-center align-items-center">
+
+    <div class="hero-overlay"></div>
+
+    <div class="floating-element position-absolute animate-float" style="top: 20%; left: 10%; opacity: 0.6;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-transparent">
+            <circle cx="12" cy="5" r="3"></circle>
+            <line x1="12" y1="22" x2="12" y2="8"></line>
+            <path d="M5 12H2a10 10 0 0 0 20 0h-3"></path>
+        </svg>
     </div>
+
+    <div class="floating-element position-absolute animate-float-delayed" style="top: 25%; right: 12%; opacity: 0.6;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-transparent">
+            <path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+            <path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.9 5.8 2.8 8"></path>
+            <path d="M12 10V4"></path>
+            <path d="M8 8v2"></path>
+            <path d="M16 8v2"></path>
+        </svg>
     </div>
 
-    <AuthorizeView>
-        <Authorized>
-  <div class="row mt-4">
-       <div class="col-12">
-      <div class="alert alert-success d-flex align-items-center" role="alert">
-  <i class="oi oi-circle-check me-3 fs-4"></i>
-         <div>
-<h4 class="alert-heading mb-1">Ahoy @context.User.Identity?.Name !</h4>
-     <p class="mb-0">Bienvenue à bord, moussaillon ! Prêt à découvrir nos trésors ?</p>
-       </div>
-     </div>
-      </div>
+    <div class="floating-element position-absolute animate-float" style="bottom: 25%; left: 15%; opacity: 0.6;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-transparent">
+            <path d="M8 2h8a4 4 0 0 1 4 4v16l-4-2-4 2-4-2-4 2V6a4 4 0 0 1 4-4Z"></path>
+            <path d="M8 6h.01"></path>
+            <path d="M16 6h.01"></path>
+        </svg>
+    </div>
+
+    <div class="hero-content container position-relative p-4" style="z-index: 10;">
+        <div class="d-flex align-items-center justify-content-center mb-4">
+            <div class="hr-amber-right"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 mx-3 animate-pulse">
+                <circle cx="12" cy="5" r="3"></circle>
+                <line x1="12" y1="22" x2="12" y2="8"></line>
+                <path d="M5 12H2a10 10 0 0 0 20 0h-3"></path>
+            </svg>
+            <div class="hr-amber-left"></div>
         </div>
-     <div class="row mt-3">
-    <div class="col-md-6">
-      <div class="card h-100 border-success">
-          <div class="card-body text-center">
-     <i class="oi oi-grid-three-up display-4 text-success mb-3"></i>
-   <h5 class="card-title">Nos cabines</h5>
-     <p class="card-text">Explorez toutes nos chambres thématiques dignes des plus grands pirates</p>
-    <a href="/rooms" class="btn btn-success btn-lg">
-    <i class="oi oi-home"></i> Découvrir toutes nos cabines
- </a>
-       </div>
-    </div>
-     </div>
- <div class="col-md-6">
-      <div class="card h-100 border-info">
-     <div class="card-body text-center">
- <i class="oi oi-calendar display-4 text-info mb-3"></i>
-   <h5 class="card-title">Réservation</h5>
-  <p class="card-text">Réservez votre aventure au SkullKing dès maintenant</p>
- <a href="/booking" class="btn btn-info btn-lg">
-      <i class="oi oi-calendar"></i> Réserver maintenant
-       </a>
-  </div>
-       </div>
+
+        <h1 class="text-amber-500 tracking-widest text-uppercase animate-fade-in-slow display-3 fw-bold">
+            HÔTEL SKULL KING
+        </h1>
+
+        <div class="mt-4 animate-fade-in-delay-1">
+            <p class="text-slate-300 lead mx-auto" style="max-width: 600px;">
+                Embarquez pour une aventure légendaire dans notre hôtel à thème pirate unique
+            </p>
+            <p class="text-slate-400 fst-italic">
+                "Où chaque nuit est une légende, chaque chambre un trésor"
+            </p>
         </div>
+
+        <div class="pt-5 animate-fade-in-delay-2">
+            <a href="#chambres-section" class="btn btn-lg btn-amber px-5 py-3 group">
+                Découvrir nos chambres
+                <i class="oi oi-media-step-forward ms-2 btn-icon-wave"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="scroll-indicator position-absolute bottom-0 start-50 translate-middle-x mb-5 animate-bounce" style="z-index: 10;">
+        <div class="d-flex flex-column align-items-center gap-2 text-amber-500">
+            <small class="tracking-wider text-uppercase fw-bold" style="letter-spacing: 2px; font-size: 0.75rem;">DÉFILER</small>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
+            </svg>
+        </div>
+    </div>
+</div>
+
+<section id="chambres-section" class="py-5 bg-darker-950" style="position: relative;">
+
+    <div class="position-absolute top-0 start-0 w-100 h-100" style="opacity: 0.05; pointer-events: none;">
+        <div class="position-absolute top-0 start-0" style="width: 400px; height: 400px; background: var(--color-amber-500); filter: blur(150px); border-radius: 50%;"></div>
+        <div class="position-absolute bottom-0 end-0" style="width: 400px; height: 400px; background: #06b6d4; filter: blur(150px); border-radius: 50%;"></div>
+    </div>
+
+    <div class="container my-5 position-relative z-10">
+        <div class="text-center mb-5">
+            <span class="badge badge-amber-outline p-2 mb-3">
+                Nos Cabines Légendaires
+            </span>
+            <h2 class="text-amber-500 tracking-widest text-uppercase">
+                CHOISISSEZ VOTRE AVENTURE
+            </h2>
+            <p class="text-slate-400 mx-auto" style="max-width: 700px;">
+                Chaque chambre est une aventure unique, inspirée des personnages mythiques du jeu Skull King.
+                Plongez dans un univers où luxe et légende se rencontrent.
+            </p>
+        </div>
+
+        @if (featuredRooms == null)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-amber-500" role="status"></div>
+                <p class="text-slate-400 mt-3">Chargement des trésors...</p>
             </div>
-   
- <!-- Description de l'hôtel SkullKing -->
-  <div class="row mt-4">
- <div class="col-12">
-      <div class="card border-primary">
-   <div class="card-header bg-primary text-white">
-  <h4><i class="oi oi-info"></i> À propos du SkullKing</h4>
-       </div>
-  <div class="card-body">
-    <div class="row">
-    <div class="col-md-8">
-    <p class="lead">Bienvenue à bord du SkullKing, l'hôtel le plus légendaire des sept mers !</p>
-  <p>
-       Notre établissement 5 étoiles vous offre une expérience unique 
-       au cœur de Paris, où l'aventure pirate rencontre le confort moderne. 
-   Sous la direction du capitaine Becks, notre équipage 
-     vous garantit un séjour inoubliable.
-    </p>
-       <p>
-   Que vous soyez un matelot en quête d'aventure ou un capitaine expérimenté, 
-      nos cabines soigneusement aménagées sauront 
-répondre à tous vos besoins d'aventurier.
-       </p>
-   </div>
-<div class="col-md-4">
- <h5><strong>Le SkullKing en bref</strong></h5>
-    <dl class="row">
-       <dt class="col-6">Nom :</dt>
-    <dd class="col-6">SkullKing</dd>
-    
-  <dt class="col-6">Capitaine :</dt>
-     <dd class="col-6">Becks</dd>
-     
-  <dt class="col-6">Classification :</dt>
-    <dd class="col-6">5 <span class="text-warning">★★★★★</span></dd>
-     
-  <dt class="col-6">Localisation :</dt>
-         <dd class="col-6">Paris, France</dd>
-     </dl>
-</div>
-   </div>
- </div>
-      </div>
- </div>
-    </div>
+        }
+        else if (!featuredRooms.Any())
+        {
+            <AuthorizeView>
+                <NotAuthorized>
+                    <div class="alert alert-warning d-flex align-items-center p-4 shadow-lg border-amber-300-light mb-5 mx-auto" role="alert" style="background-color: rgba(102, 77, 3, 0.4); border-color: #ffc107; max-width: 800px;">
+                        <i class="oi oi-lock-locked me-3 fs-3 text-warning"></i>
+                        <div>
+                            <h4 class="alert-heading mb-1 text-uppercase fw-bold text-amber-500">Accès au navire refusé !</h4>
+                            <p class="mb-0 text-light">Pour découvrir nos cabines, il faut d'abord s'identifier, matelot !</p>
+                        </div>
+                    </div>
 
-    <!-- Section Réservations et services -->
-    <div class="row mt-4">
-      <div class="col-md-6">
-     <div class="card h-100 border-success">
-      <div class="card-header bg-success text-white">
-      <h5><i class="oi oi-calendar"></i> Réservation</h5>
-         </div>
-        <div class="card-body">
-         <p>Réservez votre cabine au SkullKing et embarquez pour l'aventure !</p>
-   <div class="d-grid">
-     <a href="/booking" class="btn btn-success btn-lg">
-         <i class="oi oi-calendar"></i> Faire une réservation
-           </a>
+                    <div class="row g-4 justify-content-center">
+                        <div class="col-md-8 col-lg-6">
+                            <div class="card card-dark-theme h-100 text-center p-5 shadow-lg">
+                                <div class="card-body">
+                                    <i class="oi oi-account-login display-3 mb-3 text-amber-500"></i>
+                                    <h5 class="card-title fw-bold text-amber-500 mb-3">Embarquez avec nous !</h5>
+                                    <p class="card-text text-slate-400 mb-4">Rejoignez l'équipage pour accéder à toutes nos merveilles.</p>
+                                    <div class="d-flex justify-content-center gap-3">
+                                        <a href="/login" class="btn btn-amber btn-lg px-4">
+                                            <i class="oi oi-account-login"></i> Connexion
+                                        </a>
+                                        <a href="/register" class="btn btn-outline-amber btn-lg px-4">
+                                            <i class="oi oi-plus"></i> Inscription
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </NotAuthorized>
+                <Authorized>
+                    <div class="text-center py-5">
+                        <i class="oi oi-info display-4 text-slate-400 mb-3"></i>
+                        <p class="text-slate-400">Le capitaine n'a pas encore ouvert de cabines.</p>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var room in featuredRooms)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card card-dark-theme h-100 border-0 overflow-hidden">
+
+                            <div class="position-relative" style="height: 240px;">
+                                @if (room.HasImages)
+                                {
+                                    <img src="@room.PrimaryImageUrl" alt="Cabine @room.Number"
+                                         class="card-img-top h-100 w-100 object-fit-cover transition-transform" />
+                                }
+                                else
+                                {
+                                    <div class="h-100 w-100 bg-secondary d-flex align-items-center justify-content-center text-white-50 transition-transform">
+                                        <i class="oi oi-image fs-1"></i>
+                                    </div>
+                                }
+
+                                <div class="position-absolute inset-0" style="background: linear-gradient(to top, rgba(13, 17, 23, 0.9) 0%, transparent 60%);"></div>
+
+                                <span class="badge bg-amber-500 text-dark position-absolute top-0 end-0 m-3 d-flex align-items-center fs-6">
+                                    <i class="oi oi-star me-1"></i> @room.PricePerNight.ToString("C0")<small>/nuit</small>
+                                </span>
+
+                                <div class="position-absolute bottom-0 start-0 p-3">
+                                    <h5 class="card-title fw-bold text-amber-500 mb-1">
+                                        Cabine @room.Number
+                                    </h5>
+                                    <div class="d-flex align-items-center text-slate-300 small">
+                                        <i class="oi oi-people me-2"></i> @(room.AdultsCapacity + room.ChildrenCapacity) personnes
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-body p-4 d-flex flex-column">
+                                <p class="card-text text-slate-400 flex-grow-1 mb-4" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                    @room.BriefDescription
+                                </p>
+
+                                <div class="d-flex flex-wrap gap-2 mb-4">
+                                    <span class="badge badge-amber-outline-sm">Vue sur l'océan</span>
+                                    <span class="badge badge-amber-outline-sm">@room.Type</span>
+                                </div>
+
+                                <a href="/room/@room.Id" class="btn btn-outline-amber w-100 d-flex align-items-center justify-content-center group">
+                                    Découvrir <i class="oi oi-arrow-right ms-2 transition-transform group-hover-translate"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<section id="experiences" class="py-5" style="background: linear-gradient(to bottom, var(--color-dark-950), #0f172a);">
+    <div class="container my-5">
+        <div class="text-center mb-5">
+            <h2 class="text-amber-500 mb-2 tracking-widest text-uppercase fw-bold" style="letter-spacing: 0.1em;">
+                EXPÉRIENCES PIRATES
+            </h2>
+            <p class="text-slate-400 mx-auto" style="max-width: 600px;">
+                Vivez des aventures inoubliables pendant votre séjour
+            </p>
         </div>
-   </div>
-         </div>
-      </div>
- 
-        <div class="col-md-6">
-         <div class="card h-100 border-info">
-   <div class="card-header bg-info text-white">
-    <h5><i class="oi oi-list"></i> Mes Réservations</h5>
- </div>
-  <div class="card-body">
-           <p>Consultez et gérez toutes vos réservations au SkullKing.</p>
-           <div class="d-grid">
-       <a href="/my-bookings" class="btn btn-info btn-lg">
-      <i class="oi oi-list"></i> Voir mes réservations
-  </a>
-     </div>
-         </div>
-     </div>
-     </div>
-   </div>
-        </Authorized>
-<NotAuthorized>
-     <div class="row mt-4">
-       <div class="col-12">
-      <div class="alert alert-warning d-flex align-items-center" role="alert">
-       <i class="oi oi-circle-x me-3 fs-4"></i>
-  <div>
- <h4 class="alert-heading mb-1">Accès au navire refusé !</h4>
-   <p class="mb-0">Ahoy ! Pour monter à bord du SkullKing, il faut d'abord s'identifier, matelot !</p>
-    </div>
-      </div>
-  </div>
-       </div>
-    <div class="row mt-3">
-     <div class="col-md-6 offset-md-3 text-center">
-       <div class="card border-primary">
-<div class="card-body">
-     <i class="oi oi-account-login display-4 text-primary mb-3"></i>
-  <h3><strong>Embarquez avec nous !</strong></h3>
-       <p>Rejoignez l'équipage pour accéder à toutes nos merveilles pirates</p>
- <div class="d-grid gap-2 d-md-block">
-<a href="/login" class="btn btn-primary btn-lg">
-       <i class="oi oi-account-login"></i> Connexion
-     </a>
- <a href="/register" class="btn btn-outline-primary btn-lg">
-      <i class="oi oi-plus"></i> Inscription
-     </a>
-     </div>
-      </div>
-      </div>
-    </div>
-     </div>
-     
-      <!-- Aperçu de l'hôtel pour les visiteurs -->
-      <div class="row mt-4">
-    <div class="col-12">
-       <div class="card border-secondary">
-       <div class="card-header">
-     <h5><i class="oi oi-info"></i> Découvrez le SkullKing</h5>
- </div>
- <div class="card-body text-muted">
-      <p>L'hôtel SkullKing vous attend avec ses cabines thématiques et son ambiance pirate unique. 
-      Connectez-vous pour découvrir toutes nos offres et réserver votre aventure !
-      </p>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="card-experience h-100 p-4">
+                    <div class="card-body text-center p-0">
+                        <div class="icon-circle-gradient gradient-blue mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500">
+                                <path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+                                <path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.9 5.8 2.8 8" />
+                                <path d="M12 10V4" />
+                                <path d="M8 8v2" />
+                                <path d="M16 8v2" />
+                            </svg>
+                        </div>
+                        <h5 class="fw-bold text-slate-200 mb-2">Croisière Pirate</h5>
+                        <p class="text-slate-400 small mb-0">Embarquez à bord de notre galion authentique pour une aventure en haute mer</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card-experience h-100 p-4">
+                    <div class="card-body text-center p-0">
+                        <div class="icon-circle-gradient gradient-amber mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500">
+                                <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+                                <line x1="9" x2="9" y1="3" y2="18" />
+                                <line x1="15" x2="15" y1="6" y2="21" />
+                            </svg>
+                        </div>
+                        <h5 class="fw-bold text-slate-200 mb-2">Chasse au Trésor</h5>
+                        <p class="text-slate-400 small mb-0">Suivez la carte et résolvez les énigmes pour découvrir le trésor caché</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card-experience h-100 p-4">
+                    <div class="card-body text-center p-0">
+                        <div class="icon-circle-gradient gradient-purple mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500">
+                                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
+                                <path d="M7 2v20" />
+                                <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+                            </svg>
+                        </div>
+                        <h5 class="fw-bold text-slate-200 mb-2">Restaurant Le Kraken</h5>
+                        <p class="text-slate-400 small mb-0">Savourez une cuisine gastronomique inspirée des saveurs des Caraïbes</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card-experience h-100 p-4">
+                    <div class="card-body text-center p-0">
+                        <div class="icon-circle-gradient gradient-green mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500">
+                                <circle cx="12" cy="12" r="10" />
+                                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                            </svg>
+                        </div>
+                        <h5 class="fw-bold text-slate-200 mb-2">Navigation Nocturne</h5>
+                        <p class="text-slate-400 small mb-0">Apprenez l'art de la navigation aux étoiles avec nos capitaines</p>
+                    </div>
+                </div>
+            </div>
         </div>
-     </div>
-       </div>
     </div>
-        </NotAuthorized>
-    </AuthorizeView>
-</div>
+</section>
+
+<footer id="contact" class="bg-darker-950 border-top border-slate-800 py-5">
+    <div class="container">
+        <div class="row g-4 mb-5">
+            <div class="col-md-3 col-12">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <i class="oi oi-skull fs-2 text-amber-500"></i>
+                    <div>
+                        <div class="text-amber-500 tracking-wider fw-bold">SKULL KING</div>
+                        <div class="text-slate-400 small">Hôtel & Aventures</div>
+                    </div>
+                </div>
+                <p class="text-slate-400 small">L'hôtel pirate le plus légendaire des Caraïbes.</p>
+            </div>
+            <div class="col-md-3 col-12">
+                <h3 class="text-amber-500 fs-5 fw-bold mb-3">Contact</h3>
+                <div class="d-flex flex-column gap-2 small">
+                    <div class="d-flex align-items-center gap-2 text-slate-400 hover-text-amber transition-colors pointer">
+                        <i class="oi oi-phone"></i> <span>+33 1 23 45 67 89</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 text-slate-400 hover-text-amber transition-colors pointer">
+                        <i class="oi oi-envelope-closed"></i> <span>contact@skullking.fr</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 text-slate-400">
+                        <i class="oi oi-map-marker"></i> <span>Île de la Tortue, Caraïbes</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-12">
+                <h3 class="text-amber-500 fs-5 fw-bold mb-3">Liens Rapides</h3>
+                <div class="d-flex flex-column gap-2 small">
+                    <a href="/rooms" class="text-slate-400 text-decoration-none hover-text-amber transition-colors">Nos Chambres</a>
+                    <a href="#experiences" class="text-slate-400 text-decoration-none hover-text-amber transition-colors">Expériences</a>
+                    <a href="/booking" class="text-slate-400 text-decoration-none hover-text-amber transition-colors">Réservations</a>
+                </div>
+            </div>
+            <div class="col-md-3 col-12">
+                <h3 class="text-amber-500 fs-5 fw-bold mb-3">Suivez-nous</h3>
+                <div class="d-flex gap-3">
+                    <div class="social-icon pointer"><i class="oi oi-thumb-up"></i></div>
+                    <div class="social-icon pointer"><i class="oi oi-camera-slr"></i></div>
+                    <div class="social-icon pointer"><i class="oi oi-chat"></i></div>
+                </div>
+            </div>
+        </div>
+        <hr class="border-slate-800 my-4" />
+        <div class="text-center text-slate-500 small">
+            <p class="mb-0">&copy; 2025 Hôtel Skull King. Tous droits réservés.</p>
+            <p class="mt-1">Où les légendes prennent vie</p>
+        </div>
+    </div>
+</footer>
+
+@code {
+    private IEnumerable<Room>? featuredRooms;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFeaturedRooms();
+    }
+
+    private async Task LoadFeaturedRooms()
+    {
+        try
+        {
+            var hotels = await HotelService.GetAllHotelsAsync();
+            var skullKingHotel = hotels?.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+
+            if (skullKingHotel != null)
+            {
+                // Charge seulement 3 chambres pour l'accueil
+                var loadedRooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 3);
+                featuredRooms = loadedRooms;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur chargement chambres page d'accueil : {ex.Message}");
+        }
+    }
+}
+
+<style>
+    /* VARIABLES GLOBALES */
+    :root {
+        --color-dark-950: #0d1117;
+        --color-dark-900: #1f2732;
+        --color-slate-800: #334155;
+        --color-slate-400: #94a3b8;
+        --color-slate-300: #cbd5e1;
+        --color-amber-500: #ff9900;
+        --color-amber-600: #e68a00;
+    }
+
+    body {
+        background-color: var(--color-dark-950) !important;
+        color: white;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .bg-darker-950 {
+        background-color: var(--color-dark-950) !important;
+    }
+
+    .bg-gradient-dark-900 {
+        background: linear-gradient(to bottom, var(--color-dark-950) 0%, #171d24 100%);
+    }
+
+    .text-amber-500 {
+        color: var(--color-amber-500) !important;
+    }
+
+    .text-slate-400 {
+        color: var(--color-slate-400) !important;
+    }
+
+    .text-slate-300 {
+        color: var(--color-slate-300) !important;
+    }
+
+    .border-slate-800 {
+        border-color: var(--color-slate-800) !important;
+    }
+
+    .bg-amber-500 {
+        background-color: var(--color-amber-500) !important;
+    }
+
+    .text-amber-transparent {
+        color: rgba(255, 153, 0, 0.2);
+    }
+
+    /* HERO */
+    .hero-section {
+        height: 100vh;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+        background-image: url('/uploads/backgroundhomepage.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(13, 17, 23, 0.7) 0%, rgba(13, 17, 23, 0.5) 50%, rgba(13, 17, 23, 1) 100%);
+        z-index: 1;
+    }
+
+    .floating-element {
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 10;
+    }
+
+    .hr-amber-right {
+        height: 1px;
+        width: 60px;
+        background: linear-gradient(to right, transparent, var(--color-amber-500));
+    }
+
+    .hr-amber-left {
+        height: 1px;
+        width: 60px;
+        background: linear-gradient(to left, transparent, var(--color-amber-500));
+    }
+
+    /* ANIMATIONS */
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-20px);
+        }
+    }
+
+    @@keyframes float-delayed {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-15px);
+        }
+    }
+
+    @@keyframes bounce {
+        0%, 100% {
+            transform: translateY(-25%) translateX(-50%);
+        }
+
+        50% {
+            transform: translateX(-50%);
+        }
+    }
+
+    @@keyframes fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: .7;
+            transform: scale(1.1);
+        }
+    }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .animate-float-delayed {
+        animation: float-delayed 8s ease-in-out infinite 2s;
+    }
+
+    .animate-bounce {
+        animation: bounce 1.5s infinite;
+    }
+
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .animate-fade-in-slow {
+        animation: fade-in 1.2s ease-out;
+    }
+
+    .animate-fade-in-delay-1 {
+        animation: fade-in 1.2s ease-out 0.4s backwards;
+    }
+
+    .animate-fade-in-delay-2 {
+        animation: fade-in 1.2s ease-out 0.8s backwards;
+    }
+
+    /* COMPOSANTS */
+    .btn-amber {
+        background-color: var(--color-amber-500);
+        color: var(--color-dark-950);
+        border: 2px solid var(--color-amber-500);
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+        .btn-amber:hover {
+            background-color: var(--color-amber-600);
+            border-color: var(--color-amber-600);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+    .btn-outline-amber {
+        color: var(--color-amber-500);
+        border: 2px solid var(--color-amber-500);
+        background-color: transparent;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+        .btn-outline-amber:hover {
+            background-color: var(--color-amber-500);
+            color: var(--color-dark-950);
+            text-decoration: none;
+        }
+
+    .badge-amber-outline {
+        border: 1px solid var(--color-amber-500);
+        color: var(--color-amber-500);
+        background-color: rgba(255, 153, 0, 0.1);
+        font-size: 0.9rem;
+    }
+
+    .badge-amber-outline-sm {
+        border: 1px solid rgba(255, 153, 0, 0.5);
+        color: var(--color-slate-400);
+        font-size: 0.75rem;
+        padding: 0.35em 0.65em;
+        background-color: transparent;
+    }
+
+    /* CARTES CHAMBRES */
+    .card-dark-theme {
+        background-color: rgba(31, 39, 50, 0.7);
+        border: 1px solid var(--color-slate-800);
+        backdrop-filter: blur(5px);
+        transition: border-color 0.3s, transform 0.3s;
+    }
+
+        .card-dark-theme:hover {
+            border-color: var(--color-amber-500);
+            transform: translateY(-5px);
+        }
+
+            .card-dark-theme:hover .transition-transform {
+                transform: scale(1.1);
+            }
+
+    .object-fit-cover {
+        object-fit: cover;
+    }
+
+    .transition-transform {
+        transition: transform 0.7s ease;
+    }
+
+    .inset-0 {
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    .group:hover .group-hover-translate {
+        transform: translateX(5px);
+    }
+
+    /* EXPÉRIENCES */
+    .card-experience {
+        background-color: rgba(15, 23, 42, 0.5);
+        border: 1px solid #1e293b;
+        border-radius: 0.5rem;
+        backdrop-filter: blur(4px);
+        transition: all 0.3s ease;
+    }
+
+        .card-experience:hover {
+            border-color: rgba(245, 158, 11, 0.5);
+            transform: translateY(-5px);
+        }
+
+    .text-slate-200 {
+        color: #e2e8f0 !important;
+    }
+
+    .icon-circle-gradient {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        transition: transform 0.3s ease;
+    }
+
+    .card-experience:hover .icon-circle-gradient {
+        transform: scale(1.1);
+    }
+
+    .gradient-blue {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2));
+    }
+
+    .gradient-amber {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(249, 115, 22, 0.2));
+    }
+
+    .gradient-purple {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2));
+    }
+
+    .gradient-green {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2));
+    }
+
+    /* FOOTER */
+    .social-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #1f2732;
+        border: 1px solid var(--color-slate-800);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-slate-400);
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+        .social-icon:hover {
+            border-color: var(--color-amber-500);
+            color: var(--color-amber-500);
+            transform: scale(1.1);
+        }
+
+    .hover-text-amber:hover {
+        color: var(--color-amber-500) !important;
+        cursor: pointer;
+    }
+
+    .pointer {
+        cursor: pointer;
+    }
+</style>
