@@ -17,6 +17,7 @@ namespace HotelBooking.Web.Models
         public string RoomType { get; set; } = string.Empty;
         public string RoomDescription { get; set; } = string.Empty;
         public decimal PricePerNight { get; set; }
+        public string? RoomImageUrl { get; set; } = string.Empty; // Ajout pour la maquette
         
         // Informations sur l'hôtel
    public Guid HotelId { get; set; }
