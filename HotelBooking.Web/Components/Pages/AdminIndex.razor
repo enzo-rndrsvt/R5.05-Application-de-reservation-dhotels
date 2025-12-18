@@ -1,0 +1,11 @@
+@page "/admin/index"
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager NavigationManager
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Rediriger immédiatement vers le dashboard principal
+        NavigationManager.NavigateTo("/admin", true);
+    }
+}

@@ -1,0 +1,106 @@
+@page "/admin-safe"
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Administration Safe - Hôtel SkullKing</PageTitle>
+
+<div class="container-fluid mt-4">
+    <!-- Header Admin -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h2><i class="oi oi-shield me-2"></i>Administration SkullKing - Mode Safe</h2>
+                <p>Dashboard administrateur en mode sécurisé pour diagnostiquer les problèmes</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test de Navigation Simple -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Navigation de Base</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="/admin/rooms/create" class="btn btn-success w-100 mb-2">
+                                <i class="oi oi-plus"></i><br/>Créer Chambre
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/rooms" class="btn btn-primary w-100 mb-2">
+                                <i class="oi oi-grid-three-up"></i><br/>Voir Chambres
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/" class="btn btn-secondary w-100 mb-2">
+                                <i class="oi oi-home"></i><br/>Accueil
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/debug-error" class="btn btn-warning w-100 mb-2">
+                                <i class="oi oi-bug"></i><br/>Debug Erreurs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test de Services -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Test des Services</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Services Disponibles :</h6>
+                            <ul>
+                                <li>? IJSRuntime : Disponible</li>
+                                <li>? AuthorizeView : Fonctionne (vous voyez cette page)</li>
+                                <li>? Navigation : Testée avec les liens</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-info" @onclick="TestJS">
+                                <i class="oi oi-flash"></i> Tester JavaScript
+                            </button>
+                            
+                            @if (!string.IsNullOrEmpty(jsTestResult))
+                            {
+                                <div class="alert alert-info mt-2">
+                                    @jsTestResult
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string jsTestResult = "";
+
+    private async Task TestJS()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("console.log", "Test JavaScript depuis AdminSafe");
+            jsTestResult = "? JavaScript fonctionne !";
+        }
+        catch (Exception ex)
+        {
+            jsTestResult = $"? Erreur JS: {ex.Message}";
+        }
+        StateHasChanged();
+    }
+}

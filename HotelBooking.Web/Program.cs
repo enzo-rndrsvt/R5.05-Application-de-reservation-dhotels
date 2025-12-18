@@ -10,6 +10,17 @@ builder.Services.AddRazorComponents()
 
 // Configuration spécifique pour Blazor Server avec authentification
 builder.Services.AddCascadingAuthenticationState();
+
+// Configuration des erreurs détaillées pour le développement
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions>(options =>
+    {
+        options.DetailedErrors = true;
+    });
+}
+
+// Authentification cookie
 builder.Services.AddAuthentication()
     .AddCookie(options =>
     {
@@ -32,6 +43,7 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
 builder.Services.AddScoped<IDatabaseManagementService, DatabaseManagementService>();
+builder.Services.AddScoped<IAdminTestService, AdminTestService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 // Ajouter l'authentification et l'autorisation

@@ -57,10 +57,26 @@
                 </div>
             </div>
             
+            <!-- Dashboard principal -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin-safe" Match="NavLinkMatch.Prefix">
+                    <span class="oi oi-dashboard" aria-hidden="true"></span> 
+                    <strong>Dashboard Admin (Safe)</strong>
+                </NavLink>
+            </div>
+            
+            <!-- Test dashboard complet -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link text-warning" href="admin">
+                    <span class="oi oi-warning" aria-hidden="true"></span> 
+                    <small>Dashboard Complet (Test)</small>
+                </NavLink>
+            </div>
+            
             <!-- Liens d'administration -->
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="admin/setup">
-                    <span class="oi oi-wrench" aria-hidden="true"></span> Configuration
+                <NavLink class="nav-link" href="admin/rooms">
+                    <span class="oi oi-list" aria-hidden="true"></span> Gérer les Cabines
                 </NavLink>
             </div>
             <div class="nav-item px-3">
@@ -69,8 +85,18 @@
                 </NavLink>
             </div>
             <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/configuration">
+                    <span class="oi oi-wrench" aria-hidden="true"></span> Configuration
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/database/advanced">
+                    <span class="oi oi-cog" aria-hidden="true"></span> BDD Avancée
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
                 <NavLink class="nav-link" href="admin/database">
-                    <span class="oi oi-hard-drive" aria-hidden="true"></span> Base de Données
+                    <span class="oi oi-hard-drive" aria-hidden="true"></span> Console BDD
                 </NavLink>
             </div>
             
@@ -84,30 +110,15 @@
                 </div>
             </div>
             
-            <!-- Liens de debug -->
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="test-availability">
-                    <span class="oi oi-calendar" aria-hidden="true"></span> Test Disponibilité
-                </NavLink>
-            </div>
+            <!-- Liens de debug principaux -->
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="debug-api">
-                    <span class="oi oi-bug" aria-hidden="true"></span> Debug API
+                    <span class="oi oi-cloud" aria-hidden="true"></span> Debug API
                 </NavLink>
             </div>
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="debug-rooms">
-                    <span class="oi oi-home" aria-hidden="true"></span> Debug Chambres
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="quick-book">
-                    <span class="oi oi-flash" aria-hidden="true"></span> Réservation Express
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="test-images">
-                    <span class="oi oi-image" aria-hidden="true"></span> Test Images
+                <NavLink class="nav-link" href="test-carousel-final">
+                    <span class="oi oi-check" aria-hidden="true"></span> Test Carrousels
                 </NavLink>
             </div>
             <div class="nav-item px-3">
@@ -116,48 +127,22 @@
                 </NavLink>
             </div>
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="test-carousel">
-                    <span class="oi oi-move" aria-hidden="true"></span> Test Carrousel
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="test-carousel-simple">
-                    <span class="oi oi-play-circle" aria-hidden="true"></span> Test Simple
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="test-carousel-minimal">
-                    <span class="oi oi-wrench" aria-hidden="true"></span> Test Minimal
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="test-carousel-final">
-                    <span class="oi oi-check" aria-hidden="true"></span> Test Final
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="debug-database">
-                    <span class="oi oi-bug" aria-hidden="true"></span> Debug BDD
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
                 <NavLink class="nav-link" href="debug-database-public">
                     <span class="oi oi-wrench" aria-hidden="true"></span> Debug BDD (Public)
                 </NavLink>
             </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="test-admin">
-                    <span class="oi oi-shield" aria-hidden="true"></span> Test Admin
+            
+            <!-- Lien vers tests complets -->
+            <div class="nav-item px-3 mt-2">
+                <NavLink class="nav-link text-muted" href="debug/all-tests">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> 
+                    <small>Tous les Tests Debug</small>
                 </NavLink>
             </div>
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="test-create-room">
-                    <span class="oi oi-plus" aria-hidden="true"></span> Test Création
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="quick-test-api">
-                    <span class="oi oi-flash" aria-hidden="true"></span> Quick Test API
+                <NavLink class="nav-link text-danger" href="debug-error">
+                    <span class="oi oi-warning" aria-hidden="true"></span> 
+                    <small>Debug Erreurs</small>
                 </NavLink>
             </div>
         </Authorized>

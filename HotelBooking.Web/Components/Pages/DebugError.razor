@@ -1,0 +1,132 @@
+@page "/debug-error"
+@inject IJSRuntime JSRuntime
+@inject ILogger<DebugError> Logger
+
+<PageTitle>Debug Erreurs Blazor</PageTitle>
+
+<div class="container mt-4">
+    <div class="alert alert-info">
+        <h4><i class="oi oi-bug"></i> Diagnostic des Erreurs Blazor</h4>
+        <p>Cette page permet de diagnostiquer les erreurs de circuit Blazor.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Tests de Navigation</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Pages Principales</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" @onclick='() => TestNavigation("admin")'>
+                            Test Admin Dashboard
+                        </button>
+                        <button class="btn btn-outline-success" @onclick='() => TestNavigation("admin/rooms")'>
+                            Test Gestion Chambres
+                        </button>
+                        <button class="btn btn-outline-info" @onclick='() => TestNavigation("rooms")'>
+                            Test Liste Chambres
+                        </button>
+                        <button class="btn btn-outline-warning" @onclick='() => TestNavigation("/")'>
+                            Test Accueil
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h6>Tests de Services</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-secondary" @onclick="TestServices">
+                            Test Injection Services
+                        </button>
+                        <button class="btn btn-outline-danger" @onclick="TestException">
+                            Test Exception Volontaire
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @if (results.Any())
+            {
+                <hr>
+                <h6>Résultats des Tests :</h6>
+                <div class="border p-3 rounded bg-light" style="max-height: 200px; overflow-y: auto;">
+                    @foreach (var result in results.TakeLast(10))
+                    {
+                        <div class="mb-1">
+                            <span class="text-muted">[@result.Time.ToString("HH:mm:ss")]</span>
+                            <span class="@GetResultClass(result.Success)">
+                                @(result.Success ? "?" : "?") @result.Message
+                            </span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<TestResult> results = new();
+
+    public class TestResult
+    {
+        public DateTime Time { get; set; } = DateTime.Now;
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+    }
+
+    protected override void OnInitialized()
+    {
+        results.Add(new TestResult { Success = true, Message = "Page de debug initialisée" });
+    }
+
+    private async Task TestNavigation(string url)
+    {
+        try
+        {
+            results.Add(new TestResult { Success = true, Message = $"Test navigation vers {url}..." });
+            await JSRuntime.InvokeVoidAsync("window.location.assign", url);
+        }
+        catch (Exception ex)
+        {
+            results.Add(new TestResult { Success = false, Message = $"Erreur navigation {url}: {ex.Message}" });
+            Logger.LogError(ex, "Erreur de navigation vers {Url}", url);
+        }
+        StateHasChanged();
+    }
+
+    private void TestServices()
+    {
+        try
+        {
+            results.Add(new TestResult { Success = true, Message = "JSRuntime disponible: Oui" });
+            results.Add(new TestResult { Success = true, Message = "Logger disponible: Oui" });
+            results.Add(new TestResult { Success = true, Message = "Tous les services injectés avec succès" });
+        }
+        catch (Exception ex)
+        {
+            results.Add(new TestResult { Success = false, Message = $"Erreur services: {ex.Message}" });
+            Logger.LogError(ex, "Erreur test services");
+        }
+        StateHasChanged();
+    }
+
+    private void TestException()
+    {
+        try
+        {
+            results.Add(new TestResult { Success = true, Message = "Test d'exception volontaire..." });
+            throw new Exception("Exception de test pour diagnostiquer le circuit Blazor");
+        }
+        catch (Exception ex)
+        {
+            results.Add(new TestResult { Success = false, Message = $"Exception capturée: {ex.Message}" });
+            Logger.LogWarning("Exception de test capturée: {Message}", ex.Message);
+        }
+        StateHasChanged();
+    }
+
+    private string GetResultClass(bool success) => success ? "text-success" : "text-danger";
+}
