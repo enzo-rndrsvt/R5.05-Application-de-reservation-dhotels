@@ -19,9 +19,10 @@ builder.Services.AddAuthentication()
     });
 
 // Configurer le HttpClient pour l'API
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7186/";
 builder.Services.AddHttpClient("HotelBookingAPI", client => 
 {
-    client.BaseAddress = new Uri("https://localhost:7186/");
+    client.BaseAddress = new Uri(apiBaseUrl);
 });
 
 // Enregistrer les services
