@@ -28,7 +28,12 @@ services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorApp", policy =>
     {
-        policy.WithOrigins("https://localhost:7229", "http://localhost:7229")
+        policy.WithOrigins(
+                "https://localhost:7229",
+                "http://localhost:7229",
+                "http://localhost:5006",      
+                "http://hotel.enzorv.dev",
+                "https://hotel.enzorv.dev")  
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
