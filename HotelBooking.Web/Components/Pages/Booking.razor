@@ -3,6 +3,7 @@
 @using HotelBooking.Web.Models
 @using HotelBooking.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
 @inject IBookingService BookingService
 @inject IHotelService HotelService
 @inject NavigationManager NavigationManager
@@ -35,7 +36,7 @@
             <div class="alert alert-warning border-amber-500 bg-dark-900-opacity text-amber-500 text-center p-5">
                 <i class="oi oi-warning display-4 mb-3"></i>
                 <h4>Aucune cabine disponible</h4>
-                <p>Le navire semble complet ou en maintenance.</p>
+                <p>Le navire semble complet.</p>
                 <a href="/rooms" class="btn btn-outline-amber mt-3">Voir les disponibilités</a>
             </div>
         }
@@ -53,7 +54,7 @@
 
                             <div class="bg-amber-500-10 border border-amber-500-20 rounded-3 p-3 mb-4 d-flex align-items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2"><polyline points="20 6 9 17 4 12" /></svg>
-                                <span class="text-amber-500 small">Vos informations ont été automatiquement remplies depuis votre compte pirate.</span>
+                                <span class="text-amber-500 small">Vos informations ont été automatiquement remplies depuis votre compte.</span>
                             </div>
 
                             <AuthorizeView Context="authContext">
@@ -78,7 +79,7 @@
                                 <label class="form-label text-slate-400 small fw-bold">Nombre de voyageurs <span class="text-amber-500">*</span></label>
                                 <InputNumber class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber" @bind-Value="guests" min="1" max="@(selectedRoom?.AdultsCapacity + selectedRoom?.ChildrenCapacity ?? 4)" />
                                 <div class="form-text text-slate-500 small mt-1">
-                                    Maximum : @(selectedRoom?.AdultsCapacity ?? 0) adultes, @(selectedRoom?.ChildrenCapacity ?? 0) enfants
+                                    Capacité : @(selectedRoom?.AdultsCapacity ?? 0) adultes, @(selectedRoom?.ChildrenCapacity ?? 0) enfants
                                 </div>
                             </div>
                         </div>
@@ -126,71 +127,97 @@
                     </div>
 
                     <div class="col-lg-5">
-                        <div class="card card-dark-theme border border-amber-500-30 rounded-4 p-0 sticky-top overflow-hidden" style="top: 20px;">
-                            <div class="card-header bg-transparent border-bottom border-slate-800 p-4">
-                                <h5 class="text-amber-500 mb-0 fw-bold">Récapitulatif</h5>
-                            </div>
+                        <div class="card card-dark-theme border border-slate-800 rounded-4 p-4 sticky-top" style="top: 20px; background-color: #0b1121;">
+                            <h5 class="text-amber-500 mb-4 fw-bold">Récapitulatif</h5>
 
-                            <div class="card-body p-4">
-                                @if (selectedRoom != null)
-                                {
-                                    <div class="mb-4 overflow-hidden rounded-3 position-relative" style="height: 180px;">
-                                        @if (selectedRoom.HasImages)
+                            @if (selectedRoom != null)
+                            {
+                                <div class="mb-3 rounded-3 overflow-hidden position-relative" style="height: 160px;">
+                                    @if (selectedRoom.HasImages)
+                                    {
+                                        <img src="@selectedRoom.PrimaryImageUrl" class="w-100 h-100 object-fit-cover" alt="Chambre" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center">
+                                            <i class="oi oi-image fs-1 text-white-50"></i>
+                                        </div>
+                                    }
+                                    <div class="position-absolute inset-0" style="background: linear-gradient(to top, rgba(15, 23, 42, 0.8), transparent);"></div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h5 class="text-white fw-bold mb-1">
+                                        Cabine @selectedRoom.Number
+                                    </h5>
+                                    <div class="text-slate-400 small d-flex align-items-center">
+                                        <i class="oi oi-people me-2"></i>
+                                        <span>@selectedRoom.AdultsCapacity Adultes, @selectedRoom.ChildrenCapacity Enfants max</span>
+                                    </div>
+                                </div>
+
+                                <hr class="border-slate-800 opacity-50 my-4" />
+
+                                <div class="d-flex justify-content-between mb-2 text-sm">
+                                    <span class="text-slate-400">Arrivée:</span>
+                                    <span class="text-slate-200">@bookingModel.StartingDate.ToString("dd MMM yyyy", new CultureInfo("fr-FR"))</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-sm">
+                                    <span class="text-slate-400">Départ:</span>
+                                    <span class="text-slate-200">@bookingModel.EndingDate.ToString("dd MMM yyyy", new CultureInfo("fr-FR"))</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-sm">
+                                    <span class="text-slate-400">Durée:</span>
+                                    <span class="text-slate-200">@bookingModel.NumberOfNights nuit@(bookingModel.NumberOfNights > 1 ? "s" : "")</span>
+                                </div>
+
+                                <hr class="border-slate-800 opacity-50 my-4" />
+
+                                <div class="d-flex justify-content-between mb-2 text-sm">
+                                    <span class="text-slate-400">@selectedRoom.PricePerNight.ToString("C0") × @bookingModel.NumberOfNights nuits</span>
+                                    <span class="text-slate-200">@SubTotalDisplay</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-sm">
+                                    <span class="text-slate-400">Taxes et frais</span>
+                                    <span class="text-slate-200">@TaxesDisplay</span>
+                                </div>
+
+                                <hr class="border-slate-800 opacity-50 my-4" />
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-amber-500 fw-bold">Total</span>
+                                    <span class="text-amber-500 fw-bold fs-4">
+                                        @if (bookingModel.EstimatedPrice.HasValue || bookingModel.NumberOfNights > 0)
                                         {
-                                            <img src="@selectedRoom.PrimaryImageUrl" class="w-100 h-100 object-fit-cover" alt="Chambre" />
+                                            @TotalDisplay
                                         }
                                         else
                                         {
-                                            <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center">
-                                                <i class="oi oi-image fs-1 text-white-50"></i>
-                                            </div>
+                                            <span>...</span>
                                         }
-                                        <div class="position-absolute inset-0" style="background: linear-gradient(to top, rgba(15, 23, 42, 0.8), transparent);"></div>
-                                    </div>
+                                    </span>
+                                </div>
 
-                                    <h4 class="text-white mb-1">Cabine @selectedRoom.Number</h4>
-                                    <p class="text-slate-400 small mb-4">@selectedRoom.Type</p>
+                                <hr class="border-slate-800 opacity-50 my-4" />
 
-                                    <div class="d-flex align-items-center text-slate-300 mb-4 small bg-slate-800 p-2 rounded">
-                                        <i class="oi oi-people me-2 text-amber-500"></i>
-                                        <span>@selectedRoom.AdultsCapacity Adultes, @selectedRoom.ChildrenCapacity Enfants max</span>
-                                    </div>
-
-                                    <hr class="border-slate-800 my-4" />
-
-                                    <h6 class="text-slate-300 mb-3">Inclus</h6>
-                                    <ul class="list-unstyled text-slate-400 small mb-4">
+                                <div>
+                                    <h6 class="text-slate-300 mb-3 small fw-bold">Inclus</h6>
+                                    <ul class="list-unstyled text-slate-400 small mb-0">
                                         <li class="mb-2 d-flex align-items-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2"><polyline points="20 6 9 17 4 12" /></svg> Petit-déjeuner buffet</li>
                                         <li class="mb-2 d-flex align-items-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2"><polyline points="20 6 9 17 4 12" /></svg> WiFi gratuit</li>
                                         <li class="mb-2 d-flex align-items-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2"><polyline points="20 6 9 17 4 12" /></svg> Accès piscine</li>
                                         <li class="mb-2 d-flex align-items-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2"><polyline points="20 6 9 17 4 12" /></svg> Parking</li>
                                     </ul>
-
-                                    <hr class="border-slate-800 my-4" />
-
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-white fw-bold">Total estimé</span>
-                                        <div class="text-end">
-                                            @if (bookingModel.EstimatedPrice.HasValue)
-                                            {
-                                                <h3 class="text-amber-500 fw-bold m-0">@bookingModel.EstimatedPrice.Value.ToString("C")</h3>
-                                                <small class="text-slate-500">pour @bookingModel.NumberOfNights nuit(s)</small>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-slate-500 small fst-italic">Sélectionnez vos dates...</span>
-                                            }
-                                        </div>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="text-center py-5 text-slate-500">
-                                        <i class="oi oi-home display-4 mb-3 opacity-25"></i>
-                                        <p>Veuillez sélectionner une chambre.</p>
-                                    </div>
-                                }
-                            </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5 text-slate-500">
+                                    <i class="oi oi-home display-4 mb-3 opacity-25"></i>
+                                    <p>Veuillez sélectionner une chambre.</p>
+                                    <a href="/rooms" class="btn btn-sm btn-outline-secondary">Retourner au choix</a>
+                                </div>
+                            }
                         </div>
                     </div>
 
@@ -212,7 +239,16 @@
     private string errorMessage = string.Empty;
     private bool isLoading = true;
     private bool isSubmitting = false;
-    private int guests = 1; // Variable locale pour le champ invité
+    private int guests = 1;
+
+    // Propriétés calculées pour l'affichage (évite le code C# complexe dans le HTML)
+    private decimal SubTotal => (selectedRoom?.PricePerNight ?? 0) * bookingModel.NumberOfNights;
+    private decimal Taxes => SubTotal * 0.1m; // 10% taxes simulées
+    private decimal Total => bookingModel.EstimatedPrice ?? (SubTotal + Taxes);
+
+    private string SubTotalDisplay => SubTotal.ToString("F2") + "€";
+    private string TaxesDisplay => Taxes.ToString("F2") + "€";
+    private string TotalDisplay => Total.ToString("F2") + "€";
 
     protected override async Task OnInitializedAsync()
     {
@@ -261,7 +297,6 @@
         if (bookingModel.RoomId != Guid.Empty && rooms != null)
         {
             selectedRoom = rooms.FirstOrDefault(r => r.Id == bookingModel.RoomId);
-            // Reset guests if exceeds new capacity
             if (selectedRoom != null && guests > (selectedRoom.AdultsCapacity + selectedRoom.ChildrenCapacity))
             {
                 guests = selectedRoom.AdultsCapacity + selectedRoom.ChildrenCapacity;
@@ -281,20 +316,19 @@
         {
             try
             {
-                // Fallback local calculation first for immediate feedback
+                // Calcul local pour réactivité immédiate (simulation de l'API)
                 int nights = bookingModel.NumberOfNights;
                 if (nights > 0)
-                    bookingModel.EstimatedPrice = selectedRoom.PricePerNight * nights;
+                {
+                    decimal sub = selectedRoom.PricePerNight * nights;
+                    bookingModel.EstimatedPrice = sub + (sub * 0.1m); // Prix + Taxes
+                }
 
-                // Then try API if needed (optional)
-                var apiPrice = await BookingService.CalculateEstimatedPriceAsync(
-                    bookingModel.RoomId,
-                    bookingModel.StartingDate,
-                    bookingModel.EndingDate);
-
-                if (apiPrice.HasValue) bookingModel.EstimatedPrice = apiPrice;
+                // Si vous avez une API réelle, décommentez ceci :
+                // var apiPrice = await BookingService.CalculateEstimatedPriceAsync(bookingModel.RoomId, bookingModel.StartingDate, bookingModel.EndingDate);
+                // if (apiPrice.HasValue) bookingModel.EstimatedPrice = apiPrice;
             }
-            catch { /* Keep local calculation */ }
+            catch { }
         }
         else
         {
@@ -324,6 +358,9 @@
 
         try
         {
+            // On s'assure que le prix est à jour avant l'envoi
+            await CalculatePrice();
+
             var result = await BookingService.CreateBookingAsync(bookingModel);
             if (result)
             {
@@ -347,8 +384,6 @@
             isSubmitting = false;
         }
     }
-
-    private async Task ForceBooking() { await HandleBooking(); } // Wrapper pour debug
 }
 
 <style>
@@ -388,6 +423,10 @@
         color: var(--color-slate-400) !important;
     }
 
+    .text-slate-500 {
+        color: #64748b !important;
+    }
+
     .border-slate-800 {
         border-color: var(--color-slate-800) !important;
     }
@@ -416,9 +455,13 @@
         object-fit: cover;
     }
 
+    .text-sm {
+        font-size: 0.875rem;
+    }
+
     /* CARD THEME */
     .card-dark-theme {
-        background-color: rgba(15, 23, 42, 0.5); /* Semi-transparent */
+        background-color: rgba(15, 23, 42, 0.5);
         backdrop-filter: blur(10px);
     }
 
@@ -428,16 +471,16 @@
     }
 
         .form-control:disabled {
-            background-color: #0f172a; /* Plus sombre pour disabled */
+            background-color: #0f172a;
             opacity: 0.7;
         }
 
-        .form-control:focus, .form-select:focus {
-            background-color: var(--color-slate-800);
-            color: #fff;
-            border-color: var(--color-amber-500);
-            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
-        }
+    .focus-amber:focus {
+        background-color: var(--color-slate-800);
+        color: #fff;
+        border-color: var(--color-amber-500);
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    }
 
     input[type="date"] {
         color-scheme: dark;
@@ -453,11 +496,11 @@
 
         .btn-amber:hover {
             background-color: var(--color-amber-600);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
     .hover-scale:hover {
-        transform: scale(1.02);
+        transform: scale(1.01);
     }
 
     .group-link:hover {
