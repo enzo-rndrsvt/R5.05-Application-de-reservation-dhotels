@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using HotelBooking.Web.Models
 @using HotelBooking.Web.Services
+@using HotelBooking.Web.Components.Layout
 @inject IHotelService HotelService
 @inject NavigationManager NavigationManager
 
@@ -207,7 +208,6 @@
 
                                 <div class="d-flex flex-wrap gap-2 mb-4">
                                     <span class="badge badge-amber-outline-sm">@room.Type</span>
-                                    <span class="badge badge-amber-outline-sm">Vue Océan</span>
                                 </div>
 
                                 <a href="/room/@room.Id" class="btn btn-outline-amber w-100 d-flex align-items-center justify-content-center group-btn py-2">
@@ -319,6 +319,7 @@
         </div>
     </div>
 </section>
+<Footer />
 
 @code {
     private IEnumerable<Room>? featuredRooms;
@@ -360,6 +361,7 @@
             Console.WriteLine($"Erreur chargement chambres page d'accueil : {ex.Message}");
         }
     }
+
 }
 
 <style>

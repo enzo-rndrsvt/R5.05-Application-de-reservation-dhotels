@@ -8,207 +8,115 @@
 @inject NavigationManager NavigationManager
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Nos cabines - Hôtel SkullKing</PageTitle>
+<PageTitle>Nos Chambres - Hôtel SkullKing</PageTitle>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/">Accueil</a></li>
-                    <li class="breadcrumb-item active">Nos cabines</li>
-                </ol>
-            </nav>
-            <h3><i class="oi oi-grid-three-up"></i> Nos cabines de pirates</h3>
-            <p class="text-muted">Découvrez toutes les cabines disponibles à bord du SkullKing</p>
+<div class="page-container bg-darker-950 min-vh-100">
+
+    <div class="header-section position-relative py-5 overflow-hidden">
+        <div class="position-absolute inset-0 bg-gradient-header"></div>
+        <div class="position-absolute inset-0 opacity-20" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zM22.344 0L13.858 8.485 15.272 9.9l7.9-7.9h-.828zM27 0l-8.485 8.485 1.414 1.414L27.828 0H27zm5.657 0l-8.486 8.485 1.415 1.414L33.485 0h-.828zM39 0l-8.485 8.485 1.414 1.414L40.828 0H39zm5.657 0L36.172 8.485l1.414 1.414L46.485 0h-1.828z\' fill=\'%23f59e0b\' fill-opacity=\'0.1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E');"></div>
+
+        <div class="container position-relative z-10 text-center pt-5 pb-4">
+            <h1 class="text-amber-500 mb-4 tracking-wider fw-bold display-4">NOS CHAMBRES</h1>
+            <p class="text-slate-300 mx-auto lead" style="max-width: 800px;">
+                Découvrez nos chambres thématiques inspirées de l'univers de Skull King.
+                Chaque suite vous transporte dans un monde unique, alliant confort moderne et décoration immersive.
+            </p>
         </div>
-        <AuthorizeView>
-            <Authorized>
-                <span class="badge bg-success fs-6">
-                    <i class="oi oi-circle-check"></i> Accès autorisé
-                </span>
-            </Authorized>
-        </AuthorizeView>
     </div>
 
-    <AuthorizeView>
-        <Authorized>
-            @if (rooms == null && string.IsNullOrEmpty(errorMessage))
-            {
-                <div class="text-center p-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Chargement...</span>
+    <div class="container pb-5">
+        <AuthorizeView>
+            <Authorized>
+                @if (rooms == null && string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-amber-500" role="status"></div>
+                        <p class="text-slate-400 mt-3">Chargement des cabines...</p>
                     </div>
-                    <p class="mt-2">Chargement des cabines du SkullKing...</p>
-                </div>
-            }
-            else if (!string.IsNullOrEmpty(errorMessage))
-            {
-                <div class="alert alert-warning">
-                    <h4><i class="oi oi-warning"></i> Problème de navigation</h4>
-                    <p>@errorMessage</p>
-                    <hr>
-                    <p class="mb-0">L'hôtel SkullKing doit d'abord être créé via l'administration.</p>
-                    <div class="mt-3">
-                        <a href="/admin/setup" class="btn btn-primary">
-                            <i class="oi oi-wrench"></i> Créer l'hôtel SkullKing
-                        </a>
+                }
+                else if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-warning mx-auto" style="max-width: 600px;">
+                        @errorMessage
                     </div>
-                </div>
-            }
-            else if (rooms != null && !rooms.Any())
-            {
-                <div class="alert alert-info">
-                    <h4><i class="oi oi-info"></i> Aucune cabine disponible</h4>
-                    <p>Le SkullKing n'a pas encore de cabines configurées.</p>
-                    <hr>
-                    <p class="mb-2"><strong>Diagnostic :</strong></p>
-                    <ul>
-                        <li>Hôtel SkullKing trouvé : ? @skullKingHotel?.Name</li>
-                        <li>ID Hôtel : @skullKingHotel?.Id</li>
-                        <li>Nombre de chambres retournées : @(rooms?.Count() ?? 0)</li>
-                    </ul>
-                    <div class="mt-3 d-flex gap-2">
-                        <a href="/admin/rooms/create" class="btn btn-primary">
-                            <i class="oi oi-plus"></i> Créer des cabines
-                        </a>
-                        <a href="/debug-rooms" class="btn btn-warning">
-                            <i class="oi oi-bug"></i> Diagnostic avancé
-                        </a>
-                    </div>
-                </div>
-            }
-            else if (rooms != null)
-            {
-                <div class="alert alert-success mb-4">
-                    <i class="oi oi-circle-check"></i> 
-                    <strong>@rooms.Count()</strong> cabine(s) disponible(s) à bord du SkullKing.
-                </div>
-                
-                <div class="row">
-                    @foreach (var room in rooms)
-                    {
-                        <div class="col-md-6 col-lg-4 mb-4">
-                            <div class="card h-100 shadow-sm border-primary">
-                                <!-- Image de la chambre -->
-                                <div class="position-relative">
-                                    @if (room.HasImages)
-                                    {
-                                        <div class="card-img-top-container" style="height: 200px; overflow: hidden;">
-                                            <img src="@room.PrimaryImageUrl" alt="Cabine @room.Number" 
-                                                 class="card-img-top" 
-                                                 style="width: 100%; height: 200px; object-fit: cover;" />
-                                        </div>
-                                        
-                                        @if (room.ImageCount > 1)
-                                        {
-                                            <span class="badge bg-dark position-absolute" style="top: 10px; right: 10px;">
-                                                <i class="oi oi-camera-slr"></i> @room.ImageCount
-                                            </span>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
-                                             style="height: 200px;">
-                                            <div class="text-center text-muted">
-                                                <i class="oi oi-image" style="font-size: 3rem;"></i>
-                                                <p class="mt-2">Aucune image</p>
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
+                }
+                else if (rooms != null)
+                {
+                    <div class="row g-4">
+                        @foreach (var room in rooms)
+                        {
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card card-room h-100 border-0 overflow-hidden group cursor-pointer" @onclick="() => NavigateToRoom(room.Id)">
 
-                                <div class="card-header text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
-                                    <h5 class="mb-0">
-                                        <i class="oi oi-home"></i> Cabine @room.Number
-                                    </h5>
-                                    <span class="badge bg-light text-dark">@room.Type</span>
-                                </div>
-                                <div class="card-body">
-                                    <p class="card-text text-muted">@room.BriefDescription</p>
-         
-                                    <div class="row mb-3">
-                                        <div class="col-6">
-                                            <small class="text-muted">Matelots adultes</small>
-                                            <div class="fw-bold">
-                                                <i class="oi oi-people"></i> @room.AdultsCapacity
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="text-muted">Moussaillons</small>
-                                            <div class="fw-bold">
-                                                <i class="oi oi-person"></i> @room.ChildrenCapacity
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <div class="position-relative overflow-hidden" style="height: 250px;">
+                                        <div class="position-absolute inset-0 bg-gradient-to-t opacity-0 group-hover-opacity-100 transition-opacity duration-300"
+                                             style="background: linear-gradient(to top, rgba(245, 158, 11, 0.2), transparent);"></div>
 
-                                    <div class="price-section">
-                                        @if (room.CurrentDiscount != null)
+                                        @if (room.HasImages)
                                         {
-                                            <div class="mb-2">
-                                                <span class="badge bg-warning text-dark">
-                                                    <i class="oi oi-tag"></i> @room.CurrentDiscount.Percentage% de réduction
-                                                </span>
-                                            </div>
-                                            <div class="d-flex align-items-center">
-                                                <span class="text-decoration-line-through text-muted me-2">
-                                                    @room.PricePerNight.ToString("C")
-                                                </span>
-                                                <span class="h5 text-success mb-0">
-                                                    @CalculateDiscountedPrice(room.PricePerNight, room.CurrentDiscount.Percentage).ToString("C")
-                                                </span>
-                                            </div>
-                                            <small class="text-muted">par nuit d'aventure</small>
+                                            <img src="@room.PrimaryImageUrl" alt="Cabine @room.Number"
+                                                 class="card-img-top h-100 w-100 object-fit-cover transition-transform duration-500 group-hover-scale" />
                                         }
                                         else
                                         {
-                                            <div class="h5 text-primary">
-                                                @room.PricePerNight.ToString("C") 
-                                                <small class="text-muted">/ nuit</small>
+                                            <div class="h-100 w-100 bg-secondary d-flex align-items-center justify-content-center">
+                                                <i class="oi oi-image fs-1 text-white-50"></i>
                                             </div>
                                         }
+
+                                        <div class="position-absolute inset-0" style="background: linear-gradient(to top, rgba(15, 23, 42, 1) 0%, rgba(15, 23, 42, 0.5) 50%, transparent 100%);"></div>
+
+                                        <div class="position-absolute bottom-0 start-0 w-100 p-4">
+                                            <h3 class="text-amber-500 mb-0 fw-bold transition-colors group-hover-text-amber-400">
+                                                Cabine @room.Number
+                                            </h3>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="card-footer bg-transparent">
-                                    <div class="d-grid gap-2">
-                                        <a href="/booking/@room.Id" class="btn btn-success">
-                                            <i class="oi oi-calendar"></i> Réserver
-                                        </a>
-                                        <a href="/room/@room.Id" class="btn btn-primary">
-                                            <i class="oi oi-eye"></i> Voir les détails
-                                        </a>
+
+                                    <div class="card-body p-4 d-flex flex-column bg-slate-900-50">
+                                        <p class="card-text text-slate-300 small mb-4" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em;">
+                                            @room.BriefDescription
+                                        </p>
+
+                                        <div class="d-flex flex-wrap gap-2 mb-4">
+                                            <span class="badge-feature">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /></svg>
+                                                @room.Type
+                                            </span>
+                                        </div>
+
+                                        <div class="d-flex align-items-center justify-content-between pt-3 border-top border-slate-800 mb-3 text-slate-400 small">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="d-flex align-items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                                    @(room.AdultsCapacity + room.ChildrenCapacity) pers.
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="fw-bold text-slate-200">@room.PricePerNight€</span>/nuit
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button class="btn btn-amber w-100 fw-bold group-hover-bg-amber-400 transition-colors" @onclick:stopPropagation="true" @onclick="() => NavigateToRoom(room.Id)">
+                                            Découvrir
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    }
-                </div>
-            }
-        </Authorized>
-        <NotAuthorized>
-            <div class="row">
-                <div class="col-12">
-                    <div class="alert alert-warning d-flex align-items-center p-4" role="alert">
-                        <i class="oi oi-lock-locked me-3 fs-1"></i>
-                        <div>
-                            <h4 class="alert-heading">Accès au navire refusé !</h4>
-                            <p class="mb-3">Pour découvrir nos cabines de pirates, il faut d'abord s'identifier, matelot !</p>
-                            <hr>
-                            <div class="d-flex gap-2">
-                                <a href="/login" class="btn btn-primary">
-                                    <i class="oi oi-account-login"></i> Se connecter
-                                </a>
-                                <a href="/register" class="btn btn-outline-primary">
-                                    <i class="oi oi-plus"></i> Créer un compte
-                                </a>
-                            </div>
-                        </div>
+                        }
                     </div>
+                }
+            </Authorized>
+            <NotAuthorized>
+                <div class="text-center py-5">
+                    <h3 class="text-amber-500">Accès Réservé</h3>
+                    <p class="text-slate-400">Veuillez vous connecter pour voir nos chambres.</p>
+                    <a href="/login" class="btn btn-amber mt-3">Connexion</a>
                 </div>
-            </div>
-        </NotAuthorized>
-    </AuthorizeView>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
 </div>
 
 @code {
@@ -225,61 +133,157 @@
     {
         try
         {
-            Console.WriteLine("=== DEBUG ROOMS LOADING ===");
-            
-            // Récupérer l'hôtel SkullKing
             var hotels = await HotelService.GetAllHotelsAsync();
-            Console.WriteLine($"Hôtels trouvés: {hotels?.Count() ?? 0}");
-            
-            if (hotels != null && hotels.Any())
-            {
-                foreach (var hotel in hotels)
-                {
-                    Console.WriteLine($"Hôtel: {hotel.Name} (ID: {hotel.Id})");
-                }
-            }
-            
             skullKingHotel = hotels?.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
-            Console.WriteLine($"SkullKing trouvé: {skullKingHotel?.Name ?? "NULL"}");
 
-            if (skullKingHotel == null)
+            if (skullKingHotel != null)
             {
-                errorMessage = "L'hôtel SkullKing n'a pas encore été créé.";
-                Console.WriteLine("ERREUR: Aucun hôtel SkullKing trouvé");
-                return;
+                rooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 50);
             }
-
-            // Récupérer toutes les chambres de l'hôtel SkullKing
-            Console.WriteLine($"Chargement des chambres pour l'hôtel {skullKingHotel.Id}...");
-            var loadedRooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 50);
-            Console.WriteLine($"Chambres trouvées: {loadedRooms?.Count() ?? 0}");
-            
-            if (loadedRooms != null && loadedRooms.Any())
+            else
             {
-                foreach (var room in loadedRooms.Take(3))
-                {
-                    Console.WriteLine($"Chambre: {room.Number} - {room.Type} (ID: {room.Id})");
-                }
-                if (loadedRooms.Count() > 3)
-                {
-                    Console.WriteLine($"... et {loadedRooms.Count() - 3} autres chambres");
-                }
+                errorMessage = "L'hôtel SkullKing n'est pas encore ouvert.";
             }
-            
-            rooms = loadedRooms;
-            Console.WriteLine($"Rooms assignées: {rooms?.Count() ?? 0}");
-            Console.WriteLine("=== FIN DEBUG ROOMS ===");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"EXCEPTION dans LoadSkullKingHotelAndRooms: {ex.Message}");
-            Console.WriteLine($"StackTrace: {ex.StackTrace}");
-            errorMessage = $"Erreur lors du chargement des cabines du SkullKing: {ex.Message}";
+            errorMessage = $"Erreur : {ex.Message}";
         }
     }
 
-    private decimal CalculateDiscountedPrice(decimal originalPrice, decimal discountPercentage)
+    private void NavigateToRoom(Guid roomId)
     {
-        return originalPrice * (1 - discountPercentage / 100);
+        NavigationManager.NavigateTo($"/room/{roomId}");
     }
 }
+
+<style>
+    /* VARIABLES GLOBALES */
+    :root {
+        --color-dark-950: #020617; /* slate-950 */
+        --color-dark-900: #0f172a; /* slate-900 */
+        --color-slate-800: #1e293b;
+        --color-slate-400: #94a3b8;
+        --color-slate-300: #cbd5e1;
+        --color-amber-500: #f59e0b;
+        --color-amber-400: #fbbf24;
+        --color-amber-600: #d97706;
+    }
+
+    body {
+        background-color: var(--color-dark-950) !important;
+        color: white;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* UTILS */
+    .bg-darker-950 {
+        background-color: var(--color-dark-950) !important;
+    }
+
+    .text-amber-500 {
+        color: var(--color-amber-500) !important;
+    }
+
+    .text-slate-300 {
+        color: var(--color-slate-300) !important;
+    }
+
+    .text-slate-400 {
+        color: var(--color-slate-400) !important;
+    }
+
+    .bg-slate-900-50 {
+        background-color: rgba(15, 23, 42, 0.5);
+    }
+    /* slate-900/50 */
+    .border-slate-800 {
+        border-color: var(--color-slate-800) !important;
+    }
+
+    .inset-0 {
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .object-fit-cover {
+        object-fit: cover;
+    }
+
+    /* HEADER */
+    .bg-gradient-header {
+        background: linear-gradient(to bottom, var(--color-dark-900), var(--color-dark-950), var(--color-dark-950));
+    }
+
+    /* CARTE CHAMBRE (Style Maquette Exact) */
+    .card-room {
+        background-color: rgba(15, 23, 42, 0.5); /* bg-slate-900/50 */
+        border: 1px solid var(--color-slate-800);
+        transition: all 0.3s ease;
+        border-radius: 0.75rem; /* rounded-xl approx */
+    }
+
+        .card-room:hover {
+            border-color: rgba(245, 158, 11, 0.5); /* hover:border-amber-500/50 */
+        }
+
+    /* Effets Image */
+    .group:hover .group-hover-scale {
+        transform: scale(1.1);
+    }
+
+    .transition-transform {
+        transition: transform 0.5s ease;
+    }
+
+    .group-hover-opacity-100 {
+        opacity: 1 !important;
+    }
+
+    .transition-opacity {
+        transition: opacity 0.3s ease;
+    }
+
+    /* Texte Titre */
+    .group:hover .group-hover-text-amber-400 {
+        color: var(--color-amber-400) !important;
+    }
+
+    .transition-colors {
+        transition: color 0.3s ease;
+    }
+
+    /* Badges (Features) */
+    .badge-feature {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem; /* px-3 py-1 */
+        background-color: rgba(30, 41, 59, 0.5); /* bg-slate-800/50 */
+        color: var(--color-amber-500);
+        font-size: 0.75rem; /* text-xs */
+        border-radius: 9999px; /* rounded-full */
+    }
+
+    /* Bouton */
+    .btn-amber {
+        background-color: var(--color-amber-500);
+        color: #020617; /* slate-950 */
+        border: none;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+
+    .card-room:hover .btn-amber {
+        background-color: var(--color-amber-400); /* group-hover:bg-amber-400 */
+    }
+
+    .btn-amber:hover {
+        background-color: var(--color-amber-600) !important; /* hover:bg-amber-600 */
+    }
+</style>
