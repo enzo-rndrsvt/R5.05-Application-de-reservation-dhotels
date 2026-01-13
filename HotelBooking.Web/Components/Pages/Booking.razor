@@ -1,304 +1,287 @@
-@page "/profile"
+@page "/booking"
+@page "/booking/{RoomId:guid?}"
 @using HotelBooking.Web.Models
 @using HotelBooking.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
-@inject IUserProfileService UserProfileService
+@using System.Globalization
 @inject IBookingService BookingService
+@inject IHotelService HotelService
+@inject IUserProfileService UserProfileService
 @inject NavigationManager NavigationManager
-@inject IAuthService AuthService
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Mon Profil - Hôtel SkullKing</PageTitle>
+<PageTitle>Réservation - Hôtel SkullKing</PageTitle>
 
 <div class="page-container bg-darker-950 min-vh-100 text-slate-300 pb-5">
-    
+
     <div class="container pt-5 pb-4">
-        <h1 class="text-amber-500 mb-2 display-5 fw-bold">Mon Profil</h1>
-        <p class="text-slate-400">Gérez vos informations personnelles et consultez vos aventures.</p>
+        <a href="@(selectedRoom != null ? $"/room/{selectedRoom.Id}" : "/rooms")" class="text-slate-400 text-decoration-none hover-text-amber d-inline-flex align-items-center mb-4 group-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 transition-transform group-hover-translate-back"><path d="m15 18-6-6 6-6" /></svg>
+            @(selectedRoom != null ? "Retour à la chambre" : "Retour aux chambres")
+        </a>
+
+        <h1 class="text-amber-500 mb-2 display-5 fw-bold">Réservation</h1>
     </div>
 
     <div class="container">
-        <div class="row g-5">
-            
-            <div class="col-lg-4">
-                <div class="card card-dark-theme border border-slate-800 p-4 rounded-4 sticky-top" style="top: 20px;">
-                    
-                    @if (isLoadingProfile)
-                    {
-                        <div class="text-center py-5">
-                            <div class="spinner-border text-amber-500" role="status"></div>
-                            <p class="mt-3 text-slate-400 small">Récupération du dossier...</p>
-                        </div>
-                    }
-                    else if (userProfile != null)
-                    {
-                        <div class="text-center mb-4">
-                            <div class="avatar-circle bg-amber-500 text-dark fw-bold fs-1 mx-auto mb-3 d-flex align-items-center justify-content-center shadow-lg">
-                                @if (!string.IsNullOrEmpty(userProfile.FirstName))
-                                {
-                                    @userProfile.FirstName.Substring(0, 1).ToUpper()
-                                }
-                                else
-                                {
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                }
-                            </div>
-                            <h4 class="text-white fw-bold mb-1">@userProfile.FirstName @userProfile.LastName</h4>
-                            <p class="text-amber-500 small mb-2">@userProfile.Email</p>
-                            
-                            @if (userProfile.Roles != null && userProfile.Roles.Any())
-                            {
-                                <span class="badge bg-slate-800 border border-slate-700 text-slate-300 rounded-pill px-3 py-1">
-                                    @string.Join(", ", userProfile.Roles)
-                                </span>
-                            }
-                        </div>
-
-                        <div class="d-flex bg-slate-900 rounded-pill p-1 mb-4 border border-slate-800">
-                            <button class="btn btn-sm w-50 rounded-pill fw-bold transition-all @(activeTab == "info" ? "btn-amber" : "text-slate-400 hover-text-white")" 
-                                    @onclick="@(() => SwitchToTab("info"))">
-                                Infos
-                            </button>
-                            <button class="btn btn-sm w-50 rounded-pill fw-bold transition-all @(activeTab == "password" ? "btn-amber" : "text-slate-400 hover-text-white")" 
-                                    @onclick="@(() => SwitchToTab("password"))">
-                                Sécurité
-                            </button>
-                        </div>
-
-                        <div class="tab-content">
-                            @if (activeTab == "info")
-                            {
-                                <EditForm Model="@userProfile" OnValidSubmit="HandleUpdateProfile">
-                                    <DataAnnotationsValidator />
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label text-slate-400 x-small fw-bold text-uppercase">Prénom</label>
-                                        <InputText class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber" @bind-Value="userProfile.FirstName" />
-                                        <ValidationMessage For="@(() => userProfile.FirstName)" class="text-danger x-small" />
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label text-slate-400 x-small fw-bold text-uppercase">Nom</label>
-                                        <InputText class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber" @bind-Value="userProfile.LastName" />
-                                        <ValidationMessage For="@(() => userProfile.LastName)" class="text-danger x-small" />
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label text-slate-400 x-small fw-bold text-uppercase">Nom d'utilisateur</label>
-                                        <InputText class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber" @bind-Value="userProfile.Username" disabled />
-                                    </div>
-
-                                    <button type="submit" class="btn btn-outline-amber w-100 py-2 mt-2" disabled="@isUpdatingProfile">
-                                        @if(isUpdatingProfile) { <span class="spinner-border spinner-border-sm me-2"></span> }
-                                        Mettre à jour
-                                    </button>
-                                </EditForm>
-                            }
-                            else if (activeTab == "password")
-                            {
-                                <EditForm Model="@userProfile" OnValidSubmit="HandleChangePassword">
-                                    <DataAnnotationsValidator />
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label text-slate-400 x-small fw-bold text-uppercase">Nouveau mot de passe</label>
-                                        <InputText type="password" class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber" @bind-Value="userProfile.NewPassword" />
-                                        <ValidationMessage For="@(() => userProfile.NewPassword)" class="text-danger x-small" />
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label text-slate-400 x-small fw-bold text-uppercase">Confirmation</label>
-                                        <InputText type="password" class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber" @bind-Value="userProfile.ConfirmPassword" />
-                                        <ValidationMessage For="@(() => userProfile.ConfirmPassword)" class="text-danger x-small" />
-                                    </div>
-
-                                    <button type="submit" class="btn btn-outline-amber w-100 py-2 mt-2" disabled="@isChangingPassword">
-                                        @if(isChangingPassword) { <span class="spinner-border spinner-border-sm me-2"></span> }
-                                        Changer le mot de passe
-                                    </button>
-                                </EditForm>
-                            }
-                        </div>
-
-                        @if (!string.IsNullOrEmpty(successMessage))
-                        {
-                            <div class="alert alert-success bg-success-subtle text-success border-0 small mt-3 mb-0 d-flex align-items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                                @successMessage
-                            </div>
-                        }
-                        @if (!string.IsNullOrEmpty(errorMessage))
-                        {
-                            <div class="alert alert-danger bg-danger-subtle text-danger border-0 small mt-3 mb-0 d-flex align-items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                @errorMessage
-                            </div>
-                        }
-
-                        <hr class="border-slate-800 my-4" />
-
-                        <button class="btn btn-danger-soft w-100 d-flex align-items-center justify-content-center" @onclick="HandleLogout">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                            Déconnexion
-                        </button>
-                    }
-                </div>
+        @if (isLoading && rooms == null)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-amber-500" role="status"></div>
+                <p class="mt-3 text-slate-400">Préparation de votre cabine...</p>
             </div>
+        }
+        else if (rooms != null && !rooms.Any())
+        {
+            <div class="alert alert-warning border-amber-500 bg-dark-900-opacity text-amber-500 text-center p-5">
+                <i class="oi oi-warning display-4 mb-3"></i>
+                <h4>Aucune cabine disponible</h4>
+                <p>Le navire semble complet.</p>
+                <a href="/rooms" class="btn btn-outline-amber mt-3">Voir les disponibilités</a>
+            </div>
+        }
+        else
+        {
+            <EditForm Model="@bookingModel" OnValidSubmit="HandleBookingCheck" FormName="BookingForm">
+                <DataAnnotationsValidator />
 
-            <div class="col-lg-8">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-white fw-bold mb-0">Mes Réservations</h3>
-                    
-                    <div class="btn-group bg-slate-900 border border-slate-800 rounded-pill p-1">
-                        <button class="btn btn-sm rounded-pill px-3 @(bookingFilter == "all" ? "btn-amber" : "text-slate-400 hover-text-white")" @onclick="@(() => SetBookingFilter("all"))">Toutes</button>
-                        <button class="btn btn-sm rounded-pill px-3 @(bookingFilter == "upcoming" ? "btn-amber" : "text-slate-400 hover-text-white")" @onclick="@(() => SetBookingFilter("upcoming"))">À venir</button>
-                        <button class="btn btn-sm rounded-pill px-3 @(bookingFilter == "past" ? "btn-amber" : "text-slate-400 hover-text-white")" @onclick="@(() => SetBookingFilter("past"))">Passées</button>
-                    </div>
-                </div>
+                <div class="row g-5">
 
-                @if (isLoadingBookings)
-                {
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-amber-500" role="status"></div>
-                        <p class="mt-3 text-slate-400">Recherche de vos billets d'embarquement...</p>
-                    </div>
-                }
-                else if (filteredBookings != null && filteredBookings.Any())
-                {
-                    <div class="d-flex flex-column gap-3">
-                        @foreach (var booking in filteredBookings)
+                    <div class="col-lg-7">
+
+                        <div class="card card-dark-theme border border-slate-800 p-4 mb-4 rounded-4">
+                            <h4 class="text-slate-200 mb-4 border-bottom border-slate-800 pb-3">Informations personnelles</h4>
+
+                            <div class="bg-amber-500-10 border border-amber-500-20 rounded-3 p-3 mb-4 d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2"><polyline points="20 6 9 17 4 12" /></svg>
+                                <span class="text-amber-500 small">Vos informations ont été automatiquement remplies depuis votre compte.</span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label text-slate-400 small fw-bold">Nom complet <span class="text-amber-500">*</span></label>
+                                <input type="text" class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber" value="@userName" disabled />
+                            </div>
+
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label text-slate-400 small fw-bold">Email <span class="text-amber-500">*</span></label>
+                                    <input type="email" class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber" value="@userEmail" disabled />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-slate-400 small fw-bold">Téléphone <span class="text-amber-500">*</span></label>
+                                    <input type="tel" class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber" placeholder="+33 6 ..." />
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label text-slate-400 small fw-bold">Nombre de voyageurs <span class="text-amber-500">*</span></label>
+                                <InputNumber class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber" @bind-Value="guests" min="1" max="@(selectedRoom?.AdultsCapacity + selectedRoom?.ChildrenCapacity ?? 4)" />
+                                <div class="form-text text-slate-500 small mt-1">
+                                    Capacité : @(selectedRoom?.AdultsCapacity ?? 0) adultes, @(selectedRoom?.ChildrenCapacity ?? 0) enfants
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card card-dark-theme border border-slate-800 p-4 mb-4 rounded-4">
+                            <h4 class="text-slate-200 mb-4 border-bottom border-slate-800 pb-3">Dates de séjour</h4>
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label text-slate-400 small fw-bold">Date d'arrivée <span class="text-amber-500">*</span></label>
+                                    <InputDate class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber"
+                                               @bind-Value="bookingModel.StartingDate"
+                                               @bind-Value:after="OnDatesChanged"
+                                               min="@minDate" />
+                                    <ValidationMessage For="@(() => bookingModel.StartingDate)" class="text-danger small mt-1" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-slate-400 small fw-bold">Date de départ <span class="text-amber-500">*</span></label>
+                                    <InputDate class="form-control bg-slate-800 border-slate-700 text-slate-200 focus-amber"
+                                               @bind-Value="bookingModel.EndingDate"
+                                               @bind-Value:after="OnDatesChanged"
+                                               min="@minDate" />
+                                    <ValidationMessage For="@(() => bookingModel.EndingDate)" class="text-danger small mt-1" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-amber w-100 py-3 fw-bold text-dark mb-4 rounded-3 shadow-lg hover-scale" disabled="@(isSubmitting || !string.IsNullOrEmpty(availabilityError))">
+                            @if (isCheckingDates)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Vérification des dates...</span>
+                            }
+                            else
+                            {
+                                <span>Continuer vers le paiement</span>
+                            }
+                        </button>
+
+                        @if (!string.IsNullOrEmpty(errorMessage) || !string.IsNullOrEmpty(availabilityError))
                         {
-                            <div class="card card-dark-theme border border-slate-800 rounded-4 overflow-hidden hover-scale-sm transition-all">
-                                <div class="row g-0">
-                                    <div class="col-md-4 position-relative">
-                                        @if (!string.IsNullOrEmpty(booking.RoomImageUrl))
-                                        {
-                                            <img src="@booking.RoomImageUrl" class="w-100 h-100 object-fit-cover" alt="Chambre" style="min-height: 180px;" />
-                                        }
-                                        else
-                                        {
-                                            <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center" style="min-height: 180px;">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white-50"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                                            </div>
-                                        }
-                                        
-                                        <div class="position-absolute top-0 start-0 m-3">
-                                            @if (booking.Status == "À venir" || booking.StartingDate > DateTime.Now)
-                                            {
-                                                <span class="badge bg-success-subtle text-success border border-success fw-bold">À venir</span>
-                                            }
-                                            else if (booking.Status == "Annulée")
-                                            {
-                                                <span class="badge bg-danger-subtle text-danger border border-danger fw-bold">Annulée</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary fw-bold">Terminée</span>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <div class="card-body p-4 d-flex flex-column h-100">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <div>
-                                                    <h5 class="card-title text-white mb-1">@booking.HotelName</h5>
-                                                    <p class="text-amber-500 small mb-0 fw-bold">Chambre @booking.RoomNumber • @booking.RoomType</p>
-                                                </div>
-                                                <div class="text-end">
-                                                    <div class="fs-5 fw-bold text-white">@booking.Price.ToString("C0")</div>
-                                                    <small class="text-slate-500">Total</small>
-                                                </div>
-                                            </div>
-
-                                            <div class="row g-3 my-3">
-                                                <div class="col-6">
-                                                    <div class="d-flex align-items-center text-slate-300 small">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-slate-500"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                                        <div>
-                                                            <span class="d-block text-slate-500 x-small">Arrivée</span>
-                                                            @booking.StartingDate.ToString("dd MMM yyyy")
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="d-flex align-items-center text-slate-300 small">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-slate-500"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                                        <div>
-                                                            <span class="d-block text-slate-500 x-small">Départ</span>
-                                                            @booking.EndingDate.ToString("dd MMM yyyy")
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="mt-auto d-flex gap-2">
-                                                <button class="btn btn-sm btn-outline-secondary flex-grow-1" @onclick="() => ShowBookingDetails(booking)">
-                                                    Voir détails
-                                                </button>
-                                                @if (booking.Status != "Annulée" && booking.StartingDate > DateTime.Now)
-                                                {
-                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => CancelBooking(booking)">
-                                                        Annuler
-                                                    </button>
-                                                }
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div class="alert alert-warning border-warning bg-warning-subtle text-warning-emphasis d-flex align-items-center rounded-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3 flex-shrink-0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                                <div>
+                                    <strong>Oups !</strong> <br />
+                                    @(string.IsNullOrEmpty(availabilityError) ? errorMessage : availabilityError)
                                 </div>
                             </div>
                         }
                     </div>
-                }
-                else
-                {
-                    <div class="text-center py-5 card card-dark-theme border border-slate-800 rounded-4">
-                        <div class="mb-3 text-slate-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+
+                    <div class="col-lg-5">
+                        <div class="card card-dark-theme border border-slate-800 rounded-4 p-4 sticky-top" style="top: 20px; background-color: #0b1121;">
+                            <h5 class="text-amber-500 mb-4 fw-bold">Récapitulatif</h5>
+
+                            @if (selectedRoom != null)
+                            {
+                                <div class="mb-3 rounded-3 overflow-hidden position-relative" style="height: 160px;">
+                                    @if (selectedRoom.HasImages)
+                                    {
+                                        <img src="@selectedRoom.PrimaryImageUrl" class="w-100 h-100 object-fit-cover" alt="Chambre" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center">
+                                            <i class="oi oi-image fs-1 text-white-50"></i>
+                                        </div>
+                                    }
+                                    <div class="position-absolute inset-0" style="background: linear-gradient(to top, rgba(15, 23, 42, 0.8), transparent);"></div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h5 class="text-white fw-bold mb-1">Cabine @selectedRoom.Number</h5>
+                                    <div class="text-slate-400 small d-flex align-items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 text-amber-500"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                        <span>@selectedRoom.AdultsCapacity Adultes, @selectedRoom.ChildrenCapacity Enfants max</span>
+                                    </div>
+                                </div>
+
+                                <hr class="border-slate-800 opacity-50 my-4" />
+
+                                <div class="d-flex justify-content-between mb-2 text-sm">
+                                    <span class="text-slate-400">Arrivée:</span>
+                                    <span class="text-slate-200">@bookingModel.StartingDate.ToString("dd MMM yyyy", new CultureInfo("fr-FR"))</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-sm">
+                                    <span class="text-slate-400">Départ:</span>
+                                    <span class="text-slate-200">@bookingModel.EndingDate.ToString("dd MMM yyyy", new CultureInfo("fr-FR"))</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-sm">
+                                    <span class="text-slate-400">Durée:</span>
+                                    <span class="text-slate-200">@bookingModel.NumberOfNights nuit@(bookingModel.NumberOfNights > 1 ? "s" : "")</span>
+                                </div>
+
+                                <hr class="border-slate-800 opacity-50 my-4" />
+
+                                <div class="d-flex justify-content-between mb-2 text-sm">
+                                    <span class="text-slate-400">@selectedRoom.PricePerNight.ToString("C0") × @bookingModel.NumberOfNights nuits</span>
+                                    <span class="text-slate-200">@SubTotalDisplay</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-sm">
+                                    <span class="text-slate-400">Taxes et frais</span>
+                                    <span class="text-slate-200">@TaxesDisplay</span>
+                                </div>
+
+                                <hr class="border-slate-800 opacity-50 my-4" />
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-amber-500 fw-bold">Total</span>
+                                    <span class="text-amber-500 fw-bold fs-4">@(bookingModel.EstimatedPrice.HasValue? TotalDisplay : "...")</span>
+                                </div>
+
+                                <hr class="border-slate-800 opacity-50 my-4" />
+
+                                <div>
+                                    <h6 class="text-slate-300 mb-3 small fw-bold">Inclus</h6>
+                                    <ul class="list-unstyled text-slate-400 small mb-0">
+                                        <li class="mb-2 d-flex align-items-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2"><polyline points="20 6 9 17 4 12" /></svg> Petit-déjeuner buffet</li>
+                                        <li class="mb-2 d-flex align-items-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2"><polyline points="20 6 9 17 4 12" /></svg> WiFi gratuit</li>
+                                    </ul>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5 text-slate-500">
+                                    <p>Veuillez sélectionner une chambre.</p>
+                                </div>
+                            }
                         </div>
-                        <h4 class="text-slate-300">Aucune réservation</h4>
-                        <p class="text-slate-500 mb-4">Vous n'avez pas encore réservé de cabine pour cette période.</p>
-                        <a href="/rooms" class="btn btn-amber fw-bold">Découvrir nos chambres</a>
                     </div>
-                }
-            </div>
-        </div>
+
+                </div>
+            </EditForm>
+        }
     </div>
 </div>
 
-@if (selectedBooking != null)
+@if (showPaymentModal)
 {
     <div class="modal-backdrop fade show" style="background-color: rgba(0,0,0,0.8); z-index: 1050;"></div>
     <div class="modal fade show d-block" tabindex="-1" style="z-index: 1055;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-slate-900 border border-slate-700 text-slate-300 shadow-lg">
                 <div class="modal-header border-slate-700">
-                    <h5 class="modal-title text-amber-500 fw-bold">Détails de la réservation</h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CloseBookingDetails"></button>
+                    <h5 class="modal-title text-amber-500 fw-bold d-flex align-items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>
+                        Paiement sécurisé
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" disabled="@isProcessingPayment" @onclick="ClosePaymentModal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-4">
-                        <h6 class="text-white fw-bold mb-3 border-bottom border-slate-700 pb-2">Informations Chambre</h6>
-                        <div class="d-flex justify-content-between mb-2"><span>Numéro :</span> <span class="text-white">@selectedBooking.RoomNumber</span></div>
-                        <div class="d-flex justify-content-between mb-2"><span>Type :</span> <span class="text-white">@selectedBooking.RoomType</span></div>
-                        <div class="d-flex justify-content-between mb-2"><span>Hôtel :</span> <span class="text-white">@selectedBooking.HotelName</span></div>
+
+                    <div class="alert bg-slate-800 border border-amber-500-20 text-slate-300 mb-4 text-center">
+                        <small>Total à régler :</small>
+                        <div class="fs-2 fw-bold text-amber-500">@TotalDisplay</div>
                     </div>
-                    
-                    <div class="mb-2">
-                        <h6 class="text-white fw-bold mb-3 border-bottom border-slate-700 pb-2">Séjour</h6>
-                        <div class="d-flex justify-content-between mb-2"><span>Arrivée :</span> <span class="text-white">@selectedBooking.StartingDate.ToString("dd/MM/yyyy")</span></div>
-                        <div class="d-flex justify-content-between mb-2"><span>Départ :</span> <span class="text-white">@selectedBooking.EndingDate.ToString("dd/MM/yyyy")</span></div>
-                        <div class="d-flex justify-content-between mb-2"><span>Durée :</span> <span class="text-white">@selectedBooking.NumberOfNights nuit(s)</span></div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-slate-400 x-small fw-bold text-uppercase">Nom sur la carte</label>
+                        <input type="text" class="form-control bg-slate-800 border-slate-700 text-white" placeholder="JACK SPARROW" disabled="@isProcessingPayment" />
                     </div>
-                    
-                    <div class="mt-4 p-3 bg-slate-800 rounded-3 d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">Prix Total</span>
-                        <span class="fs-4 text-amber-500 fw-bold">@selectedBooking.Price.ToString("C")</span>
+
+                    <div class="mb-3">
+                        <label class="form-label text-slate-400 x-small fw-bold text-uppercase">Numéro de carte</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-slate-800 border-slate-700 text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg></span>
+                            <input type="text" class="form-control bg-slate-800 border-slate-700 text-white" placeholder="0000 0000 0000 0000" disabled="@isProcessingPayment" />
+                        </div>
                     </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label text-slate-400 x-small fw-bold text-uppercase">Expiration</label>
+                            <input type="text" class="form-control bg-slate-800 border-slate-700 text-white" placeholder="MM/AA" disabled="@isProcessingPayment" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-slate-400 x-small fw-bold text-uppercase">CVC</label>
+                            <input type="text" class="form-control bg-slate-800 border-slate-700 text-white" placeholder="123" disabled="@isProcessingPayment" />
+                        </div>
+                    </div>
+
+                    @if (isProcessingPayment)
+                    {
+                        <div class="text-center mt-4">
+                            <div class="spinner-border text-amber-500 mb-2" role="status"></div>
+                            <p class="text-slate-400 small animate-pulse">Validation du trésor...</p>
+                        </div>
+                    }
                 </div>
                 <div class="modal-footer border-slate-700">
-                    <button type="button" class="btn btn-outline-secondary" @onclick="CloseBookingDetails">Fermer</button>
+                    <button type="button" class="btn btn-outline-secondary" disabled="@isProcessingPayment" @onclick="ClosePaymentModal">Annuler</button>
+                    <button type="button" class="btn btn-amber fw-bold px-4" disabled="@isProcessingPayment" @onclick="ProcessPaymentAndBooking">
+                        @if (!isProcessingPayment)
+                        {
+                            <span>Payer @TotalDisplay</span>
+                        }
+                        else
+                        {
+
+                            <span>Traitement...</span>
+                        }
+                    </button>
                 </div>
             </div>
         </div>
@@ -306,185 +289,310 @@
 }
 
 @code {
-    private UserProfile? userProfile;
-    private IEnumerable<BookingForUser>? userBookings;
-    private IEnumerable<BookingForUser>? filteredBookings;
-    private BookingForUser? selectedBooking;
-    
+    [Parameter] public Guid? RoomId { get; set; }
+
+    [SupplyParameterFromForm]
+    private BookingCreation bookingModel { get; set; } = new();
+
+    private IEnumerable<Room>? rooms;
+    private Room? selectedRoom;
     private string successMessage = string.Empty;
     private string errorMessage = string.Empty;
-    private string activeTab = "info";
-    private string bookingFilter = "all";
-    
-    private bool isLoadingProfile = true;
-    private bool isLoadingBookings = true;
-    private bool isUpdatingProfile = false;
-    private bool isChangingPassword = false;
+    private string availabilityError = string.Empty;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private bool isCheckingDates = false;
+    private bool showPaymentModal = false;
+    private bool isProcessingPayment = false;
+    private int guests = 1;
+
+    // Date minimale = Demain
+    private string minDate = DateTime.Now.AddDays(1).ToString("yyyy-MM-dd");
+
+    private string userEmail = string.Empty;
+    private string userName = string.Empty;
+
+    // Propriétés calculées
+    private decimal SubTotal => (selectedRoom?.PricePerNight ?? 0) * bookingModel.NumberOfNights;
+    private decimal Taxes => SubTotal * 0.1m;
+    private decimal Total => bookingModel.EstimatedPrice ?? (SubTotal + Taxes);
+
+    private string SubTotalDisplay => SubTotal.ToString("F2") + "€";
+    private string TaxesDisplay => Taxes.ToString("F2") + "€";
+    private string TotalDisplay => Total.ToString("F2") + "€";
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadUserProfile();
-        await LoadUserBookings();
+        // Initialiser les dates par défaut à demain
+        if (bookingModel.StartingDate == default || bookingModel.StartingDate <= DateTime.Now.Date)
+        {
+            bookingModel.StartingDate = DateTime.Now.Date.AddDays(1);
+            bookingModel.EndingDate = DateTime.Now.Date.AddDays(2);
+        }
+
+        await LoadUserInfo();
+        await LoadRooms();
+
+        if (RoomId.HasValue)
+        {
+            bookingModel.RoomId = RoomId.Value;
+            await OnRoomChanged();
+        }
+        isLoading = false;
     }
 
-    private async Task LoadUserProfile()
+    private async Task LoadUserInfo()
     {
         try
         {
-            isLoadingProfile = true;
-            // On tente de récupérer le profil via le service
-            userProfile = await UserProfileService.GetCurrentUserProfileAsync();
-            
-            // Si le service renvoie null (ou qu'on veut être sûr), on utilise l'AuthState
-            if (userProfile == null)
+            // Tentative 1 : Service Profil (Données les plus riches)
+            var profile = await UserProfileService.GetCurrentUserProfileAsync();
+            if (profile != null)
             {
-                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-                var user = authState.User;
-                if(user.Identity?.IsAuthenticated == true)
-                {
-                    userProfile = new UserProfile
-                    {
-                        Username = user.Identity.Name ?? "Pirate",
-                        Email = user.FindFirst(ClaimTypes.Email)?.Value ?? "Inconnu",
-                        FirstName = user.Identity.Name ?? "Capitaine"
-                    };
-                }
-                else 
-                {
-                    errorMessage = "Impossible de charger le profil.";
-                }
+                userName = $"{profile.FirstName} {profile.LastName}".Trim();
+                if (string.IsNullOrWhiteSpace(userName)) userName = profile.Username;
+                userEmail = profile.Email;
+                return;
+            }
+        }
+        catch { }
+
+        // Tentative 2 : Session / Claims (Fallback)
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            userName = user.Identity.Name ?? "";
+            userEmail = user.FindFirst(ClaimTypes.Email)?.Value
+                     ?? user.FindFirst("email")?.Value
+                     ?? user.FindFirst("preferred_username")?.Value
+                     ?? "";
+        }
+    }
+
+    private async Task LoadRooms()
+    {
+        try
+        {
+            var hotels = await HotelService.GetAllHotelsAsync();
+            var skullKingHotel = hotels.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+
+            if (skullKingHotel != null)
+            {
+                rooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 100);
+            }
+            else
+            {
+                errorMessage = "L'hôtel SkullKing n'a pas encore été créé.";
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Erreur profil : {ex.Message}";
-        }
-        finally
-        {
-            isLoadingProfile = false;
+            errorMessage = $"Erreur : {ex.Message}";
         }
     }
 
-    private async Task LoadUserBookings()
+    private async Task OnDatesChanged()
     {
-        try
-        {
-            isLoadingBookings = true;
-            userBookings = await BookingService.GetUserBookingsAsync();
-            ApplyBookingFilter();
-        }
-        catch (Exception)
-        {
-            // Gérer silencieusement ou afficher un message discret si pas de réservations
-            userBookings = new List<BookingForUser>();
-        }
-        finally
-        {
-            isLoadingBookings = false;
-        }
-    }
-
-    private void SwitchToTab(string tabName)
-    {
-        activeTab = tabName;
-        successMessage = string.Empty;
         errorMessage = string.Empty;
-    }
+        availabilityError = string.Empty;
 
-    private void SetBookingFilter(string filter)
-    {
-        bookingFilter = filter;
-        ApplyBookingFilter();
-    }
-
-    private void ApplyBookingFilter()
-    {
-        if (userBookings == null) return;
-
-        var now = DateTime.Now;
-        filteredBookings = bookingFilter switch
+        // Validation des dates
+        if (bookingModel.StartingDate <= DateTime.Now.Date)
         {
-            "upcoming" => userBookings.Where(b => b.StartingDate > now && b.Status != "Annulée"),
-            "past" => userBookings.Where(b => b.EndingDate < now),
-            _ => userBookings
-        };
+            availabilityError = "Vous ne pouvez pas réserver pour aujourd'hui ou dans le passé.";
+            return;
+        }
+
+        if (bookingModel.EndingDate <= bookingModel.StartingDate)
+        {
+            availabilityError = "La date de départ doit être après la date d'arrivée.";
+            return;
+        }
+
+        if (bookingModel.RoomId != Guid.Empty)
+        {
+            await CalculatePrice();
+        }
     }
 
-    private void ShowBookingDetails(BookingForUser booking) => selectedBooking = booking;
-    private void CloseBookingDetails() => selectedBooking = null;
-
-    private async Task CancelBooking(BookingForUser booking)
+    private async Task OnRoomChanged()
     {
-        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Voulez-vous vraiment annuler cette réservation ?");
-        if (!confirmed) return;
+        if (bookingModel.RoomId != Guid.Empty && rooms != null)
+        {
+            selectedRoom = rooms.FirstOrDefault(r => r.Id == bookingModel.RoomId);
+            if (selectedRoom != null && guests > (selectedRoom.AdultsCapacity + selectedRoom.ChildrenCapacity))
+            {
+                guests = selectedRoom.AdultsCapacity + selectedRoom.ChildrenCapacity;
+            }
+            await CalculatePrice();
+        }
+        else
+        {
+            selectedRoom = null;
+            bookingModel.EstimatedPrice = null;
+        }
+    }
+
+    private async Task CalculatePrice()
+    {
+        if (selectedRoom != null)
+        {
+            try
+            {
+                if (bookingModel.NumberOfNights <= 0) return;
+
+                var estimatedPrice = await BookingService.CalculateEstimatedPriceAsync(
+                    bookingModel.RoomId,
+                    bookingModel.StartingDate,
+                    bookingModel.EndingDate);
+
+                if (estimatedPrice.HasValue)
+                {
+                    bookingModel.EstimatedPrice = estimatedPrice;
+                    availabilityError = string.Empty;
+                }
+                else
+                {
+                    // Indisponible
+                    availabilityError = "Ces dates sont indisponibles pour cette cabine.";
+                    decimal sub = selectedRoom.PricePerNight * bookingModel.NumberOfNights;
+                    bookingModel.EstimatedPrice = sub + (sub * 0.1m);
+                }
+            }
+            catch
+            {
+                decimal sub = selectedRoom.PricePerNight * bookingModel.NumberOfNights;
+                bookingModel.EstimatedPrice = sub + (sub * 0.1m);
+            }
+        }
+        else
+        {
+            bookingModel.EstimatedPrice = null;
+        }
+        StateHasChanged();
+    }
+
+    private async Task HandleBookingCheck()
+    {
+        errorMessage = string.Empty;
+        availabilityError = string.Empty;
+        isCheckingDates = true;
 
         try
         {
-            var result = await BookingService.CancelBookingAsync(booking.Id);
+            if (bookingModel.RoomId == Guid.Empty)
+            {
+                errorMessage = "Veuillez sélectionner une chambre.";
+                isCheckingDates = false;
+                return;
+            }
+
+            if (!bookingModel.IsValid)
+            {
+                errorMessage = "Veuillez vérifier les champs du formulaire.";
+                isCheckingDates = false;
+                return;
+            }
+
+            // Vérification Dates (Doublon de sécurité)
+            if (bookingModel.StartingDate <= DateTime.Now.Date)
+            {
+                availabilityError = "Vous ne pouvez pas réserver pour aujourd'hui ou dans le passé.";
+                isCheckingDates = false;
+                return;
+            }
+
+            // Vérification disponibilité API
+            var estimatedPrice = await BookingService.CalculateEstimatedPriceAsync(
+                bookingModel.RoomId,
+                bookingModel.StartingDate,
+                bookingModel.EndingDate);
+
+            if (!estimatedPrice.HasValue)
+            {
+                availabilityError = "Désolé, cette cabine n'est plus disponible pour ces dates.";
+                isCheckingDates = false;
+                return;
+            }
+
+            // Tout est bon => Paiement
+            showPaymentModal = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Erreur de connexion lors de la vérification.";
+        }
+        finally
+        {
+            isCheckingDates = false;
+        }
+    }
+
+    private void ClosePaymentModal()
+    {
+        showPaymentModal = false;
+        isProcessingPayment = false;
+    }
+
+    private async Task ProcessPaymentAndBooking()
+    {
+        isProcessingPayment = true;
+
+        await Task.Delay(2000); // Simulation
+
+        try
+        {
+            var result = await BookingService.CreateBookingAsync(bookingModel);
+
             if (result)
             {
-                successMessage = "Réservation annulée.";
-                await LoadUserBookings(); // Rafraichir la liste
+                showPaymentModal = false;
+                successMessage = $"Paiement accepté !";
+
+                await Task.Delay(1000);
+
+                // Récupération de l'ID pour redirection
+                var userBookings = await BookingService.GetUserBookingsAsync();
+                var latestBooking = userBookings.OrderByDescending(b => b.StartingDate).FirstOrDefault(); // Ou par DateCreation si dispo
+
+                bookingModel = new BookingCreation
+                {
+                    StartingDate = DateTime.Now.Date.AddDays(1),
+                    EndingDate = DateTime.Now.Date.AddDays(2)
+                };
+                selectedRoom = null;
+
+                if (latestBooking != null)
+                {
+                    NavigationManager.NavigateTo($"/booking-confirmation/{latestBooking.Id}");
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("/profile");
+                }
             }
             else
             {
-                errorMessage = "Impossible d'annuler cette réservation.";
+                showPaymentModal = false;
+                availabilityError = "Erreur : La chambre a été réservée par quelqu'un d'autre.";
             }
         }
-        catch
+        catch (Exception ex)
         {
-            errorMessage = "Erreur lors de l'annulation.";
+            showPaymentModal = false;
+            errorMessage = $"Erreur technique : {ex.Message}";
         }
-    }
-
-    private async Task HandleUpdateProfile()
-    {
-        if (userProfile == null) return;
-        isUpdatingProfile = true;
-        errorMessage = string.Empty;
-        successMessage = string.Empty;
-
-        try
+        finally
         {
-            var result = await UserProfileService.UpdateUserProfileAsync(userProfile);
-            if (result) successMessage = "Profil mis à jour !";
-            else errorMessage = "Échec de la mise à jour.";
+            isProcessingPayment = false;
         }
-        catch { errorMessage = "Erreur technique."; }
-        finally { isUpdatingProfile = false; }
-    }
-
-    private async Task HandleChangePassword()
-    {
-        if (userProfile == null) return;
-        isChangingPassword = true;
-        errorMessage = string.Empty;
-        successMessage = string.Empty;
-
-        try
-        {
-            var result = await UserProfileService.ChangePasswordAsync(userProfile.NewPassword);
-            if (result) 
-            {
-                successMessage = "Mot de passe modifié.";
-                userProfile.NewPassword = "";
-                userProfile.ConfirmPassword = "";
-            }
-            else errorMessage = "Erreur lors du changement.";
-        }
-        catch { errorMessage = "Erreur technique."; }
-        finally { isChangingPassword = false; }
-    }
-
-    private async Task HandleLogout()
-    {
-        await AuthService.Logout();
-        NavigationManager.NavigateTo("/", true);
     }
 }
 
 <style>
-    /* VARIABLES (Mêmes que Booking.razor) */
+    /* VARIABLES */
     :root {
         --color-dark-950: #020617;
         --color-dark-900: #0f172a;
@@ -495,45 +603,83 @@
         --color-amber-600: #d97706;
     }
 
-    /* GLOBAL */
-    .bg-darker-950 { background-color: var(--color-dark-950) !important; }
-    .bg-slate-900 { background-color: var(--color-dark-900) !important; }
-    .bg-slate-800 { background-color: var(--color-slate-800) !important; }
-    .text-amber-500 { color: var(--color-amber-500) !important; }
-    .text-slate-300 { color: #cbd5e1 !important; }
-    .text-slate-400 { color: var(--color-slate-400) !important; }
-    .border-slate-800 { border-color: var(--color-slate-800) !important; }
-    .border-slate-700 { border-color: var(--color-slate-700) !important; }
-    .rounded-4 { border-radius: 1rem !important; }
-    .object-fit-cover { object-fit: cover; }
-    .x-small { font-size: 0.75rem; }
+    /* BASE */
+    .bg-darker-950 {
+        background-color: var(--color-dark-950) !important;
+    }
+
+    .bg-slate-900 {
+        background-color: var(--color-dark-900) !important;
+    }
+
+    .bg-slate-800 {
+        background-color: var(--color-slate-800) !important;
+    }
+
+    .text-amber-500 {
+        color: var(--color-amber-500) !important;
+    }
+
+    .text-slate-300 {
+        color: #cbd5e1 !important;
+    }
+
+    .text-slate-400 {
+        color: var(--color-slate-400) !important;
+    }
+
+    .text-slate-500 {
+        color: #64748b !important;
+    }
+
+    .border-slate-800 {
+        border-color: var(--color-slate-800) !important;
+    }
+
+    .border-slate-700 {
+        border-color: var(--color-slate-700) !important;
+    }
+
+    .bg-amber-500-10 {
+        background-color: rgba(245, 158, 11, 0.1);
+    }
+
+    .border-amber-500-20 {
+        border-color: rgba(245, 158, 11, 0.2) !important;
+    }
+
+    .border-amber-500-30 {
+        border-color: rgba(245, 158, 11, 0.3) !important;
+    }
+
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+
+    .object-fit-cover {
+        object-fit: cover;
+    }
+
+    .text-sm {
+        font-size: 0.875rem;
+    }
 
     /* CARD THEME */
     .card-dark-theme {
         background-color: rgba(15, 23, 42, 0.5);
         backdrop-filter: blur(10px);
-        transition: transform 0.2s;
-    }
-    
-    .hover-scale-sm:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-        border-color: var(--color-amber-500) !important;
     }
 
-    /* AVATAR */
-    .avatar-circle {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        border: 4px solid rgba(255, 255, 255, 0.1);
+    /* INPUTS STYLING */
+    .form-control, .form-select {
+        color: #e2e8f0;
     }
 
-    /* FORMS */
-    .form-control:disabled {
-        background-color: #0f172a;
-        opacity: 0.7;
-    }
+        .form-control:disabled {
+            background-color: #0f172a;
+            opacity: 0.7;
+        }
+
     .focus-amber:focus {
         background-color: var(--color-slate-800);
         color: #fff;
@@ -541,38 +687,51 @@
         box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
     }
 
-    /* BUTTONS */
+    input[type="date"] {
+        color-scheme: dark;
+    }
+
+    /* BUTTONS & LINKS */
     .btn-amber {
         background-color: var(--color-amber-500);
         border: none;
+        transition: all 0.2s;
         color: #020617;
-        transition: all 0.2s;
     }
-    .btn-amber:hover {
-        background-color: var(--color-amber-600);
+
+        .btn-amber:hover {
+            background-color: var(--color-amber-600);
+            transform: translateY(-1px);
+        }
+
+    .hover-scale:hover {
+        transform: scale(1.01);
     }
-    
-    .btn-outline-amber {
-        color: var(--color-amber-500);
-        border-color: var(--color-amber-500);
+
+    .group-link:hover {
+        color: var(--color-amber-500) !important;
     }
-    .btn-outline-amber:hover {
-        background-color: var(--color-amber-500);
-        color: #000;
+
+        .group-link:hover .group-hover-translate-back {
+            transform: translateX(-3px);
+        }
+
+    .transition-transform {
+        transition: transform 0.2s ease;
     }
-    
-    .btn-danger-soft {
-        color: #fca5a5;
-        background-color: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.2);
-        padding: 0.5rem;
-        border-radius: 0.5rem;
-        transition: all 0.2s;
+
+    /* ANIMATIONS */
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
-    .btn-danger-soft:hover {
-        background-color: rgba(239, 68, 68, 0.2);
-        color: #fff;
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: .5;
+        }
     }
-    
-    .hover-text-white:hover { color: white !important; }
 </style>
