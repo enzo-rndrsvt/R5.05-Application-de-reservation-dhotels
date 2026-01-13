@@ -137,18 +137,27 @@ namespace HotelBooking.Application.Services
             var googleMapsLink =
                 $"https://www.google.com/maps/search/?api=1&query={hotel.Geolocation}";
             var emailBody =
-                $"Dear {user.FirstName},\n" +
-                $"We are delighted to confirm your booking made through our website. " +
-                $"Your booking was created on {booking.CreationDate}, with your stay scheduled " +
-                $"to start on {booking.StartingDate} and end on {booking.EndingDate}.\n" +
-                $"The total price for your booking is {booking.Price:C}." +
-                $"You have booked room number {room.Number} which can accommodate " +
-                $"{room.AdultsCapacity} adults and {room.ChildrenCapacity} children.\n" +
-                $"Your stay will be at {hotel.Name}, a {hotel.StarRating}-star hotel. " +
-                $"You can view the exact location of the hotel on the map here: {googleMapsLink}" +
-                $" \nWe hope you have a pleasant stay. \nIf you have any questions or need " +
-                $"further assistance, feel free to contact us.\n\n" +
-                $"Best Regards,\nYour Booking Website Team";
+                $"Cher(e) {user.FirstName} {user.LastName},\n\n" +
+                $"Nous sommes ravis de confirmer votre réservation effectuée via notre site web.\n\n" +
+                $"📋 DÉTAILS DE VOTRE RÉSERVATION\n" +
+                $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                $"Date de réservation : {booking.CreationDate:dd/MM/yyyy à HH:mm}\n" +
+                $"Date d'arrivée : {booking.StartingDate:dd/MM/yyyy}\n" +
+                $"Date de départ : {booking.EndingDate:dd/MM/yyyy}\n" +
+                $"Prix total : {booking.Price:C}\n\n" +
+                $"🏨 INFORMATIONS SUR VOTRE HÉBERGEMENT\n" +
+                $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                $"Hôtel : {hotel.Name} ({hotel.StarRating} étoiles)\n" +
+                $"Chambre n° {room.Number}\n" +
+                $"Capacité : {room.AdultsCapacity} adulte(s) et {room.ChildrenCapacity} enfant(s)\n\n" +
+                $"📍 LOCALISATION\n" +
+                $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                $"Vous pouvez consulter l'emplacement exact de l'hôtel sur Google Maps :\n" +
+                $"{googleMapsLink}\n\n" +
+                $"Nous vous souhaitons un excellent séjour !\n" +
+                $"Si vous avez des questions ou besoin d'assistance, n'hésitez pas à nous contacter.\n\n" +
+                $"Cordialement,\n" +
+                $"L'équipe de votre site de réservation";
 
             return emailBody;
         }
