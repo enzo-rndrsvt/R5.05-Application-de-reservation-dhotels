@@ -223,11 +223,6 @@
                             Réserver maintenant
                         </a>
 
-                        <button class="btn btn-outline-secondary w-100 mb-3 d-flex align-items-center justify-content-center" @onclick="ShareRoom">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
-                            Partager
-                        </button>
-
                         <p class="text-center text-slate-500 x-small mt-2" style="font-size: 0.7rem;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1 text-slate-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
                             Annulation gratuite jusqu'à 48h avant l'arrivée
@@ -305,16 +300,6 @@
     private decimal CalculateDiscountedPrice(decimal originalPrice, decimal discountPercentage)
     {
         return originalPrice * (1 - discountPercentage / 100);
-    }
-
-    private async Task ShareRoom()
-    {
-        try
-        {
-            var url = NavigationManager.Uri;
-            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
-        }
-        catch { /* Fallback */ }
     }
 
     private async Task GoToSlide(int index)
