@@ -4,28 +4,28 @@ namespace HotelBooking.Web.Models.Auth
 {
     public class RegisterRequest
     {
-        [Required(ErrorMessage = "Le prénom est requis")]
-        [StringLength(50, MinimumLength = 3, ErrorMessage = "Le prénom doit avoir entre 3 et 50 caractères")]
+        [Required(ErrorMessage = "Moussaillon ! Votre prénom est requis pour rejoindre l'équipage")]
+        [StringLength(50, MinimumLength = 2, ErrorMessage = "Votre prénom doit contenir entre 2 et 50 caractères")]
         public string FirstName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Le nom de famille est requis")]
-        [StringLength(50, MinimumLength = 3, ErrorMessage = "Le nom de famille doit avoir entre 3 et 50 caractères")]
+        [Required(ErrorMessage = "Capitaine ! Votre nom de famille est nécessaire")]
+        [StringLength(50, MinimumLength = 2, ErrorMessage = "Votre nom doit contenir entre 2 et 50 caractères")]
         public string LastName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Le nom d'utilisateur est requis")]
-        [StringLength(50, MinimumLength = 3, ErrorMessage = "Le nom d'utilisateur doit avoir entre 3 et 50 caractères")]
+        [Required(ErrorMessage = "Ahoy ! Choisissez un nom d'utilisateur pour naviguer")]
+        [StringLength(50, MinimumLength = 3, ErrorMessage = "Votre nom d'utilisateur doit contenir entre 3 et 50 caractères")]
         public string Username { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "L'email est requis")]
-        [EmailAddress(ErrorMessage = "Format d'email invalide")]
+        [Required(ErrorMessage = "Matelot ! Votre adresse email est indispensable")]
+        [EmailAddress(ErrorMessage = "Cette adresse email n'est pas valide (ex: capitaine@skullking.com)")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Le mot de passe est requis")]
-        [StringLength(100, MinimumLength = 8, ErrorMessage = "Le mot de passe doit avoir au moins 8 caractères")]
+        [Required(ErrorMessage = "Arrgh ! Un mot de passe solide protégera votre trésor")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Votre mot de passe doit contenir au moins 6 caractères pour sécuriser vos richesses")]
         public string Password { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "La confirmation du mot de passe est requise")]
-        [Compare(nameof(Password), ErrorMessage = "Les mots de passe ne correspondent pas")]
+        [Required(ErrorMessage = "Confirmez votre mot de passe pour éviter les mutineries")]
+        [Compare(nameof(Password), ErrorMessage = "Les deux mots de passe ne correspondent pas, vérifiez votre saisie")]
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

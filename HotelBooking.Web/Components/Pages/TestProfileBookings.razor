@@ -1,0 +1,202 @@
+@page "/test-profile-bookings"
+@using HotelBooking.Web.Models
+
+<PageTitle>Test Profil - Réservations avec Images DB</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>?? Test des Réservations avec Images de la Base de Données</h4>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-success">
+                <h5><i class="oi oi-check"></i> Améliorations Implémentées :</h5>
+                <ul class="mb-0">
+                    <li><strong>Images depuis la base :</strong> Les images des chambres sont maintenant récupérées depuis la table Rooms</li>
+                    <li><strong>Support multi-images :</strong> Chaque chambre peut avoir plusieurs images stockées en JSON</li>
+                    <li><strong>Titre Cabine X :</strong> Affichage du numéro de cabine au lieu de "SkullKing"</li>
+                    <li><strong>Galerie dans le modal :</strong> Navigation entre les images dans les détails</li>
+                </ul>
+            </div>
+            
+            <!-- Simulation des cartes de réservation avec images DB -->
+            <div class="row g-3">
+                
+                <!-- Exemple 1 : Avec image principale depuis la DB -->
+                <div class="col-12">
+                    <div style="background: #243142; border-radius: 12px; border: 1px solid #334155; overflow: hidden; display: grid; grid-template-columns: 200px 1fr auto;">
+                        <!-- Image depuis la base de données -->
+                        <div style="height: 150px; background: #0a0e1a; display: flex; align-items: center; justify-content: center; border: 2px solid #00d4d4;">
+                            <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&h=300&fit=crop&crop=center" 
+                                 style="width: 100%; height: 100%; object-fit: cover;" 
+                                 alt="Cabine 101" />
+                        </div>
+                        
+                        <!-- Détails -->
+                        <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <h3 style="color: #ff9500; margin: 0; font-size: 1.3rem;">Cabine 101</h3>
+                                <span style="background: #00c896; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.875rem; font-weight: 600;">À venir</span>
+                            </div>
+                            
+                            <div style="color: #8892b0;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <i class="oi oi-tag" style="color: #ff9500;"></i>
+                                    <span>Suite Deluxe • Hôtel SkullKing</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <i class="oi oi-people" style="color: #00d4d4;"></i>
+                                    <span>3 nuits</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="oi oi-image" style="color: #00c896;"></i>
+                                    <span style="font-size: 0.85rem;">4 photos disponibles</span>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 30px; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="oi oi-calendar" style="color: #586577;"></i>
+                                    <div>
+                                        <span style="font-size: 0.875rem; color: #586577;">Arrivée</span><br>
+                                        <span style="color: #ffffff; font-weight: 500;">25 Jan 2024</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="oi oi-calendar" style="color: #586577;"></i>
+                                    <div>
+                                        <span style="font-size: 0.875rem; color: #586577;">Départ</span><br>
+                                        <span style="color: #ffffff; font-weight: 500;">28 Jan 2024</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                                    <span style="font-size: 0.875rem; color: #586577;">Total</span>
+                                    <span style="color: #ff9500; font-size: 1.2rem; font-weight: bold;">395,00 €</span>
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 0.875rem; color: #586577;">
+                                Réf B4D3F7A2 • Images récupérées depuis la base de données
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; min-width: 120px;">
+                            <button class="btn btn-info btn-sm">Détails</button>
+                            <button class="btn btn-warning btn-sm">Modifier</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exemple 2 : Chambre sans image (placeholder personnalisé) -->
+                <div class="col-12">
+                    <div style="background: #243142; border-radius: 12px; border: 1px solid #334155; overflow: hidden; display: grid; grid-template-columns: 200px 1fr auto;">
+                        <!-- Placeholder amélioré -->
+                        <div style="height: 150px; background: #0a0e1a; display: flex; align-items: center; justify-content: center; border: 2px solid #00d4d4;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;">
+                                <i class="oi oi-home" style="font-size: 2.5rem; color: #ff9500;"></i>
+                                <span style="font-size: 0.9rem; color: #8892b0; font-weight: 600;">Cabine 304</span>
+                                <small style="font-size: 0.75rem; color: #586577; opacity: 0.7;">Aucune image disponible</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Détails -->
+                        <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <h3 style="color: #ff9500; margin: 0; font-size: 1.3rem;">Cabine 304</h3>
+                                <span style="background: #586577; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.875rem; font-weight: 600;">Terminée</span>
+                            </div>
+                            
+                            <div style="color: #8892b0;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <i class="oi oi-tag" style="color: #ff9500;"></i>
+                                    <span>Chambre Standard • Hôtel SkullKing</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i class="oi oi-people" style="color: #00d4d4;"></i>
+                                    <span>1 nuit</span>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 30px; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="oi oi-calendar" style="color: #586577;"></i>
+                                    <div>
+                                        <span style="font-size: 0.875rem; color: #586577;">Arrivée</span><br>
+                                        <span style="color: #ffffff; font-weight: 500;">05 Déc 2023</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="oi oi-calendar" style="color: #586577;"></i>
+                                    <div>
+                                        <span style="font-size: 0.875rem; color: #586577;">Départ</span><br>
+                                        <span style="color: #ffffff; font-weight: 500;">06 Déc 2023</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                                    <span style="font-size: 0.875rem; color: #586577;">Total</span>
+                                    <span style="color: #ff9500; font-size: 1.2rem; font-weight: bold;">89,00 €</span>
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 0.875rem; color: #586577;">
+                                Réf C8E9F2B1 • Pas d'images en base pour cette chambre
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div style="display: flex; flex-direction: column; gap: 10px; padding: 20px; min-width: 120px;">
+                            <button class="btn btn-secondary btn-sm" disabled>Détails</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations techniques détaillées -->
+            <div class="mt-5 alert alert-info">
+                <h5><i class="oi oi-info"></i> Architecture Technique :</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>?? Base de Données :</h6>
+                        <ul>
+                            <li><strong>Table Rooms :</strong> Colonne <code>ImageUrl</code> (image principale)</li>
+                            <li><strong>Table Rooms :</strong> Colonne <code>ImageUrls</code> (JSON array)</li>
+                            <li><strong>Désérialisation :</strong> JSON vers <code>List&lt;string&gt;</code></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>?? Flux de Données :</h6>
+                        <ul>
+                            <li><strong>BookingRepository</strong> ? Récupération avec images</li>
+                            <li><strong>BookingWithDetailsDTO</strong> ? Transport API</li>
+                            <li><strong>BookingForUser</strong> ? Modèle d'affichage</li>
+                            <li><strong>Profile.razor</strong> ? Affichage final</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SQL pour tester -->
+            <div class="mt-4 alert alert-warning">
+                <h6>??? Pour Tester avec de Vraies Données :</h6>
+                <p>Exécutez le script SQL : <code>HotelBooking.Infrastructure/Scripts/AddRoomImagesTestData.sql</code></p>
+                <p>Ce script ajoute des images à plusieurs chambres et permet de tester l'affichage réel.</p>
+                <div class="mt-2">
+                    <button class="btn btn-sm btn-outline-warning" onclick="navigator.clipboard.writeText('UPDATE Rooms SET ImageUrl = \\'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&h=300&fit=crop&crop=center\\' WHERE Number = 101;')">
+                        <i class="oi oi-clipboard"></i> Copier commande SQL rapide
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lien vers la vraie page -->
+            <div class="mt-4 pt-3 border-top text-center">
+                <a href="/profile" class="btn btn-success me-3">
+                    <i class="oi oi-person"></i> Voir le Profil Réel
+                </a>
+                <a href="/rooms" class="btn btn-primary">
+                    <i class="oi oi-grid-three-up"></i> Voir les Chambres
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
