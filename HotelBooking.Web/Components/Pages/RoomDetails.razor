@@ -50,6 +50,14 @@
                         var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}";
 
                         <div id="@carouselId" class="carousel slide h-100" data-bs-ride="carousel">
+                            <!-- Indicateur de position global (affiché pour toutes les images) -->
+                            @if (validImages.Count > 1)
+                            {
+                                <div class="carousel-image-counter">
+                                    @GetImageCounterText()
+                                </div>
+                            }
+                            
                             <div class="carousel-inner h-100">
                                 @for (int i = 0; i < validImages.Count; i++)
                                 {
@@ -304,6 +312,16 @@
         var prevIndex = (currentSlideIndex - 1) < 0 ? (room?.AllImageUrls.Count ?? 0) - 1 : currentSlideIndex - 1;
         await GoToSlide(prevIndex);
     }
+
+    // Méthode pour obtenir le texte de l'indicateur de position
+    private string GetImageCounterText()
+    {
+        if (room?.AllImageUrls == null || !room.AllImageUrls.Any())
+            return "1/1";
+        
+        var validImages = room.AllImageUrls.Where(url => !string.IsNullOrWhiteSpace(url)).ToList();
+        return $"{currentSlideIndex + 1}/{validImages.Count}";
+    }
 }
 
 <style>
@@ -423,5 +441,96 @@
 
     .border-transparent {
         border-color: transparent !important;
+    }
+
+    /* INDICATEUR DE POSITION DU CARROUSEL */
+    .carousel-image-counter {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.95) 0%, rgba(217, 119, 6, 0.95) 100%);
+        color: #000;
+        padding: 8px 14px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(245, 158, 11, 0.4);
+        box-shadow: 
+            0 4px 15px rgba(245, 158, 11, 0.3),
+            0 2px 8px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        text-shadow: none;
+        letter-spacing: 0.5px;
+        min-width: 55px;
+        text-align: center;
+        line-height: 1.2;
+        user-select: none;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-origin: center;
+        animation: fadeInCounter 0.5s ease-out;
+    }
+
+    /* Animation d'entrée pour l'indicateur */
+    @@keyframes fadeInCounter {
+        from {
+            opacity: 0;
+            transform: scale(0.8) translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    /* Animation subtile au hover du carrousel */
+    .carousel:hover .carousel-image-counter {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        border-color: rgba(251, 191, 36, 0.6);
+        transform: scale(1.05);
+        box-shadow: 
+            0 6px 20px rgba(245, 158, 11, 0.4),
+            0 3px 12px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    /* Style actif quand on change de slide */
+    .carousel-item.active .carousel-image-counter {
+        animation: pulseCounter 0.3s ease-out;
+    }
+
+    @@keyframes pulseCounter {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    /* Responsive pour mobile */
+    @@media (max-width: 768px) {
+        .carousel-image-counter {
+            top: 12px;
+            left: 12px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            min-width: 50px;
+            border-width: 1.5px;
+        }
+    }
+
+    /* Style pour écrans très petits */
+    @@media (max-width: 480px) {
+        .carousel-image-counter {
+            top: 10px;
+            left: 10px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            min-width: 45px;
+            border-radius: 20px;
+        }
     }
 </style>
