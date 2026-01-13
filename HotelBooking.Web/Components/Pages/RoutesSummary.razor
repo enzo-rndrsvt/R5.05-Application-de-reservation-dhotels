@@ -1,0 +1,166 @@
+@page "/routes-summary"
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+
+<PageTitle>Résumé des Routes - Administration</PageTitle>
+
+<div class="container mt-4">
+    <div class="alert alert-success">
+        <h4><i class="oi oi-check"></i> Conflit de Routes Résolu !</h4>
+        <p>Le problème d'ambiguïté des routes a été corrigé avec succès.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5>?? Résumé des Routes Admin Actives</h5>
+                </div>
+                <div class="card-body">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">? Routes Principales</h6>
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Route</th>
+                                        <th>Page</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>/admin</code></td>
+                                        <td>AdminDashboard</td>
+                                        <td><span class="badge bg-success">Actif</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/admin-safe</code></td>
+                                        <td>AdminSafe</td>
+                                        <td><span class="badge bg-success">Actif</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/admin/rooms</code></td>
+                                        <td>AdminRoomsManage</td>
+                                        <td><span class="badge bg-success">Actif</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/admin/rooms/create</code></td>
+                                        <td>CreateRoom</td>
+                                        <td><span class="badge bg-success">Actif</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/admin/configuration</code></td>
+                                        <td>AdminConfiguration</td>
+                                        <td><span class="badge bg-success">Actif</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/admin/database/advanced</code></td>
+                                        <td>AdminDatabaseAdvanced</td>
+                                        <td><span class="badge bg-success">Actif</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="text-info">?? Routes Debug</h6>
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Route</th>
+                                        <th>Page</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="table-success">
+                                        <td><code>/debug/all-tests</code></td>
+                                        <td>AdminTestsCenter</td>
+                                        <td><span class="badge bg-success">Actif</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/debug-error</code></td>
+                                        <td>DebugError</td>
+                                        <td><span class="badge bg-success">Actif</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/debug-api</code></td>
+                                        <td>DebugAPI</td>
+                                        <td><span class="badge bg-success">Actif</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/test-carousel-final</code></td>
+                                        <td>TestCarouselFinal</td>
+                                        <td><span class="badge bg-success">Actif</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>/routes-summary</code></td>
+                                        <td>Cette page</td>
+                                        <td><span class="badge bg-info">Nouveau</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-danger">? Routes Supprimées (Conflit Résolu)</h6>
+                            <div class="alert alert-warning">
+                                <h6>Conflit Résolu :</h6>
+                                <p>
+                                    <strong>Route en conflit :</strong> <code>/test-admin-redirect</code><br/>
+                                    <strong>Pages en conflit :</strong>
+                                </p>
+                                <ul>
+                                    <li>? <strong>AdminTestsCenter.razor</strong> - Route conservée : <code>/debug/all-tests</code></li>
+                                    <li>? <strong>TestAdminRedirect.razor</strong> - Page supprimée</li>
+                                </ul>
+                                <p class="mb-0">
+                                    <strong>Solution :</strong> La page <code>TestAdminRedirect.razor</code> était un doublon de <code>AdminTestsCenter.razor</code>. 
+                                    Elle a été supprimée et le lien dans le menu pointe maintenant vers <code>/debug/all-tests</code>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-primary">?? Navigation Mise à Jour</h6>
+                            <p>Le menu de navigation a été mis à jour :</p>
+                            <ul>
+                                <li><strong>Tous les Tests Debug</strong> ? <code>/debug/all-tests</code> (au lieu de <code>/test-admin-redirect</code>)</li>
+                                <li><strong>Dashboard Admin (Safe)</strong> ? <code>/admin-safe</code> (mode sécurisé)</li>
+                                <li><strong>Dashboard Complet (Test)</strong> ? <code>/admin</code> (mode complet)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="/debug/all-tests" class="btn btn-primary">
+                                    <i class="oi oi-list-rich"></i> Centre de Tests
+                                </a>
+                                <a href="/admin-safe" class="btn btn-success">
+                                    <i class="oi oi-shield"></i> Dashboard Safe
+                                </a>
+                                <a href="/admin" class="btn btn-warning">
+                                    <i class="oi oi-dashboard"></i> Dashboard Complet
+                                </a>
+                                <a href="/debug-error" class="btn btn-danger">
+                                    <i class="oi oi-bug"></i> Debug Erreurs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,152 @@
+@page "/test-carousel-simple"
+
+<PageTitle>Test Carrousel Simple</PageTitle>
+
+<div class="container mt-4">
+    <h2>?? Test Carrousel Bootstrap Pure (Sans JS Personnalisé)</h2>
+    
+    <div class="alert alert-info">
+        <strong>Note :</strong> Cette version utilise uniquement Bootstrap natif, sans JavaScript personnalisé.
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Carrousel Bootstrap Standard -->
+            <div id="simpleCarousel" class="carousel slide">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div style="height: 400px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                            ????? Image 1 - Cabine Pirate
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div style="height: 400px; background: linear-gradient(45deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                            ? Image 2 - Vue Océan
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div style="height: 400px; background: linear-gradient(45deg, #f093fb, #f5576c); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                            ??? Image 3 - Carte au Trésor
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div style="height: 400px; background: linear-gradient(45deg, #4facfe, #00f2fe); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                            ?? Image 4 - Coffre au Trésor
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contrôles -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#simpleCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Précédent</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#simpleCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Suivant</span>
+                </button>
+                
+                <!-- Indicateurs -->
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#simpleCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#simpleCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#simpleCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                    <button type="button" data-bs-target="#simpleCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                </div>
+            </div>
+            
+            <!-- Test de miniatures avec onclick simple -->
+            <div class="row mt-4">
+                <div class="col-3">
+                    <div class="card bg-primary text-white text-center" style="cursor: pointer;" 
+                         onclick="document.querySelector('[data-bs-target=&quot;#simpleCarousel&quot;][data-bs-slide-to=&quot;0&quot;]').click()">
+                        <div class="card-body">
+                            <h5>1</h5>
+                            <p>Cliquez-moi</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="card bg-secondary text-white text-center" style="cursor: pointer;" 
+                         onclick="document.querySelector('[data-bs-target=&quot;#simpleCarousel&quot;][data-bs-slide-to=&quot;1&quot;]').click()">
+                        <div class="card-body">
+                            <h5>2</h5>
+                            <p>Cliquez-moi</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="card bg-success text-white text-center" style="cursor: pointer;" 
+                         onclick="document.querySelector('[data-bs-target=&quot;#simpleCarousel&quot;][data-bs-slide-to=&quot;2&quot;]').click()">
+                        <div class="card-body">
+                            <h5>3</h5>
+                            <p>Cliquez-moi</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="card bg-warning text-white text-center" style="cursor: pointer;" 
+                         onclick="document.querySelector('[data-bs-target=&quot;#simpleCarousel&quot;][data-bs-slide-to=&quot;3&quot;]').click()">
+                        <div class="card-body">
+                            <h5>4</h5>
+                            <p>Cliquez-moi</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Instructions de test :</h6>
+                        <ul>
+                            <li>? Cliquez sur les <strong>flèches ? ?</strong> du carrousel</li>
+                            <li>? Cliquez sur les <strong>points</strong> en bas du carrousel</li>
+                            <li>? Cliquez sur les <strong>cartes colorées</strong> ci-dessus</li>
+                        </ul>
+                        
+                        <p class="mt-3">
+                            <strong>Si cette page fonctionne</strong> mais pas /test-carousel, c'est que le problème vient de notre JavaScript personnalisé.<br/>
+                            <strong>Si cette page ne fonctionne pas non plus</strong>, c'est un problème Bootstrap plus fondamental.
+                        </p>
+                        
+                        <div class="mt-3">
+                            <a href="/test-carousel" class="btn btn-primary">Version avec JS personnalisé</a>
+                            <a href="/admin/test-images" class="btn btn-secondary">Test sur vraies chambres</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script de test pour cette page uniquement
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('?? Test Carousel Simple loaded');
+        
+        // Vérifier Bootstrap
+        if (typeof bootstrap !== 'undefined') {
+            console.log('? Bootstrap available');
+            
+            // Vérifier carrousel spécifiquement
+            const carousel = document.getElementById('simpleCarousel');
+            if (carousel) {
+                console.log('? Carousel element found');
+                
+                try {
+                    // Essayer d'initialiser
+                    const carouselInstance = new bootstrap.Carousel(carousel);
+                    console.log('? Carousel initialized successfully');
+                } catch (error) {
+                    console.error('? Failed to initialize carousel:', error);
+                }
+            } else {
+                console.error('? Carousel element not found');
+            }
+        } else {
+            console.error('? Bootstrap not available');
+        }
+    });
+</script>

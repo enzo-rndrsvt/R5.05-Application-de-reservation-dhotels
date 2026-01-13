@@ -1,0 +1,23 @@
+@page "/admin/redirect"
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <div class="text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Redirection...</span>
+        </div>
+        <p class="mt-2">Redirection vers le dashboard administrateur...</p>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(100); // Petit délai pour l'UX
+            NavigationManager.NavigateTo("/admin", true);
+        }
+    }
+}

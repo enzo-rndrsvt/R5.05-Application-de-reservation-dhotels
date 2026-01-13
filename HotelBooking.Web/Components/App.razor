@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="css/room-images.css" />
+    <link rel="stylesheet" href="css/placeholder-images.css" />
+    <link rel="stylesheet" href="HotelBooking.Web.styles.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <HeadOutlet @rendermode="InteractiveServer" />
+</head>
+
+<body>
+    <Routes @rendermode="InteractiveServer" />
+    <!-- Bootstrap JavaScript Local -->
+    <script src="bootstrap/bootstrap.bundle.min.js"></script>
+    <script>
+        // Vérification immédiate après chargement Bootstrap
+        console.log('🔍 Checking Bootstrap immediately after script load...');
+        if (typeof bootstrap !== 'undefined') {
+            console.log('✅ Bootstrap loaded successfully from local files');
+            console.log('Available classes:', Object.keys(bootstrap));
+        } else {
+            console.error('❌ Bootstrap is still not loaded after script execution!');
+            console.log('window.bootstrap:', typeof window.bootstrap);
+        }
+    </script>
+    <script src="_framework/blazor.web.js"></script>
+    <script src="js/tabs.js"></script>
+    <script src="js/room-details.js"></script>
+    <script>
+        // Vérification finale après tous les scripts
+        console.log('🔍 Final Bootstrap check after all scripts...');
+        if (typeof bootstrap !== 'undefined') {
+            console.log('✅ Bootstrap still available after all scripts');
+        } else {
+            console.error('❌ Bootstrap lost after loading other scripts!');
+        }
+    </script>
+</body>
+
+</html>

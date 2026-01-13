@@ -1,0 +1,374 @@
+@page "/my-bookings"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IBookingService BookingService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Mes Réservations - SkullKing</PageTitle>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+<div class="card-header bg-primary text-white">
+        <h3 class="text-center">
+              <i class="oi oi-list"></i> Mes Réservations
+</h3>
+        <p class="text-center mb-0">
+        <i class="oi oi-calendar"></i> Gérez vos séjours au SkullKing
+             </p>
+    </div>
+     <div class="card-body">
+
+            @if (!string.IsNullOrEmpty(successMessage))
+  {
+     <div class="alert alert-success">
+ <i class="oi oi-circle-check"></i> @successMessage
+  </div>
+                }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+     {
+   <div class="alert alert-danger">
+           <i class="oi oi-warning"></i> @errorMessage
+  </div>
+       }
+
+  @if (bookings == null)
+        {
+           <div class="text-center p-4">
+   <div class="spinner-border text-primary" role="status">
+     <span class="visually-hidden">Chargement...</span>
+      </div>
+      <p class="mt-2">Chargement de vos réservations...</p>
+               </div>
+        }
+     else if (!bookings.Any())
+              {
+    <div class="text-center p-4">
+          <div class="alert alert-info">
+   <h5><i class="oi oi-info"></i> Aucune réservation</h5>
+         <p>Vous n'avez pas encore effectué de réservation au SkullKing.</p>
+          <a href="/booking" class="btn btn-primary">
+          <i class="oi oi-calendar"></i> Faire une réservation
+         </a>
+     </div>
+      </div>
+               }
+       else
+        {
+         <!-- Filtres et actions -->
+  <div class="row mb-4">
+   <div class="col-md-6">
+  <div class="input-group">
+           <span class="input-group-text">
+    <i class="oi oi-magnifying-glass"></i>
+            </span>
+              <select class="form-select" @bind="selectedFilter" @bind:after="ApplyFilter">
+     <option value="all">Toutes les réservations</option>
+            <option value="upcoming">À venir</option>
+      <option value="current">En cours</option>
+            <option value="completed">Terminées</option>
+     </select>
+ </div>
+</div>
+         <div class="col-md-6 text-end">
+           <a href="/booking" class="btn btn-success">
+<i class="oi oi-plus"></i> Nouvelle réservation
+     </a>
+  </div>
+       </div>
+
+       <!-- Liste des réservations -->
+  <div class="row">
+       @foreach (var booking in filteredBookings)
+     {
+          <div class="col-md-6 mb-4">
+    <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+       <h6 class="mb-0">
+            <i class="oi oi-home"></i> @booking.HotelName
+     </h6>
+            <span class="badge @booking.StatusBadgeClass">
+        @booking.Status
+ </span>
+        </div>
+               <div class="card-body">
+   <div class="row">
+         <div class="col-8">
+           <dl class="row mb-0">
+        <dt class="col-5">Chambre :</dt>
+        <dd class="col-7">@booking.RoomNumber - @booking.RoomType</dd>
+
+  <dt class="col-5">Arrivée :</dt>
+     <dd class="col-7">@booking.StartingDate.ToString("dd/MM/yyyy")</dd>
+
+    <dt class="col-5">Départ :</dt>
+     <dd class="col-7">@booking.EndingDate.ToString("dd/MM/yyyy")</dd>
+
+     <dt class="col-5">Nuits :</dt>
+      <dd class="col-7">@booking.NumberOfNights</dd>
+     </dl>
+               </div>
+         <div class="col-4 text-end">
+              <div class="card bg-success text-white">
+         <div class="card-body text-center p-2">
+         <small>Total</small>
+      <h6 class="mb-0">@booking.Price.ToString("C")</h6>
+             </div>
+       </div>
+      </div>
+   </div>
+   </div>
+     <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center">
+           <small class="text-muted">
+        Réservé le @booking.CreationDate.ToString("dd/MM/yyyy")
+   </small>
+          <div class="btn-group" role="group">
+         <button class="btn btn-outline-primary btn-sm" 
+            @onclick="() => ShowBookingDetails(booking.Id)">
+      <i class="oi oi-eye"></i> Détails
+  </button>
+            @if (booking.Status == "À venir")
+     {
+       <button class="btn btn-outline-danger btn-sm" 
+   @onclick="() => CancelBooking(booking.Id)">
+     <i class="oi oi-x"></i> Annuler
+        </button>
+            }
+          </div>
+  </div>
+       </div>
+       </div>
+     </div>
+             }
+     </div>
+
+    <!-- Pagination (si nécessaire dans le futur) -->
+          @if (bookings.Count() > 6)
+            {
+            <nav aria-label="Navigation des réservations">
+     <ul class="pagination justify-content-center">
+           <li class="page-item">
+    <a class="page-link" href="#" aria-label="Précédent">
+           <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+ <li class="page-item active">
+        <a class="page-link" href="#">1</a>
+         </li>
+                <li class="page-item">
+         <a class="page-link" href="#" aria-label="Suivant">
+            <span aria-hidden="true">&raquo;</span>
+   </a>
+          </li>
+    </ul>
+            </nav>
+            }
+  }
+
+      <!-- Navigation -->
+     <div class="row mt-4">
+       <div class="col-12">
+              <div class="card bg-dark text-white">
+        <div class="card-body text-center">
+        <h5><i class="oi oi-compass"></i> Navigation</h5>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+      <a href="/booking" class="btn btn-success">
+     <i class="oi oi-calendar"></i> Nouvelle réservation
+    </a>
+         <a href="/rooms" class="btn btn-info">
+                 <i class="oi oi-grid-three-up"></i> Voir les chambres
+         </a>
+  <a href="/" class="btn btn-secondary">
+       <i class="oi oi-home"></i> Retour à l'accueil
+         </a>
+  </div>
+             </div>
+   </div>
+ </div>
+  </div>
+         </div>
+            </div>
+  </div>
+    </div>
+</div>
+
+<!-- Modal pour les détails de réservation -->
+@if (selectedBooking != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+   <div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="oi oi-eye"></i> Détails de la réservation
+           </h5>
+        <button type="button" class="btn-close" @onclick="CloseModal"></button>
+    </div>
+                <div class="modal-body">
+           <div class="row">
+          <div class="col-md-6">
+       <h6><i class="oi oi-home"></i> Informations de l'hôtel</h6>
+             <dl class="row">
+      <dt class="col-4">Nom :</dt>
+  <dd class="col-8">@selectedBooking.HotelName</dd>
+                  
+              <dt class="col-4">Étoiles :</dt>
+    <dd class="col-8">
+  @for (int i = 0; i < (int)selectedBooking.HotelStarRating; i++)
+        {
+   <span class="text-warning">?</span>
+            }
+         (@selectedBooking.HotelStarRating)
+           </dd>
+         
+ <dt class="col-4">Propriétaire :</dt>
+         <dd class="col-8">@selectedBooking.OwnerName</dd>
+    </dl>
+               </div>
+       <div class="col-md-6">
+        <h6><i class="oi oi-calendar"></i> Informations du séjour</h6>
+           <dl class="row">
+           <dt class="col-4">Chambre :</dt>
+       <dd class="col-8">@selectedBooking.RoomNumber - @selectedBooking.RoomType</dd>
+            
+              <dt class="col-4">Arrivée :</dt>
+      <dd class="col-8">@selectedBooking.StartingDate.ToString("dddd dd MMMM yyyy")</dd>
+      
+        <dt class="col-4">Départ :</dt>
+        <dd class="col-8">@selectedBooking.EndingDate.ToString("dddd dd MMMM yyyy")</dd>
+           
+    <dt class="col-4">Durée :</dt>
+        <dd class="col-8">@selectedBooking.NumberOfNights nuit(s)</dd>
+              </dl>
+    </div>
+       </div>
+            
+             <hr>
+   
+        <div class="row">
+ <div class="col-md-6">
+            <h6><i class="oi oi-info"></i> Description</h6>
+    <p>@selectedBooking.RoomDescription</p>
+ </div>
+          <div class="col-md-6">
+    <h6><i class="oi oi-dollar"></i> Tarification</h6>
+       <dl class="row">
+    <dt class="col-6">Prix par nuit :</dt>
+   <dd class="col-6">@selectedBooking.PricePerNight.ToString("C")</dd>
+         
+  <dt class="col-6">Nombre de nuits :</dt>
+       <dd class="col-6">@selectedBooking.NumberOfNights</dd>
+       
+            <dt class="col-6"><strong>Total :</strong></dt>
+     <dd class="col-6"><strong>@selectedBooking.Price.ToString("C")</strong></dd>
+            </dl>
+                </div>
+     </div>
+      </div>
+     <div class="modal-footer">
+  @if (selectedBooking.Status == "À venir")
+{
+     <button type="button" class="btn btn-danger" @onclick="() => CancelBooking(selectedBooking.Id)">
+     <i class="oi oi-x"></i> Annuler cette réservation
+        </button>
+         }
+      <button type="button" class="btn btn-secondary" @onclick="CloseModal">
+    <i class="oi oi-x"></i> Fermer
+  </button>
+     </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+ private IEnumerable<BookingForUser>? bookings;
+    private IEnumerable<BookingForUser> filteredBookings = Enumerable.Empty<BookingForUser>();
+    private BookingForUser? selectedBooking;
+    private string successMessage = string.Empty;
+    private string errorMessage = string.Empty;
+    private string selectedFilter = "all";
+
+    protected override async Task OnInitializedAsync()
+    {
+  await LoadBookings();
+     ApplyFilter();
+    }
+
+    private async Task LoadBookings()
+    {
+   try
+     {
+          bookings = await BookingService.GetUserBookingsAsync();
+       ApplyFilter();
+     }
+   catch (Exception ex)
+{
+        errorMessage = $"Erreur lors du chargement des réservations: {ex.Message}";
+ }
+    }
+
+    private void ApplyFilter()
+    {
+        if (bookings == null) return;
+
+     filteredBookings = selectedFilter switch
+        {
+       "upcoming" => bookings.Where(b => b.Status == "À venir"),
+       "current" => bookings.Where(b => b.Status == "En cours"),
+          "completed" => bookings.Where(b => b.Status == "Terminée"),
+     _ => bookings
+        };
+
+        StateHasChanged();
+    }
+
+    private async Task ShowBookingDetails(Guid bookingId)
+    {
+        try
+        {
+            selectedBooking = await BookingService.GetBookingByIdAsync(bookingId);
+        }
+catch (Exception ex)
+   {
+         errorMessage = $"Erreur lors du chargement des détails: {ex.Message}";
+     }
+    }
+
+    private void CloseModal()
+{
+        selectedBooking = null;
+    }
+
+    private async Task CancelBooking(Guid bookingId)
+    {
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", "Êtes-vous sûr de vouloir annuler cette réservation ?"))
+    return;
+
+        try
+    {
+            var result = await BookingService.CancelBookingAsync(bookingId);
+            
+            if (result)
+        {
+     successMessage = "Réservation annulée avec succès.";
+                selectedBooking = null;
+      await LoadBookings(); // Recharger la liste
+        }
+            else
+            {
+  errorMessage = "Erreur lors de l'annulation de la réservation.";
+  }
+        }
+  catch (Exception ex)
+        {
+      errorMessage = $"Erreur inattendue : {ex.Message}";
+        }
+    }
+}

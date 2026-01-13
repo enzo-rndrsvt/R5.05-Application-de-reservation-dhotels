@@ -1,0 +1,281 @@
+@page "/test-carousel"
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Test Carrousel Bootstrap</PageTitle>
+
+<div class="container mt-4">
+    <h2>?? Test Simple du Carrousel Bootstrap</h2>
+    
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <h6>? Erreur détectée :</h6>
+            <p>@errorMessage</p>
+            <button class="btn btn-warning btn-sm" @onclick="ClearError">Effacer l'erreur</button>
+        </div>
+    }
+    
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Carrousel Bootstrap Standard -->
+            <div id="testCarousel" class="carousel slide" data-bs-ride="false">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <div class="test-image test-image-1" style="height: 300px; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                            ????? Image 1 - Cabine Pirate
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="test-image test-image-2" style="height: 300px; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                            ? Image 2 - Vue Océan
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="test-image test-image-3" style="height: 300px; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                            ??? Image 3 - Carte au Trésor
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="test-image test-image-4" style="height: 300px; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                            ?? Image 4 - Coffre au Trésor
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contrôles -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#testCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Précédent</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#testCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Suivant</span>
+                </button>
+                
+                <!-- Indicateurs -->
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#testCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#testCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#testCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                    <button type="button" data-bs-target="#testCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                </div>
+            </div>
+            
+            <!-- Miniatures -->
+            <div class="row mt-3">
+                <div class="col-3">
+                    <div class="img-thumbnail cursor-pointer border-primary test-image-1" 
+                         style="height: 60px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer;"
+                         @onclick="() => GoToSlideDirectly(0)">1</div>
+                </div>
+                <div class="col-3">
+                    <div class="img-thumbnail cursor-pointer border-secondary test-image-2" 
+                         style="height: 60px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer;"
+                         @onclick="() => GoToSlideDirectly(1)">2</div>
+                </div>
+                <div class="col-3">
+                    <div class="img-thumbnail cursor-pointer border-secondary test-image-3" 
+                         style="height: 60px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer;"
+                         @onclick="() => GoToSlideDirectly(2)">3</div>
+                </div>
+                <div class="col-3">
+                    <div class="img-thumbnail cursor-pointer border-secondary test-image-4" 
+                         style="height: 60px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; cursor: pointer;"
+                         @onclick="() => GoToSlideDirectly(3)">4</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>?? Contrôles de Test</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" @onclick="() => GoToSlideTest(0)">
+                            Aller à l'image 1
+                        </button>
+                        <button class="btn btn-primary" @onclick="() => GoToSlideTest(1)">
+                            Aller à l'image 2
+                        </button>
+                        <button class="btn btn-primary" @onclick="() => GoToSlideTest(2)">
+                            Aller à l'image 3
+                        </button>
+                        <button class="btn btn-primary" @onclick="() => GoToSlideTest(3)">
+                            Aller à l'image 4
+                        </button>
+                        <hr/>
+                        <button class="btn btn-success" @onclick="InitCarousel">
+                            ?? Réinitialiser Carrousel
+                        </button>
+                        <button class="btn btn-info" @onclick="TestBootstrap">
+                            ?? Test Bootstrap
+                        </button>
+                        <button class="btn btn-warning" @onclick="DiagnoseCarousel">
+                            ?? Diagnostiquer
+                        </button>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6>État actuel :</h6>
+                        <small>
+                            <ul>
+                                <li>Slide actuel : @currentSlide</li>
+                                <li>Bootstrap détecté : @(bootstrapDetected ? "?" : "?")</li>
+                                <li>Carrousel initialisé : @(carouselInitialized ? "?" : "?")</li>
+                                <li>Erreurs JS : @jsErrorCount</li>
+                            </ul>
+                        </small>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6>Instructions :</h6>
+                        <small>
+                            <ul>
+                                <li>Utilisez les flèches ? ? sur le carrousel</li>
+                                <li>Cliquez sur les points indicateurs</li>
+                                <li>Cliquez sur les miniatures colorées</li>
+                                <li>Utilisez les boutons ci-dessus</li>
+                            </ul>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? errorMessage;
+    private int currentSlide = 0;
+    private bool bootstrapDetected = false;
+    private bool carouselInitialized = false;
+    private int jsErrorCount = 0;
+
+    private async Task GoToSlideTest(int index)
+    {
+        try
+        {
+            errorMessage = null;
+            await JSRuntime.InvokeVoidAsync("goToCarouselSlide", "testCarousel", index);
+            currentSlide = index;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur GoToSlideTest: {ex.Message}";
+            jsErrorCount++;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GoToSlideDirectly(int index)
+    {
+        try
+        {
+            errorMessage = null;
+            // Méthode alternative sans notre JS personnalisé
+            await JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('[data-bs-target=\"#testCarousel\"][data-bs-slide-to=\"{index}\"]').click()");
+            currentSlide = index;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur GoToSlideDirectly: {ex.Message}";
+            jsErrorCount++;
+            StateHasChanged();
+        }
+    }
+
+    private async Task InitCarousel()
+    {
+        try
+        {
+            errorMessage = null;
+            await JSRuntime.InvokeVoidAsync("initializeRoomCarousels");
+            carouselInitialized = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur InitCarousel: {ex.Message}";
+            jsErrorCount++;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TestBootstrap()
+    {
+        try
+        {
+            errorMessage = null;
+            var result = await JSRuntime.InvokeAsync<bool>("eval", "typeof bootstrap !== 'undefined' && typeof bootstrap.Carousel !== 'undefined'");
+            bootstrapDetected = result;
+            
+            if (!result)
+            {
+                errorMessage = "Bootstrap n'est pas détecté ! Vérifiez que bootstrap.bundle.min.js est chargé.";
+            }
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur TestBootstrap: {ex.Message}";
+            bootstrapDetected = false;
+            jsErrorCount++;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DiagnoseCarousel()
+    {
+        try
+        {
+            errorMessage = null;
+            
+            // Tester plusieurs choses
+            var hasBootstrap = await JSRuntime.InvokeAsync<bool>("eval", "typeof bootstrap !== 'undefined'");
+            var hasCarouselElement = await JSRuntime.InvokeAsync<bool>("eval", "document.getElementById('testCarousel') !== null");
+            var carouselClass = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('testCarousel')?.className || 'NOT_FOUND'");
+            
+            errorMessage = $"Diagnostic:\n" +
+                          $"• Bootstrap disponible: {hasBootstrap}\n" +
+                          $"• Élément carrousel trouvé: {hasCarouselElement}\n" +
+                          $"• Classes CSS: {carouselClass}";
+                          
+            bootstrapDetected = hasBootstrap;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur DiagnoseCarousel: {ex.Message}";
+            jsErrorCount++;
+            StateHasChanged();
+        }
+    }
+
+    private void ClearError()
+    {
+        errorMessage = null;
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await TestBootstrap();
+                await InitCarousel();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Erreur OnAfterRenderAsync: {ex.Message}";
+                jsErrorCount++;
+                StateHasChanged();
+            }
+        }
+    }
+}

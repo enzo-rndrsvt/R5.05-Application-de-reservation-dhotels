@@ -1,0 +1,16 @@
+@using HotelBooking.Web.Services
+@inject IAuthService AuthService
+@inject NavigationManager NavManager
+
+<button @onclick="LogoutUser" class="btn btn-outline-light btn-sm w-100" title="Se déconnecter">
+    <i class="oi oi-account-logout me-2"></i>
+    <span>Se déconnecter</span>
+</button>
+
+@code {
+    private async Task LogoutUser()
+    {
+        await AuthService.Logout();
+        NavManager.NavigateTo("/");
+    }
+}

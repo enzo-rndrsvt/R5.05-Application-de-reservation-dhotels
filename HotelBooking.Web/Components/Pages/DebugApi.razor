@@ -1,0 +1,230 @@
+@page "/debug-api"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@inject IBookingService BookingService
+@inject IJSRuntime JSRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Debug API</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>Debug de l'API de disponibilité</h3>
+        </div>
+        <div class="card-body">
+            
+            <h5>Test simple de disponibilité</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Room ID:</label>
+                    <input @bind="testRoomId" class="form-control" placeholder="GUID de la chambre" />
+                </div>
+                <div class="col-md-4">
+                    <label>Date début:</label>
+                    <input @bind="startDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label>Date fin:</label>
+                    <input @bind="endDate" type="date" class="form-control" />
+                </div>
+            </div>
+            
+            <div class="mt-3 d-flex gap-2">
+                <button @onclick="TestBasicAvailability" class="btn btn-primary" disabled="@isTesting">
+                    @if (isTesting) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                    Test disponibilité de base
+                </button>
+                
+                <button @onclick="TestDetailedAvailability" class="btn btn-info" disabled="@isTesting">
+                    @if (isTesting) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                    Test disponibilité détaillée
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(result))
+            {
+                <div class="mt-4">
+                    <h6>Résultat :</h6>
+                    <div class="alert alert-light">
+                        <pre style="white-space: pre-wrap; margin: 0;">@result</pre>
+                    </div>
+                </div>
+            }
+
+            <hr class="my-4">
+
+            <h5>Informations système</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>URLs testées :</h6>
+                    <ul>
+                        <li><small>Base : <code>api/users/room-availability/{roomId}?startDate=...&endDate=...</code></small></li>
+                        <li><small>Basic : <code>BookingService.IsRoomAvailableAsync(...)</code></small></li>
+                        <li><small>Detailed : <code>BookingService.GetRoomAvailabilityInfoAsync(...)</code></small></li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Format de dates attendu :</h6>
+                    <ul>
+                        <li><small>API : yyyy-MM-dd</small></li>
+                        <li><small>Exemple : 2024-01-15</small></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <button @onclick="LogConsoleInfo" class="btn btn-secondary">
+                    Afficher infos console
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string testRoomId = "";
+    private DateTime startDate = DateTime.Today.AddDays(1);
+    private DateTime endDate = DateTime.Today.AddDays(3);
+    private bool isTesting = false;
+    private string result = "";
+
+    private async Task TestBasicAvailability()
+    {
+        if (!ValidateInputs()) return;
+
+        isTesting = true;
+        result = "Test de disponibilité de base...\n\n";
+        StateHasChanged();
+
+        try
+        {
+            var roomGuid = Guid.Parse(testRoomId);
+            
+            // Log des paramètres
+            result += $"Paramètres :\n";
+            result += $"  Room ID: {roomGuid}\n";
+            result += $"  Date début: {startDate:yyyy-MM-dd}\n";
+            result += $"  Date fin: {endDate:yyyy-MM-dd}\n\n";
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var isAvailable = await BookingService.IsRoomAvailableAsync(roomGuid, startDate, endDate);
+            stopwatch.Stop();
+
+            result += $"Résultat :\n";
+            result += $"  Disponible: {isAvailable}\n";
+            result += $"  Temps: {stopwatch.ElapsedMilliseconds}ms\n";
+            result += $"  Timestamp: {DateTime.Now:HH:mm:ss}\n";
+        }
+        catch (Exception ex)
+        {
+            result += $"ERREUR :\n";
+            result += $"  Message: {ex.Message}\n";
+            result += $"  Type: {ex.GetType().Name}\n";
+            if (ex.InnerException != null)
+            {
+                result += $"  Inner: {ex.InnerException.Message}\n";
+            }
+        }
+        finally
+        {
+            isTesting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TestDetailedAvailability()
+    {
+        if (!ValidateInputs()) return;
+
+        isTesting = true;
+        result = "Test de disponibilité détaillée...\n\n";
+        StateHasChanged();
+
+        try
+        {
+            var roomGuid = Guid.Parse(testRoomId);
+            
+            result += $"Paramètres :\n";
+            result += $"  Room ID: {roomGuid}\n";
+            result += $"  Date début: {startDate:yyyy-MM-dd}\n";
+            result += $"  Date fin: {endDate:yyyy-MM-dd}\n\n";
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var availabilityInfo = await BookingService.GetRoomAvailabilityInfoAsync(roomGuid, startDate, endDate);
+            stopwatch.Stop();
+
+            result += $"Résultat :\n";
+            if (availabilityInfo != null)
+            {
+                result += $"  Disponible: {availabilityInfo.IsAvailable}\n";
+                result += $"  Message: {availabilityInfo.Message}\n";
+                result += $"  Room ID: {availabilityInfo.RoomId}\n";
+                result += $"  Conflits: {availabilityInfo.Conflicts.Count}\n";
+                if (availabilityInfo.NextAvailableDate.HasValue)
+                {
+                    result += $"  Prochaine dispo: {availabilityInfo.NextAvailableDate.Value:yyyy-MM-dd}\n";
+                }
+                foreach (var conflict in availabilityInfo.Conflicts.Take(3))
+                {
+                    result += $"    Conflit: {conflict.Period}\n";
+                }
+            }
+            else
+            {
+                result += $"  NULL - Aucune information retournée\n";
+            }
+            result += $"  Temps: {stopwatch.ElapsedMilliseconds}ms\n";
+            result += $"  Timestamp: {DateTime.Now:HH:mm:ss}\n";
+        }
+        catch (Exception ex)
+        {
+            result += $"ERREUR :\n";
+            result += $"  Message: {ex.Message}\n";
+            result += $"  Type: {ex.GetType().Name}\n";
+            if (ex.InnerException != null)
+            {
+                result += $"  Inner: {ex.InnerException.Message}\n";
+            }
+        }
+        finally
+        {
+            isTesting = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool ValidateInputs()
+    {
+        if (string.IsNullOrEmpty(testRoomId) || !Guid.TryParse(testRoomId, out _))
+        {
+            result = "ERREUR: Room ID invalide (doit être un GUID)";
+            return false;
+        }
+
+        if (startDate >= endDate)
+        {
+            result = "ERREUR: La date de début doit être avant la date de fin";
+            return false;
+        }
+
+        if (startDate < DateTime.Today)
+        {
+            result = "ERREUR: La date de début ne peut pas être dans le passé";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task LogConsoleInfo()
+    {
+        await JSRuntime.InvokeVoidAsync("console.log", "=== DEBUG API INFO ===");
+        await JSRuntime.InvokeVoidAsync("console.log", $"Room ID: {testRoomId}");
+        await JSRuntime.InvokeVoidAsync("console.log", $"Start Date: {startDate:yyyy-MM-dd}");
+        await JSRuntime.InvokeVoidAsync("console.log", $"End Date: {endDate:yyyy-MM-dd}");
+        await JSRuntime.InvokeVoidAsync("console.log", "Ouvrez la console du navigateur pour plus de détails");
+        
+        result = "Informations loggées dans la console du navigateur (F12 > Console)";
+    }
+}

@@ -1,0 +1,762 @@
+﻿@page "/profile"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using System.Globalization
+@inject IUserProfileService UserProfileService
+@inject IBookingService BookingService
+@inject IHotelService HotelService
+@inject NavigationManager NavigationManager
+@inject IAuthService AuthService
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Mon Profil - Hôtel SkullKing</PageTitle>
+
+<div class="profile-container bg-darker-950 min-vh-100 pb-5">
+    <div class="container pt-5">
+        <div class="row g-5">
+
+            <div class="col-lg-4">
+
+                <div class="card card-custom p-4 mb-4 position-relative overflow-hidden">
+
+                    <div class="d-flex justify-content-center bg-darker-950 rounded-pill p-1 mb-4 border border-slate-800">
+                        <button class="btn btn-sm rounded-pill flex-grow-1 fw-bold @(activeTab == "overview" ? "btn-amber-soft" : "text-slate-400 hover-text-white")"
+                                @onclick="@(() => activeTab = "overview")">
+                            Profil
+                        </button>
+                        <button class="btn btn-sm rounded-pill flex-grow-1 fw-bold @(activeTab == "edit" ? "btn-amber-soft" : "text-slate-400 hover-text-white")"
+                                @onclick="@(() => activeTab = "edit")">
+                            Infos
+                        </button>
+                        <button class="btn btn-sm rounded-pill flex-grow-1 fw-bold @(activeTab == "security" ? "btn-amber-soft" : "text-slate-400 hover-text-white")"
+                                @onclick="@(() => activeTab = "security")">
+                            Sécurité
+                        </button>
+                    </div>
+
+                    @if (activeTab == "overview")
+                    {
+                        <div class="text-center animate-fade-in">
+                            <div class="avatar-wrapper d-flex justify-content-center mb-3">
+                                <div class="avatar-circle d-flex align-items-center justify-content-center shadow-lg">
+                                    @if (!string.IsNullOrEmpty(userProfile?.FirstName))
+                                    {
+                                        <span class="avatar-text">@userProfile.FirstName.Substring(0, 1).ToUpper()</span>
+                                    }
+                                    else
+                                    {
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                    }
+                                </div>
+                            </div>
+
+                            <h4 class="text-amber-500 fw-bold mb-1">
+                                @(userProfile != null ? $"{userProfile.FirstName} {userProfile.LastName}" : "Capitaine")
+                            </h4>
+
+                            <div class="mb-4">
+                                <span class="badge bg-slate-800 border border-slate-700 text-amber-500 rounded-pill px-3 py-2 fw-normal d-inline-flex align-items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /><path d="M5 12l7-7 7 7" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" /></svg>
+                                    Membre de l'équipage
+                                </span>
+                            </div>
+
+                            <div class="text-start px-2 mb-4">
+                                <div class="mb-3 pb-3 border-bottom border-slate-800">
+                                    <label class="text-slate-500 x-small text-uppercase fw-bold mb-1">Email</label>
+                                    <div class="text-slate-200 fw-bold text-break">@(userProfile?.Email ?? "Chargement...")</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-column gap-3">
+                                <button class="btn btn-profile-action btn-profile-home" @onclick="@(() => NavigationManager.NavigateTo("/"))">
+                                    Retour à l'accueil
+                                </button>
+                                <button class="btn btn-profile-action btn-profile-logout" @onclick="HandleLogout">
+                                    Déconnexion
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    else if (activeTab == "edit")
+                    {
+                        <div class="animate-fade-in">
+                            <h5 class="text-white fw-bold mb-4">Modifier mes infos</h5>
+                            <EditForm Model="@userProfile" OnValidSubmit="HandleUpdateProfile">
+                                <DataAnnotationsValidator />
+
+                                <div class="mb-3">
+                                    <label class="text-slate-500 x-small text-uppercase fw-bold mb-1">Prénom</label>
+                                    <InputText class="form-control form-control-dark" @bind-Value="userProfile.FirstName" />
+                                    <ValidationMessage For="@(() => userProfile.FirstName)" class="text-danger x-small" />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="text-slate-500 x-small text-uppercase fw-bold mb-1">Nom</label>
+                                    <InputText class="form-control form-control-dark" @bind-Value="userProfile.LastName" />
+                                    <ValidationMessage For="@(() => userProfile.LastName)" class="text-danger x-small" />
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="text-slate-500 x-small text-uppercase fw-bold mb-1">Email</label>
+                                    <InputText class="form-control form-control-dark" @bind-Value="userProfile.Email" />
+                                    <ValidationMessage For="@(() => userProfile.Email)" class="text-danger x-small" />
+                                </div>
+
+                                <button type="submit" class="btn btn-amber w-100 fw-bold" disabled="@isUpdatingProfile">
+                                    @if (isUpdatingProfile)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                    }
+                                    Enregistrer
+                                </button>
+                            </EditForm>
+                        </div>
+                    }
+
+                    else if (activeTab == "security")
+                    {
+                        <div class="animate-fade-in">
+                            <h5 class="text-white fw-bold mb-4">Changer mot de passe</h5>
+                            <EditForm Model="@userProfile" OnValidSubmit="HandleChangePassword">
+                                <DataAnnotationsValidator />
+
+                                <div class="mb-3">
+                                    <label class="text-slate-500 x-small text-uppercase fw-bold mb-1">Nouveau mot de passe</label>
+                                    <InputText type="password" class="form-control form-control-dark" @bind-Value="userProfile.NewPassword" />
+                                    <ValidationMessage For="@(() => userProfile.NewPassword)" class="text-danger x-small" />
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="text-slate-500 x-small text-uppercase fw-bold mb-1">Confirmer</label>
+                                    <InputText type="password" class="form-control form-control-dark" @bind-Value="userProfile.ConfirmPassword" />
+                                    <ValidationMessage For="@(() => userProfile.ConfirmPassword)" class="text-danger x-small" />
+                                </div>
+
+                                <button type="submit" class="btn btn-amber w-100 fw-bold" disabled="@isChangingPassword">
+                                    @if (isChangingPassword)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                    }
+                                    Mettre à jour
+                                </button>
+                            </EditForm>
+                        </div>
+                    }
+                </div>
+
+                <div class="card card-custom p-4">
+                    <h5 class="text-amber-500 fw-bold mb-4">Statistiques</h5>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-slate-800 pb-3">
+                        <span class="text-slate-400">Réservations totales</span>
+                        <span class="text-amber-500 fw-bold fs-5">@TotalBookings</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-slate-400">Nuits réservées</span>
+                        <span class="text-amber-500 fw-bold fs-5">@TotalNights</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-lg-8">
+                <h4 class="text-amber-500 fw-bold mb-4">Mes Réservations</h4>
+
+                @if (isLoadingBookings)
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-amber-500" role="status"></div>
+                    </div>
+                }
+                else if (filteredBookings?.Any() == true)
+                {
+                    <div class="d-flex flex-column gap-4">
+                        @foreach (var booking in filteredBookings)
+                        {
+                            <div class="card card-custom overflow-hidden h-100">
+                                <div class="row g-0 h-100">
+                                    <div class="col-md-5 position-relative">
+                                        @if (roomImages.ContainsKey(booking.Id) && !string.IsNullOrEmpty(roomImages[booking.Id]))
+                                        {
+                                            <img src="@roomImages[booking.Id]" class="w-100 h-100 object-fit-cover" alt="Chambre" style="min-height: 240px;" />
+                                        }
+                                        else if (!string.IsNullOrEmpty(booking.RoomImageUrl))
+                                        {
+                                            <img src="@booking.RoomImageUrl" class="w-100 h-100 object-fit-cover" alt="Chambre" style="min-height: 240px;" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-100 h-100 bg-slate-800 d-flex align-items-center justify-content-center" style="min-height: 240px;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="col-md-7 d-flex flex-column">
+                                        <div class="card-body p-4 d-flex flex-column flex-grow-1">
+
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <h5 class="text-amber-500 fw-bold mb-1">Cabine @booking.RoomNumber</h5>
+                                                    <div class="d-flex align-items-center text-slate-400 small">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-amber-500 me-2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                                                        <span>@booking.NumberOfNights voyageur@(booking.NumberOfNights > 1 ? "s" : "")</span>
+                                                    </div>
+                                                </div>
+
+                                                @if (booking.Status == "Confirmée" || booking.Status == "À venir")
+                                                {
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Confirmée</span>
+                                                }
+                                                else if (booking.Status == "Annulée")
+                                                {
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">Annulée</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill">Terminée</span>
+                                                }
+                                            </div>
+
+                                            <div class="row g-2 mt-2 mb-3">
+                                                <div class="col-6">
+                                                    <div class="text-slate-500 x-small text-uppercase fw-bold">Arrivée</div>
+                                                    <div class="text-slate-200 fw-bold small">
+                                                        @booking.StartingDate.ToString("dd MMM yyyy", new CultureInfo("fr-FR"))
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-slate-500 x-small text-uppercase fw-bold">Départ</div>
+                                                    <div class="text-slate-200 fw-bold small">
+                                                        @booking.EndingDate.ToString("dd MMM yyyy", new CultureInfo("fr-FR"))
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex gap-2 mt-auto">
+                                                <button class="btn btn-sm btn-dark-outline flex-grow-1" @onclick="@(() => ShowBookingDetails(booking))">
+                                                    Détails
+                                                </button>
+                                                @if (booking.Status == "À venir")
+                                                {
+                                                    <button class="btn btn-sm btn-danger-outline" @onclick="@(() => RequestCancelBooking(booking))">
+                                                        Annuler
+                                                    </button>
+                                                }
+                                            </div>
+
+                                            <div class="mt-3 pt-3 border-top border-slate-800 d-flex justify-content-between align-items-center">
+                                                <div class="text-slate-400 x-small font-monospace">
+                                                    Réf: @booking.Id.ToString().Substring(0, 8).ToUpper()
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="text-slate-500 x-small text-uppercase fw-bold me-2">Total</span>
+                                                    <span class="text-amber-500 fw-bold fs-5">@booking.Price.ToString("C")</span>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 card card-custom">
+                        <div class="mb-3 text-slate-500 opacity-75">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                        </div>
+                        <h4 class="text-slate-200">Aucune aventure prévue</h4>
+                        <p class="text-slate-400 mb-4">Votre journal de bord est vide.</p>
+                        <div class="d-flex justify-content-center">
+                            <a href="/rooms" class="btn btn-amber btn-sm fw-bold px-4 py-2 rounded-pill d-inline-flex align-items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" /></svg>
+                                Explorer les cabines
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success position-fixed top-0 end-0 m-4 shadow-lg border-0 d-flex align-items-center" style="z-index: 2000; background-color: #064e3b; color: #34d399;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+            <span>@successMessage</span>
+            <button class="btn-close btn-close-white ms-3" @onclick="@(() => successMessage = string.Empty)"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger position-fixed top-0 end-0 m-4 shadow-lg border-0 d-flex align-items-center" style="z-index: 2000; background-color: #7f1d1d; color: #f87171;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+            <span>@errorMessage</span>
+            <button class="btn-close btn-close-white ms-3" @onclick="@(() => errorMessage = string.Empty)"></button>
+        </div>
+    }
+</div>
+
+@if (selectedBooking != null)
+{
+    <div class="modal-backdrop fade show" style="background-color: rgba(0,0,0,0.8); z-index: 1050;"></div>
+    <div class="modal fade show d-block" tabindex="-1" style="z-index: 1055;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content card-custom text-slate-300 shadow-lg">
+                <div class="modal-header border-slate-800">
+                    <h5 class="modal-title text-amber-500 fw-bold">Détails de la réservation</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseBookingDetails"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <h6 class="text-white fw-bold mb-3 border-bottom border-slate-800 pb-2">Informations Chambre</h6>
+                        <div class="d-flex justify-content-between mb-2"><span>Numéro :</span> <span class="text-white">@selectedBooking.RoomNumber</span></div>
+                        <div class="d-flex justify-content-between mb-2"><span>Type :</span> <span class="text-white">@selectedBooking.RoomType</span></div>
+                        <div class="d-flex justify-content-between mb-2"><span>Description :</span> <span class="text-white small">@selectedBooking.RoomDescription</span></div>
+                    </div>
+                    <div class="mb-2">
+                        <h6 class="text-white fw-bold mb-3 border-bottom border-slate-800 pb-2">Séjour</h6>
+                        <div class="d-flex justify-content-between mb-2"><span>Arrivée :</span> <span class="text-white">@selectedBooking.StartingDate.ToString("dd/MM/yyyy")</span></div>
+                        <div class="d-flex justify-content-between mb-2"><span>Départ :</span> <span class="text-white">@selectedBooking.EndingDate.ToString("dd/MM/yyyy")</span></div>
+                    </div>
+                    <div class="mt-4 p-3 bg-slate-800 rounded-3 d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Prix Total</span>
+                        <span class="fs-4 text-amber-500 fw-bold">@selectedBooking.Price.ToString("C")</span>
+                    </div>
+                </div>
+                <div class="modal-footer border-slate-800">
+                    @if (selectedBooking.Status == "À venir")
+                    {
+                        <button class="btn btn-danger-outline" @onclick="@(() => RequestCancelBooking(selectedBooking))">Annuler la réservation</button>
+                    }
+                    <button type="button" class="btn btn-dark-outline" @onclick="CloseBookingDetails">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showCancelModal)
+{
+    <div class="modal-backdrop fade show" style="background-color: rgba(0,0,0,0.8); z-index: 1060;"></div>
+    <div class="modal fade show d-block" tabindex="-1" style="z-index: 1065;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content card-custom text-slate-300 shadow-lg">
+                <div class="modal-header border-slate-800">
+                    <h5 class="modal-title text-danger fw-bold">Annulation</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseCancelModal" disabled="@isCancelling"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p class="fs-5 mb-3">Êtes-vous sûr de vouloir annuler ?</p>
+                    <p class="text-slate-500 small">Cette action est définitive.</p>
+                </div>
+                <div class="modal-footer border-slate-800 justify-content-center">
+                    <button type="button" class="btn btn-dark-outline" @onclick="CloseCancelModal" disabled="@isCancelling">Retour</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmCancellation" disabled="@isCancelling">
+                        @if (isCancelling)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+
+                            <span>Traitement...</span>
+                        }
+                        else
+                        {
+                            <span>Confirmer l'annulation</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private UserProfile? userProfile;
+    private IEnumerable<BookingForUser>? userBookings;
+    private IEnumerable<BookingForUser>? filteredBookings;
+    private BookingForUser? selectedBooking;
+
+    // Onglet actif : overview, edit, security
+    private string activeTab = "overview";
+
+    private bool showCancelModal = false;
+    private BookingForUser? bookingToCancel;
+    private bool isCancelling = false;
+
+    private int TotalBookings => userBookings?.Count() ?? 0;
+    private int TotalNights => userBookings?.Sum(b => b.NumberOfNights) ?? 0;
+    private Dictionary<Guid, string> roomImages = new();
+
+    private string successMessage = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private bool isUpdatingProfile = false;
+    private bool isChangingPassword = false;
+    private bool isLoadingProfile = true;
+    private bool isLoadingBookings = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserProfile();
+        await LoadUserBookings();
+    }
+
+    private async Task LoadUserProfile()
+    {
+        try
+        {
+            isLoadingProfile = true;
+            userProfile = await UserProfileService.GetCurrentUserProfileAsync();
+            if (userProfile == null)
+            {
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                var user = authState.User;
+                if (user.Identity?.IsAuthenticated == true)
+                {
+                    userProfile = new UserProfile
+                    {
+                        Username = user.Identity.Name ?? "Pirate",
+                        Email = user.FindFirst(ClaimTypes.Email)?.Value ?? "Inconnu",
+                        FirstName = user.Identity.Name ?? "Capitaine",
+                        Roles = new List<string>()
+                    };
+                }
+            }
+        }
+        catch { }
+        finally { isLoadingProfile = false; }
+    }
+
+    private async Task LoadUserBookings()
+    {
+        isLoadingBookings = true;
+        try
+        {
+            userBookings = await BookingService.GetUserBookingsAsync();
+            if (userBookings != null && userBookings.Any())
+            {
+                try
+                {
+                    var hotels = await HotelService.GetAllHotelsAsync();
+                    var allRooms = new List<Room>();
+                    foreach (var h in hotels)
+                    {
+                        var rooms = await HotelService.GetHotelRoomsAsync(h.Id, 1, 100);
+                        if (rooms != null) allRooms.AddRange(rooms);
+                    }
+                    foreach (var booking in userBookings)
+                    {
+                        var room = allRooms.FirstOrDefault(r => r.Number == booking.RoomNumber);
+                        if (room != null && !string.IsNullOrEmpty(room.PrimaryImageUrl))
+                        {
+                            if (!roomImages.ContainsKey(booking.Id))
+                                roomImages.Add(booking.Id, room.PrimaryImageUrl);
+                        }
+                    }
+                }
+                catch { }
+            }
+            filteredBookings = userBookings;
+        }
+        catch { }
+        finally { isLoadingBookings = false; }
+    }
+
+    // Gestion des profils
+    private async Task HandleUpdateProfile()
+    {
+        if (userProfile == null) return;
+        isUpdatingProfile = true;
+        try
+        {
+            var result = await UserProfileService.UpdateUserProfileAsync(userProfile);
+            if (result) successMessage = "Profil mis à jour !";
+            else errorMessage = "Erreur mise à jour.";
+        }
+        catch (Exception ex) { errorMessage = ex.Message; }
+        finally { isUpdatingProfile = false; }
+    }
+
+    private async Task HandleChangePassword()
+    {
+        if (userProfile == null) return;
+        isChangingPassword = true;
+        try
+        {
+            var result = await UserProfileService.ChangePasswordAsync(userProfile.NewPassword);
+            if (result) successMessage = "Mot de passe modifié !";
+            else errorMessage = "Erreur modification mot de passe.";
+        }
+        catch (Exception ex) { errorMessage = ex.Message; }
+        finally { isChangingPassword = false; }
+    }
+
+    private void ShowBookingDetails(BookingForUser booking) => selectedBooking = booking;
+    private void CloseBookingDetails() => selectedBooking = null;
+
+    private void RequestCancelBooking(BookingForUser booking)
+    {
+        bookingToCancel = booking;
+        selectedBooking = null;
+        showCancelModal = true;
+    }
+
+    private void CloseCancelModal()
+    {
+        showCancelModal = false;
+        bookingToCancel = null;
+    }
+
+    private async Task ConfirmCancellation()
+    {
+        if (bookingToCancel == null) return;
+
+        isCancelling = true;
+        try
+        {
+            var result = await BookingService.CancelBookingAsync(bookingToCancel.Id);
+            if (result)
+            {
+                successMessage = "Réservation annulée avec succès.";
+                await LoadUserBookings();
+            }
+            else
+            {
+                errorMessage = "Impossible d'annuler cette réservation.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur : {ex.Message}";
+        }
+        finally
+        {
+            isCancelling = false;
+            CloseCancelModal();
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.Logout();
+        NavigationManager.NavigateTo("/", true);
+    }
+}
+
+<style>
+    /* VARIABLES COULEURS */
+    :root {
+        --color-dark-950: #020617;
+        --color-dark-900: #0f172a;
+        --color-slate-800: #1e293b;
+        --color-amber-500: #f59e0b;
+        --color-slate-200: #e2e8f0;
+        --color-slate-400: #94a3b8;
+        --color-slate-500: #64748b;
+    }
+
+    /* CLASSES UTILITAIRES */
+    .bg-darker-950 {
+        background-color: var(--color-dark-950) !important;
+    }
+
+    .bg-slate-900 {
+        background-color: var(--color-dark-900) !important;
+    }
+
+    .text-amber-500 {
+        color: var(--color-amber-500) !important;
+    }
+
+    .text-slate-200 {
+        color: var(--color-slate-200) !important;
+    }
+
+    .text-slate-300 {
+        color: #cbd5e1 !important;
+    }
+
+    .text-slate-400 {
+        color: var(--color-slate-400) !important;
+    }
+
+    .text-slate-500 {
+        color: var(--color-slate-500) !important;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    /* FORMULAIRES DARK */
+    .form-control-dark {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        color: #e2e8f0;
+    }
+
+        .form-control-dark:focus {
+            background-color: #1e293b;
+            color: white;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+        }
+
+    /* ONGLETS */
+    .btn-amber-soft {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .hover-text-white:hover {
+        color: white !important;
+    }
+
+    /* CARTES STANDARDISÉES */
+    .card-custom {
+        background-color: var(--color-dark-900);
+        border: 1px solid #1e293b;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    /* AVATAR */
+    .avatar-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: #f59e0b;
+        color: #0f172a;
+        border: 4px solid #1e293b;
+        font-weight: 700;
+        font-size: 2.5rem;
+    }
+
+    /* BADGE MEMBRE */
+    .border-slate-700 {
+        border-color: #334155 !important;
+    }
+
+    /* BOUTONS ACTIONS PROFIL */
+    .btn-profile-action {
+        width: 100%;
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        padding: 0.6rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        color: var(--color-slate-200);
+    }
+
+        .btn-profile-action:hover {
+            background-color: #334155;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+    .btn-profile-home:hover {
+        color: #d97706;
+    }
+
+    .btn-profile-logout:hover {
+        color: #ef4444;
+    }
+
+    /* BOUTONS RESERVATIONS */
+    .btn-dark-outline {
+        color: #e2e8f0;
+        border: 1px solid #334155;
+        background: transparent;
+    }
+
+        .btn-dark-outline:hover {
+            background: #1e293b;
+            color: white;
+            border-color: #475569;
+        }
+
+    .btn-danger-outline {
+        color: #fca5a5;
+        border: 1px solid #7f1d1d;
+        background: rgba(127, 29, 29, 0.1);
+    }
+
+        .btn-danger-outline:hover {
+            background: #991b1b;
+            color: white;
+            border-color: #991b1b;
+        }
+
+    .btn-amber {
+        background-color: #f59e0b;
+        border: none;
+        color: #0f172a;
+    }
+
+        .btn-amber:hover {
+            background-color: #d97706;
+        }
+
+    /* ANIMATION */
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* BADGES STATUS */
+    .bg-success-subtle {
+        background-color: rgba(5, 150, 105, 0.15) !important;
+        color: #34d399 !important;
+        border-color: rgba(5, 150, 105, 0.3) !important;
+    }
+
+    .bg-danger-subtle {
+        background-color: rgba(220, 38, 38, 0.15) !important;
+        color: #f87171 !important;
+        border-color: rgba(220, 38, 38, 0.3) !important;
+    }
+
+    .bg-secondary-subtle {
+        background-color: rgba(71, 85, 105, 0.3) !important;
+        color: #94a3b8 !important;
+        border-color: rgba(71, 85, 105, 0.5) !important;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .card-booking .row > div {
+            width: 100%;
+        }
+
+        .card-booking img {
+            height: 200px;
+        }
+
+        .position-absolute.top-0.end-0 {
+            position: relative !important;
+            margin-bottom: 10px !important;
+        }
+    }
+</style>

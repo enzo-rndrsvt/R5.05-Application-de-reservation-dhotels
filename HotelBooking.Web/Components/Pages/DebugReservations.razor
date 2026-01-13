@@ -1,0 +1,207 @@
+@page "/debug-reservations"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@inject IBookingService BookingService
+@inject IJSRuntime JSRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Debug - Réservations</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h4>?? Debug - Diagnostic des Réservations</h4>
+        </div>
+        <div class="card-body">
+            
+            <div class="alert alert-info">
+                <h5>?? Diagnostic en Cours...</h5>
+                <p>Cette page aide à diagnostiquer les problèmes d'affichage des réservations.</p>
+            </div>
+
+            <button class="btn btn-primary mb-3" @onclick="TestBookings">
+                <i class="oi oi-reload"></i> Tester les Réservations
+            </button>
+
+            @if (isLoading)
+            {
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Chargement...</p>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">
+                    <h6><i class="oi oi-warning"></i> Erreur détectée :</h6>
+                    <pre>@errorMessage</pre>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(debugInfo))
+            {
+                <div class="alert alert-success">
+                    <h6><i class="oi oi-check"></i> Informations de Debug :</h6>
+                    <pre>@debugInfo</pre>
+                </div>
+            }
+
+            @if (bookings?.Any() == true)
+            {
+                <div class="alert alert-success">
+                    <h5>? Réservations Trouvées : @bookings.Count()</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cabine</th>
+                                <th>Type</th>
+                                <th>Dates</th>
+                                <th>Prix</th>
+                                <th>Image</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in bookings.Take(10))
+                            {
+                                <tr>
+                                    <td>@booking.Id.ToString().Substring(0, 8)</td>
+                                    <td><strong>Cabine @booking.RoomNumber</strong></td>
+                                    <td>@booking.RoomType</td>
+                                    <td>
+                                        @booking.StartingDate.ToString("dd/MM/yyyy")<br>
+                                        ? @booking.EndingDate.ToString("dd/MM/yyyy")
+                                    </td>
+                                    <td><strong>@booking.Price.ToString("C")</strong></td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(booking.RoomImageUrl))
+                                        {
+                                            <span class="badge bg-success">DB</span>
+                                            <img src="@booking.RoomImageUrl" alt="Prévisualisation" style="width: 50px; height: 30px; object-fit: cover;" />
+                                            <br><small class="text-muted">@booking.RoomImageUrl.Substring(0, Math.Min(30, booking.RoomImageUrl.Length))...</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">Défaut</span>
+                                            <img src="@booking.PrimaryRoomImageUrl" alt="Prévisualisation" style="width: 50px; height: 30px; object-fit: cover;" />
+                                            <br><small class="text-muted">Génération automatique</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @GetStatusBadgeClass(booking.Status)">
+                                            @booking.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else if (!isLoading && !string.IsNullOrEmpty(debugInfo))
+            {
+                <div class="alert alert-warning">
+                    <h5>?? Aucune Réservation Trouvée</h5>
+                    <p>L'utilisateur actuel n'a pas de réservations ou il y a un problème de récupération.</p>
+                </div>
+            }
+
+            <div class="mt-4">
+                <h6>??? Actions de Dépannage :</h6>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="/profile" class="btn btn-success">
+                        <i class="oi oi-person"></i> Aller au Profil
+                    </a>
+                    <a href="/rooms" class="btn btn-primary">
+                        <i class="oi oi-grid-three-up"></i> Voir les Chambres
+                    </a>
+                    <button class="btn btn-warning" @onclick="ClearBrowserCache">
+                        <i class="oi oi-reload"></i> Vider le Cache
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<BookingForUser>? bookings;
+    private string? errorMessage;
+    private string? debugInfo;
+    private bool isLoading = false;
+
+    private async Task TestBookings()
+    {
+        isLoading = true;
+        errorMessage = null;
+        debugInfo = null;
+        bookings = null;
+
+        try
+        {
+            debugInfo = "?? Début du test de récupération des réservations...\n";
+            
+            var result = await BookingService.GetUserBookingsAsync();
+            
+            debugInfo += $"? Appel API terminé.\n";
+            debugInfo += $"?? Nombre de réservations reçues: {result?.Count() ?? 0}\n";
+            
+            if (result?.Any() == true)
+            {
+                bookings = result.ToList();
+                
+                var firstBooking = bookings.First();
+                debugInfo += $"?? Première réservation:\n";
+                debugInfo += $"   - ID: {firstBooking.Id}\n";
+                debugInfo += $"   - Cabine: {firstBooking.RoomNumber}\n";
+                debugInfo += $"   - Type: {firstBooking.RoomType}\n";
+                debugInfo += $"   - Hôtel: {firstBooking.HotelName}\n";
+                debugInfo += $"   - Image DB: {firstBooking.RoomImageUrl ?? "NULL"}\n";
+                debugInfo += $"   - Image calculée: {firstBooking.PrimaryRoomImageUrl}\n";
+                debugInfo += $"   - HasImages: {firstBooking.HasRoomImages}\n";
+                debugInfo += $"   - Prix: {firstBooking.Price:C}\n";
+            }
+            else
+            {
+                debugInfo += "?? Aucune réservation trouvée pour l'utilisateur actuel.\n";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du test:\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ClearBrowserCache()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("location.reload", true);
+        }
+        catch
+        {
+            // Fallback
+            await JSRuntime.InvokeVoidAsync("location.reload");
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "À venir" => "bg-primary",
+            "En cours" => "bg-success", 
+            "Terminée" => "bg-secondary",
+            _ => "bg-light"
+        };
+    }
+}

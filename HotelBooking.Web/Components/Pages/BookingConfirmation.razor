@@ -1,0 +1,455 @@
+﻿@page "/booking-confirmation/{BookingId:guid}"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using System.Globalization
+@inject IBookingService BookingService
+@inject IUserProfileService UserProfileService
+@inject IHotelService HotelService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Confirmation - Hôtel SkullKing</PageTitle>
+
+<div class="page-container bg-darker-950 min-vh-100 pb-5">
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center align-items-center min-vh-100">
+            <div class="text-center">
+                <div class="spinner-border text-amber-500" role="status"></div>
+                <p class="mt-3 text-slate-400">Génération de votre parchemin...</p>
+            </div>
+        </div>
+    }
+    else if (booking == null)
+    {
+        <div class="container pt-5 text-center">
+            <div class="alert alert-warning bg-slate-900 border-amber-500 text-amber-500">
+                Réservation introuvable.
+            </div>
+            <a href="/" class="btn btn-amber mt-3">Retour à l'accueil</a>
+        </div>
+    }
+    else
+    {
+        <div class="container pt-5">
+
+            <div class="text-center mb-5 animate-fade-in-up">
+                <div class="success-icon-wrapper mb-4">
+                    <div class="success-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    </div>
+                </div>
+                <h1 class="text-amber-500 fw-bold mb-2">Réservation confirmée !</h1>
+                <p class="text-slate-400 fs-5">Votre aventure au Skull King est réservée</p>
+
+                <div class="reservation-badge mt-4">
+                    <span class="text-slate-500 small text-uppercase fw-bold d-block mb-1">Numéro de réservation</span>
+                    <span class="text-amber-500 fs-4 fw-bold letter-spacing-1">SK-@booking.Id.ToString().Substring(0, 8).ToUpper()</span>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+
+                    <div class="card card-confirmation border border-slate-800 rounded-4 overflow-hidden mb-4">
+
+                        <div class="p-4 border-bottom border-slate-800 bg-slate-900-50">
+                            <div class="d-flex gap-4 align-items-center flex-column flex-md-row">
+                                <div class="confirmation-img-wrapper rounded-3 overflow-hidden">
+                                    @if (!string.IsNullOrEmpty(displayImageUrl))
+                                    {
+                                        <img src="@displayImageUrl" class="w-100 h-100 object-fit-cover" alt="Chambre" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-100 h-100 bg-slate-800 d-flex align-items-center justify-content-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
+                                        </div>
+                                    }
+                                </div>
+                                <div>
+                                    <h5 class="text-amber-500 fw-bold mb-1 fs-4">@booking.RoomType</h5>
+                                    <p class="text-slate-400 mb-2">Une chambre spectaculaire inspirée de la légende.</p>
+                                    <div class="d-flex align-items-center text-slate-300 small">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                        @guests voyageur@(guests > 1 ? "s" : "") (estimation)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4 p-md-5">
+                            <div class="row g-5">
+                                <div class="col-md-6">
+                                    <h6 class="text-white fw-bold mb-4">Informations du voyageur</h6>
+
+                                    <div class="mb-3">
+                                        <span class="d-block text-slate-500 x-small text-uppercase fw-bold mb-1">Nom</span>
+                                        <span class="text-slate-200">@userName</span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <span class="d-block text-slate-500 x-small text-uppercase fw-bold mb-1">Email</span>
+                                        <span class="text-slate-200">@userEmail</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <h6 class="text-white fw-bold mb-4">Dates de séjour</h6>
+
+                                    <div class="mb-3 position-relative ps-4 border-start border-slate-700">
+                                        <span class="d-block text-slate-500 x-small text-uppercase fw-bold mb-1">Arrivée</span>
+                                        <div class="text-white fw-bold fs-5">@booking.StartingDate.ToString("dddd d MMMM yyyy", new CultureInfo("fr-FR"))</div>
+                                        <div class="text-slate-500 small">À partir de 15h00</div>
+                                        <div class="position-absolute top-0 start-0 translate-middle-x bg-darker-950 p-1" style="margin-top: 2px;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-amber-500"><circle cx="12" cy="12" r="10" /></svg>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3 position-relative ps-4 border-start border-slate-700">
+                                        <span class="d-block text-slate-500 x-small text-uppercase fw-bold mb-1">Départ</span>
+                                        <div class="text-white fw-bold fs-5">@booking.EndingDate.ToString("dddd d MMMM yyyy", new CultureInfo("fr-FR"))</div>
+                                        <div class="text-slate-500 small">Avant 11h00</div>
+                                        <div class="position-absolute top-0 start-0 translate-middle-x bg-darker-950 p-1" style="margin-top: 2px;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-amber-500"><circle cx="12" cy="12" r="10" /></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-800 my-4" />
+
+                            <div class="price-recap">
+                                <h6 class="text-slate-400 mb-3">Récapitulatif des prix</h6>
+
+                                <div class="d-flex justify-content-between mb-2 text-slate-300">
+                                    <span>@booking.PricePerNight.ToString("C0") × @booking.NumberOfNights nuits</span>
+                                    <span>@((booking.PricePerNight * booking.NumberOfNights).ToString("C"))</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-4 text-slate-300">
+                                    <span>Taxes et frais</span>
+                                    <span>@((booking.Price - (booking.PricePerNight * booking.NumberOfNights)).ToString("C"))</span>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center pt-3 border-top border-slate-800">
+                                    <span class="text-amber-500 fw-bold fs-5">Total payé</span>
+                                    <span class="text-amber-500 fw-bold fs-4">@booking.Price.ToString("C")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-confirmation-email d-flex align-items-start gap-3 p-4 mb-4 rounded-4 border border-success border-opacity-25 bg-success-subtle bg-opacity-10">
+                        <div class="email-icon text-success">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+                        </div>
+                        <div>
+                            <h6 class="text-success fw-bold mb-1">Email de confirmation envoyé</h6>
+                            <p class="text-slate-300 small mb-0">
+                                Un email de confirmation avec tous les détails de votre réservation et votre billet électronique a été envoyé à <strong class="text-white text-decoration-underline">@userEmail</strong>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-slate-900 border border-slate-800 rounded-4 p-4 mb-5">
+                        <div class="d-flex align-items-center mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2"><circle cx="12" cy="12" r="10" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /><path d="M2 12h20" /></svg>
+                            <h6 class="text-amber-500 fw-bold mb-0">Informations importantes</h6>
+                        </div>
+
+                        <ul class="list-unstyled text-slate-300 small mb-0 d-flex flex-column gap-2">
+                            <li class="d-flex align-items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2 mt-1 flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+                                Check-in à partir de 15h00 - Check-out avant 11h00
+                            </li>
+                            <li class="d-flex align-items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2 mt-1 flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+                                Annulation gratuite jusqu'à 48h avant votre arrivée
+                            </li>
+                            <li class="d-flex align-items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2 mt-1 flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+                                Carte d'identité ou passeport requis à l'arrivée
+                            </li>
+                            <li class="d-flex align-items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500 me-2 mt-1 flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
+                                Petit-déjeuner buffet inclus de 7h00 à 10h30
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex justify-content-center mb-5">
+                        <a href="/" class="btn btn-amber py-3 px-5 fw-bold rounded-3 d-flex align-items-center justify-content-center shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+                            Retour à l'accueil
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid BookingId { get; set; }
+
+    private BookingForUser? booking;
+    private bool isLoading = true;
+    private string userName = "";
+    private string userEmail = "";
+    private string displayImageUrl = "";
+    private int guests = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserInfo();
+        await LoadBookingAndRoomImage();
+        isLoading = false;
+    }
+
+    private async Task LoadUserInfo()
+    {
+        try
+        {
+            var profile = await UserProfileService.GetCurrentUserProfileAsync();
+            if (profile != null)
+            {
+                userName = $"{profile.FirstName} {profile.LastName}".Trim();
+                if (string.IsNullOrWhiteSpace(userName)) userName = profile.Username;
+                userEmail = profile.Email;
+                return;
+            }
+        }
+        catch { }
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            userName = user.Identity.Name ?? "Voyageur";
+            userEmail = user.FindFirst(ClaimTypes.Email)?.Value
+                     ?? user.FindFirst("email")?.Value
+                     ?? user.FindFirst("preferred_username")?.Value
+                     ?? "Email inconnu";
+        }
+    }
+
+    private async Task LoadBookingAndRoomImage()
+    {
+        try
+        {
+            var userBookings = await BookingService.GetUserBookingsAsync();
+            booking = userBookings.FirstOrDefault(b => b.Id == BookingId);
+
+            // Fallback si la réservation n'est pas encore indexée
+            if (booking == null && userBookings.Any())
+            {
+                booking = userBookings.OrderByDescending(b => b.StartingDate).First();
+            }
+
+            if (booking != null)
+            {
+                // 1. Essayer l'image stockée dans booking
+                if (!string.IsNullOrEmpty(booking.RoomImageUrl))
+                {
+                    displayImageUrl = booking.RoomImageUrl;
+                }
+                // 2. Si vide, chercher l'image via l'API HotelService
+                else
+                {
+                    try
+                    {
+                        var hotels = await HotelService.GetAllHotelsAsync();
+                        var hotel = hotels.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+
+                        if (hotel != null)
+                        {
+                            var rooms = await HotelService.GetHotelRoomsAsync(hotel.Id, 1, 100);
+                            var room = rooms.FirstOrDefault(r => r.Number == booking.RoomNumber);
+
+                            if (room != null && !string.IsNullOrEmpty(room.PrimaryImageUrl))
+                            {
+                                displayImageUrl = room.PrimaryImageUrl;
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
+        }
+        catch { }
+    }
+}
+
+<style>
+    /* VARIABLES */
+    :root {
+        --color-dark-950: #020617;
+        --color-slate-900: #0f172a;
+        --color-slate-800: #1e293b;
+        --color-slate-700: #334155;
+        --color-slate-500: #64748b;
+        --color-slate-400: #94a3b8;
+        --color-slate-300: #cbd5e1;
+        --color-slate-200: #e2e8f0;
+        --color-amber-500: #f59e0b;
+    }
+
+    /* CLASSES TEXTE CLAIRE */
+    .text-slate-200 {
+        color: var(--color-slate-200) !important;
+    }
+
+    .text-slate-300 {
+        color: var(--color-slate-300) !important;
+    }
+
+    .text-slate-400 {
+        color: var(--color-slate-400) !important;
+    }
+
+    .text-slate-500 {
+        color: var(--color-slate-500) !important;
+    }
+
+    .text-amber-500 {
+        color: var(--color-amber-500) !important;
+    }
+
+    /* FOND */
+    .bg-darker-950 {
+        background-color: var(--color-dark-950) !important;
+    }
+
+    .bg-slate-900 {
+        background-color: var(--color-slate-900) !important;
+    }
+
+    .bg-slate-900-50 {
+        background-color: rgba(15, 23, 42, 0.5) !important;
+    }
+
+    .border-slate-800 {
+        border-color: var(--color-slate-800) !important;
+    }
+
+    .border-slate-700 {
+        border-color: var(--color-slate-700) !important;
+    }
+
+    /* CARD STYLE */
+    .card-confirmation {
+        background-color: #0b1121;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* BADGE RÉSERVATION */
+    .reservation-badge {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid var(--color-slate-800);
+        padding: 15px 30px;
+        border-radius: 12px;
+        display: inline-block;
+    }
+
+    .letter-spacing-1 {
+        letter-spacing: 1px;
+    }
+
+    /* ICONE SUCCÈS */
+    .success-icon-wrapper {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.1);
+        position: relative;
+    }
+
+        .success-icon-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid #10b981;
+            animation: pulse-green 2s infinite;
+        }
+
+    .success-icon {
+        width: 60px;
+        height: 60px;
+        background: #10b981;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    }
+
+    @@keyframes pulse-green {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+    }
+
+    /* ANIMATION */
+    .animate-fade-in-up {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* UTILS */
+    .confirmation-img-wrapper {
+        width: 120px;
+        height: 90px;
+        flex-shrink: 0;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    /* BOUTONS */
+    .btn-amber {
+        background-color: var(--color-amber-500);
+        border: none;
+        color: #020617;
+        transition: all 0.2s;
+    }
+
+        .btn-amber:hover {
+            background-color: #d97706;
+        }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .confirmation-img-wrapper {
+            width: 100%;
+            height: 200px;
+        }
+    }
+</style>

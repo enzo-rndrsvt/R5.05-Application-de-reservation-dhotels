@@ -1,0 +1,391 @@
+﻿@page "/test-create-room"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@inject IHotelAdminService HotelAdminService
+@inject IHotelService HotelService
+@inject ILocalStorageService LocalStorageService
+@inject IHttpClientFactory HttpClientFactory
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+
+<PageTitle>Test Création Chambre</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-warning">
+            <h3>🧪 Test Création Chambre (Debug Mode)</h3>
+        </div>
+        <div class="card-body">
+            
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success">
+                    ✅ @successMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">
+                    ❌ @errorMessage
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Création Simplifiée</h5>
+                    <div class="mb-3">
+                        <label>Hôtel</label>
+                        <select class="form-select" @bind="testRoom.HotelId">
+                            <option value="">-- Sélectionner --</option>
+                            @if (hotels != null)
+                            {
+                                @foreach (var hotel in hotels)
+                                {
+                                    <option value="@hotel.Id">@hotel.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label>Numéro</label>
+                        <input type="number" class="form-control" @bind="testRoom.Number" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label>Type</label>
+                        <select class="form-select" @bind="testRoom.Type">
+                            <option value="">-- Type --</option>
+                            <option value="Standard">Standard</option>
+                            <option value="Deluxe">Deluxe</option>
+                            <option value="Suite">Suite</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label>Prix</label>
+                        <input type="number" class="form-control" @bind="testRoom.PricePerNight" step="0.01" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label>Description</label>
+                        <textarea class="form-control" @bind="testRoom.BriefDescription" rows="2"></textarea>
+                    </div>
+                    
+                    <!-- Section Images -->
+                    <div class="mb-3">
+                        <label>Images de test</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-info" @onclick="AddTestImages">
+                                📷 Ajouter images test
+                            </button>
+                            @if (testRoom.ImageCount > 0)
+                            {
+                                <button type="button" class="btn btn-outline-warning" @onclick="ClearImages">
+                                    🗑️ Vider (@testRoom.ImageCount)
+                                </button>
+                            }
+                        </div>
+                        @if (testRoom.HasImages)
+                        {
+                            <div class="mt-2">
+                                <small class="text-success">@testRoom.ImageCount image(s) de test ajoutée(s)</small>
+                            </div>
+                        }
+                    </div>
+                    
+                    <button class="btn btn-primary w-100" @onclick="CreateTestRoom" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        🚀 Créer Chambre Test
+                    </button>
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>Console Debug</h5>
+                    <div class="bg-dark text-light p-3 rounded" style="height: 400px; overflow-y: auto; font-family: monospace; font-size: 11px;">
+                        @foreach (var log in debugLogs)
+                        {
+                            <div style="color: @GetLogColor(log.Type);">
+                                [@log.Time.ToString("HH:mm:ss.fff")] @log.Message
+                            </div>
+                        }
+                        @if (!debugLogs.Any())
+                        {
+                            <div class="text-muted">Logs d'debug apparaîtront ici...</div>
+                        }
+                    </div>
+                    
+                    <button class="btn btn-secondary w-100 mt-2" @onclick="ClearLogs">
+                        🗑️ Vider Logs
+                    </button>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h6>Actions Rapides</h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-info" @onclick="LoadHotels">
+                            🏨 Charger Hôtels
+                        </button>
+                        <button class="btn btn-success" @onclick="FillTestData">
+                            📝 Données Test
+                        </button>
+                        <button class="btn btn-warning" @onclick="TestApiAuth">
+                            🔐 Test Auth API
+                        </button>
+                        <a href="/admin/rooms/create" class="btn btn-outline-primary">
+                            📋 Page Normale
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RoomCreation testRoom = new();
+    private IEnumerable<HotelForUser>? hotels;
+    private List<DebugLog> debugLogs = new();
+    private bool isLoading = false;
+    private string successMessage = "";
+    private string errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        AddLog("Initialisation de la page test", LogType.Info);
+        await LoadHotels();
+    }
+
+    private async Task LoadHotels()
+    {
+        AddLog("Chargement des hôtels...", LogType.Info);
+        try
+        {
+            hotels = await HotelAdminService.GetHotelsForRoomCreationAsync();
+            AddLog($"✅ {hotels?.Count() ?? 0} hôtels chargés", LogType.Success);
+            
+            if (hotels?.Any() == true)
+            {
+                foreach (var hotel in hotels.Take(3))
+                {
+                    AddLog($"   - {hotel.Name} ({hotel.Id})", LogType.Data);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AddLog($"❌ Erreur chargement hôtels: {ex.Message}", LogType.Error);
+        }
+    }
+
+    private void FillTestData()
+    {
+        AddLog("Remplissage données test", LogType.Info);
+        
+        testRoom.Number = new Random().Next(100, 999);
+        testRoom.Type = "Standard";
+        testRoom.AdultsCapacity = 2;
+        testRoom.ChildrenCapacity = 1;
+        testRoom.BriefDescription = "Chambre de test créée automatiquement";
+        testRoom.PricePerNight = 75.50m;
+        
+        if (hotels?.Any() == true)
+        {
+            testRoom.HotelId = hotels.First().Id;
+            AddLog($"Hôtel sélectionné: {hotels.First().Name}", LogType.Info);
+        }
+        
+        AddLog("✅ Données test remplies", LogType.Success);
+        StateHasChanged();
+    }
+
+    private void AddTestImages()
+    {
+        // Ajouter quelques URLs d'images de test
+        var testImageUrls = new List<string>
+        {
+            "/images/room1.jpg",
+            "/images/room2.jpg", 
+            "/images/room3.jpg",
+            "/images/room4.jpg",
+            "/images/room5.jpg"
+        };
+
+        testRoom.ImageUrls.Clear();
+        var imagesToAdd = testImageUrls.Take(3).ToList(); // Ajouter 3 images de test
+        testRoom.ImageUrls.AddRange(imagesToAdd);
+        
+        if (!string.IsNullOrEmpty(testRoom.ImageUrls.FirstOrDefault()))
+        {
+            testRoom.ImageUrl = testRoom.ImageUrls.First();
+        }
+
+        AddLog($"✅ {imagesToAdd.Count} images de test ajoutées", LogType.Success);
+        StateHasChanged();
+    }
+
+    private void ClearImages()
+    {
+        testRoom.ImageUrls.Clear();
+        testRoom.ImageUrl = null;
+        AddLog("🗑️ Images supprimées", LogType.Info);
+        StateHasChanged();
+    }
+
+    private async Task CreateTestRoom()
+    {
+        errorMessage = "";
+        successMessage = "";
+        isLoading = true;
+
+        AddLog("=== DÉBUT CRÉATION CHAMBRE ===", LogType.Info);
+        AddLog($"Données: Numéro={testRoom.Number}, Type={testRoom.Type}", LogType.Data);
+        AddLog($"HotelId={testRoom.HotelId}, Prix={testRoom.PricePerNight}", LogType.Data);
+
+        try
+        {
+            if (testRoom.HotelId == Guid.Empty)
+            {
+                var message = "Aucun hôtel sélectionné";
+                AddLog($"❌ {message}", LogType.Error);
+                errorMessage = message;
+                return;
+            }
+
+            AddLog("Appel HotelAdminService.CreateRoomAsync...", LogType.Info);
+            var startTime = DateTime.Now;
+            
+            var result = await HotelAdminService.CreateRoomAsync(testRoom);
+            
+            var duration = (DateTime.Now - startTime).TotalMilliseconds;
+            AddLog($"Réponse reçue en {duration:F0}ms: {result}", LogType.Info);
+
+            if (result)
+            {
+                successMessage = $"✅ Chambre {testRoom.Number} créée avec succès!";
+                AddLog("🎉 SUCCESS: Chambre créée!", LogType.Success);
+                
+                // Reset form
+                testRoom = new RoomCreation();
+            }
+            else
+            {
+                errorMessage = "❌ L'API a retourné false";
+                AddLog("❌ ÉCHEC: CreateRoomAsync a retourné false", LogType.Error);
+                AddLog("💡 Vérifiez la console du navigateur (F12) pour plus de détails", LogType.Warning);
+                AddLog("💡 Vérifiez aussi les logs de l'API côté serveur", LogType.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"💥 Exception: {ex.Message}";
+            AddLog($"💥 EXCEPTION: {ex.Message}", LogType.Error);
+            AddLog($"Type: {ex.GetType().Name}", LogType.Error);
+            if (ex.StackTrace != null && ex.StackTrace.Length > 200)
+            {
+                AddLog($"Stack: {ex.StackTrace.Substring(0, 200)}...", LogType.Error);
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            AddLog("=== FIN CRÉATION ===", LogType.Info);
+            StateHasChanged();
+        }
+    }
+
+    private async Task TestApiAuth()
+    {
+        AddLog("=== TEST AUTORISATION API ===", LogType.Info);
+        
+        try
+        {
+            // Test simple: essayer de récupérer les chambres admin
+            var httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+            
+            // Récupérer et ajouter le token
+            var token = await LocalStorageService.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                AddLog($"🔑 Token ajouté: {token.Substring(0, Math.Min(20, token.Length))}...", LogType.Info);
+            }
+            else
+            {
+                AddLog("❌ Aucun token trouvé !", LogType.Error);
+                return;
+            }
+
+            // Test GET sur endpoint admin
+            AddLog("📡 Test GET /api/admin/rooms...", LogType.Info);
+            var response = await httpClient.GetAsync("api/admin/rooms?Page=1&PageSize=1");
+            
+            AddLog($"Status: {response.StatusCode} ({(int)response.StatusCode})", 
+                response.IsSuccessStatusCode ? LogType.Success : LogType.Error);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                AddLog($"Erreur: {content}", LogType.Error);
+                
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    AddLog("🚨 PROBLÈME: Token invalide ou expiré !", LogType.Error);
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    AddLog("🚨 PROBLÈME: Pas de rôle Admin !", LogType.Error);
+                }
+            }
+            else
+            {
+                AddLog("✅ Autorisation API OK !", LogType.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            AddLog($"💥 Exception test auth: {ex.Message}", LogType.Error);
+        }
+    }
+
+    private void ClearLogs()
+    {
+        debugLogs.Clear();
+        StateHasChanged();
+    }
+
+    private void AddLog(string message, LogType type)
+    {
+        debugLogs.Add(new DebugLog { Message = message, Type = type, Time = DateTime.Now });
+        if (debugLogs.Count > 50)
+        {
+            debugLogs.RemoveAt(0);
+        }
+        StateHasChanged();
+    }
+
+    private string GetLogColor(LogType type) => type switch
+    {
+        LogType.Success => "#28a745",
+        LogType.Error => "#dc3545",
+        LogType.Warning => "#ffc107",
+        LogType.Info => "#17a2b8",
+        LogType.Data => "#6c757d",
+        _ => "#ffffff"
+    };
+
+    public enum LogType { Info, Success, Error, Warning, Data }
+
+    public class DebugLog
+    {
+        public string Message { get; set; } = "";
+        public LogType Type { get; set; }
+        public DateTime Time { get; set; }
+    }
+}

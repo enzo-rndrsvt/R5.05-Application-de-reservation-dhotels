@@ -1,0 +1,233 @@
+@page "/quick-test-api"
+@using HotelBooking.Web.Services
+@using System.Net.Http.Json
+@inject ILocalStorageService LocalStorage
+@inject IHttpClientFactory HttpClientFactory
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Test API Quick</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-danger">
+            <h3>?? Test API Rapide</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-grid gap-2">
+                <button class="btn btn-danger" @onclick="EmergencyFixDatabase">
+                    ?? FIX D'URGENCE BDD
+                </button>
+                <button class="btn btn-warning" @onclick="ApplyMigrations">
+                    ??? Appliquer Migrations
+                </button>
+                <hr/>
+                <button class="btn btn-info" @onclick="TestAuth">
+                    ?? Test Autorisation
+                </button>
+                <button class="btn btn-warning" @onclick="TestPostRoom">
+                    ?? Test POST Room
+                </button>
+                <button class="btn btn-success" @onclick="TestGetRooms">
+                    ?? Test GET Rooms
+                </button>
+            </div>
+
+            @if (results.Any())
+            {
+                <div class="mt-4">
+                    <div class="bg-dark text-light p-3 rounded" style="font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: auto;">
+                        @foreach (var result in results.TakeLast(20))
+                        {
+                            <div style="color: @(result.IsSuccess ? "#28a745" : "#dc3545");">
+                                [@result.Time.ToString("HH:mm:ss")] @result.Message
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<TestResult> results = new();
+
+    private async Task TestAuth()
+    {
+        var token = await LocalStorage.GetItemAsync<string>("authToken");
+        if (string.IsNullOrEmpty(token))
+        {
+            AddResult("? Pas de token", false);
+            return;
+        }
+
+        AddResult($"?? Token: {token.Substring(0, 20)}...", true);
+
+        var httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+        httpClient.DefaultRequestHeaders.Authorization = 
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        try
+        {
+            var response = await httpClient.GetAsync("api/admin/rooms?Page=1&PageSize=1");
+            AddResult($"?? GET Admin: {response.StatusCode}", response.IsSuccessStatusCode);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                AddResult($"Erreur: {content}", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            AddResult($"?? Exception: {ex.Message}", false);
+        }
+    }
+
+    private async Task TestGetRooms()
+    {
+        var httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+        var token = await LocalStorage.GetItemAsync<string>("authToken");
+        if (!string.IsNullOrEmpty(token))
+        {
+            httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
+        try
+        {
+            AddResult("?? Test GET /api/admin/rooms", true);
+            var response = await httpClient.GetAsync("api/admin/rooms?Page=1&PageSize=5");
+            AddResult($"Status: {response.StatusCode}", response.IsSuccessStatusCode);
+            
+            var content = await response.Content.ReadAsStringAsync();
+            AddResult($"Content: {content.Substring(0, Math.Min(100, content.Length))}...", response.IsSuccessStatusCode);
+        }
+        catch (Exception ex)
+        {
+            AddResult($"?? GET Exception: {ex.Message}", false);
+        }
+    }
+
+    private async Task TestPostRoom()
+    {
+        var httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+        var token = await LocalStorage.GetItemAsync<string>("authToken");
+        if (!string.IsNullOrEmpty(token))
+        {
+            httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
+        // Données de test hardcodées
+        var testRoom = new
+        {
+            Number = 999.0,
+            Type = "Test",
+            AdultsCapacity = 2,
+            ChildrenCapacity = 0,
+            BriefDescription = "Test room",
+            PricePerNight = 100.0m,
+            HotelId = new Guid("415d2c20-3590-4111-e70b-08de1d4a02ab"), // ID de SkullKing trouvé dans les logs
+            ImageUrl = (string?)null
+        };
+
+        try
+        {
+            AddResult("?? Test POST Room avec données hardcodées", true);
+            AddResult($"Données: {System.Text.Json.JsonSerializer.Serialize(testRoom)}", true);
+            
+            var response = await httpClient.PostAsJsonAsync("api/admin/rooms", testRoom);
+            AddResult($"POST Status: {response.StatusCode}", response.IsSuccessStatusCode);
+            
+            var content = await response.Content.ReadAsStringAsync();
+            AddResult($"POST Response: {content}", response.IsSuccessStatusCode);
+            
+            // Analyser les erreurs de validation
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                AddResult("?? Erreur de validation détectée !", false);
+                
+                try
+                {
+                    var errorData = System.Text.Json.JsonSerializer.Deserialize<object>(content);
+                    AddResult($"Validation details: {errorData}", false);
+                }
+                catch
+                {
+                    AddResult($"Raw validation error: {content}", false);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            AddResult($"?? POST Exception: {ex.Message}", false);
+        }
+    }
+
+    private async Task ApplyMigrations()
+    {
+        AddResult("??? APPLICATION DES MIGRATIONS...", true);
+        
+        try
+        {
+            // Pour l'instant, simulons l'application des migrations
+            await Task.Delay(1000);
+            AddResult("?? Migrations simulées - utilisez le fix d'urgence", false);
+        }
+        catch (Exception ex)
+        {
+            AddResult($"?? Erreur migrations: {ex.Message}", false);
+        }
+    }
+
+    private async Task EmergencyFixDatabase()
+    {
+        AddResult("?? FIX D'URGENCE DE LA BASE DE DONNÉES...", true);
+        
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+            var token = await LocalStorage.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+
+            AddResult("?? Ajout de la colonne ImageUrl...", true);
+            var response = await httpClient.PostAsync("api/admin/rooms/emergency-fix-imageurl", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                AddResult("? FIX D'URGENCE RÉUSSI !", true);
+                AddResult($"Détails: {content}", true);
+                AddResult("?? Vous pouvez maintenant créer des chambres !", true);
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                AddResult($"? Échec du fix: {response.StatusCode}", false);
+                AddResult($"Erreur: {errorContent}", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            AddResult($"?? Erreur fix d'urgence: {ex.Message}", false);
+        }
+    }
+
+    private void AddResult(string message, bool success)
+    {
+        results.Add(new TestResult { Message = message, IsSuccess = success, Time = DateTime.Now });
+        StateHasChanged();
+    }
+
+    public class TestResult
+    {
+        public string Message { get; set; } = "";
+        public bool IsSuccess { get; set; }
+        public DateTime Time { get; set; }
+    }
+}

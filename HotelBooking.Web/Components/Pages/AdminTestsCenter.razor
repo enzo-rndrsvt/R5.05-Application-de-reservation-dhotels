@@ -1,0 +1,185 @@
+@page "/test-admin-redirect"
+@page "/debug/all-tests"
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+
+<PageTitle>Tests et Debug Complets - Administration</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="oi oi-bug me-2"></i>
+                        Centre de Tests et Debug SkullKing
+                    </h4>
+                    <p class="mb-0 mt-2">Accès rapide à tous les outils de test et de debug</p>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Tests Principaux -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="text-primary">?? Tests Principaux</h5>
+                            <div class="list-group">
+                                <a href="/debug-api" class="list-group-item list-group-item-action">
+                                    <i class="oi oi-cloud me-2"></i>
+                                    <strong>Debug API</strong>
+                                    <small class="d-block text-muted">Test des endpoints API principaux</small>
+                                </a>
+                                <a href="/test-carousel-final" class="list-group-item list-group-item-action">
+                                    <i class="oi oi-check me-2"></i>
+                                    <strong>Test Carrousels Final</strong>
+                                    <small class="d-block text-muted">Validation des carrousels d'images</small>
+                                </a>
+                                <a href="/admin/test-images" class="list-group-item list-group-item-action">
+                                    <i class="oi oi-camera-slr me-2"></i>
+                                    <strong>Test Multi-Images</strong>
+                                    <small class="d-block text-muted">Test upload multiple d'images</small>
+                                </a>
+                                <a href="/debug-database-public" class="list-group-item list-group-item-action">
+                                    <i class="oi oi-wrench me-2"></i>
+                                    <strong>Debug BDD (Public)</strong>
+                                    <small class="d-block text-muted">Tests publics de base de données</small>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="text-success">? Tests Spécialisés</h5>
+                            <div class="list-group">
+                                <a href="/test-availability" class="list-group-item list-group-item-action">
+                                    <i class="oi oi-calendar me-2"></i>
+                                    <strong>Test Disponibilité</strong>
+                                    <small class="d-block text-muted">Vérification des disponibilités de chambres</small>
+                                </a>
+                                <a href="/quick-book" class="list-group-item list-group-item-action">
+                                    <i class="oi oi-flash me-2"></i>
+                                    <strong>Réservation Express</strong>
+                                    <small class="d-block text-muted">Test de réservation rapide</small>
+                                </a>
+                                <a href="/test-admin" class="list-group-item list-group-item-action">
+                                    <i class="oi oi-shield me-2"></i>
+                                    <strong>Test Admin</strong>
+                                    <small class="d-block text-muted">Tests spécifiques administrateur</small>
+                                </a>
+                                <a href="/quick-test-api" class="list-group-item list-group-item-action">
+                                    <i class="oi oi-flash me-2"></i>
+                                    <strong>Quick Test API</strong>
+                                    <small class="d-block text-muted">Tests rapides des endpoints</small>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tests Images et Carrousels -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-warning">??? Tests Images et Carrousels</h5>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="card border-warning">
+                                        <div class="card-body text-center">
+                                            <a href="/test-images" class="btn btn-outline-warning">
+                                                <i class="oi oi-image"></i><br/>
+                                                <small>Test Images</small>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-warning">
+                                        <div class="card-body text-center">
+                                            <a href="/test-carousel" class="btn btn-outline-warning">
+                                                <i class="oi oi-move"></i><br/>
+                                                <small>Test Carrousel</small>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-warning">
+                                        <div class="card-body text-center">
+                                            <a href="/test-carousel-simple" class="btn btn-outline-warning">
+                                                <i class="oi oi-play-circle"></i><br/>
+                                                <small>Carrousel Simple</small>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-warning">
+                                        <div class="card-body text-center">
+                                            <a href="/test-carousel-minimal" class="btn btn-outline-warning">
+                                                <i class="oi oi-wrench"></i><br/>
+                                                <small>Carrousel Minimal</small>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tests Base de Données -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-danger">??? Tests Base de Données</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="list-group">
+                                        <a href="/debug-database" class="list-group-item list-group-item-action">
+                                            <i class="oi oi-bug me-2"></i>
+                                            <strong>Debug BDD (Admin)</strong>
+                                            <small class="d-block text-muted">Debug avancé base de données</small>
+                                        </a>
+                                        <a href="/debug-rooms" class="list-group-item list-group-item-action">
+                                            <i class="oi oi-home me-2"></i>
+                                            <strong>Debug Chambres</strong>
+                                            <small class="d-block text-muted">Analyse des chambres en BDD</small>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="list-group">
+                                        <a href="/test-create-room" class="list-group-item list-group-item-action">
+                                            <i class="oi oi-plus me-2"></i>
+                                            <strong>Test Création Chambre</strong>
+                                            <small class="d-block text-muted">Test de création de chambres</small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions Rapides -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h5 class="text-secondary">? Actions Rapides</h5>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="/admin" class="btn btn-primary">
+                                    <i class="oi oi-dashboard"></i> Dashboard Admin
+                                </a>
+                                <a href="/admin/rooms" class="btn btn-success">
+                                    <i class="oi oi-list"></i> Gérer Chambres
+                                </a>
+                                <a href="/admin/database/advanced" class="btn btn-warning">
+                                    <i class="oi oi-hard-drive"></i> BDD Avancée
+                                </a>
+                                <a href="/admin/configuration" class="btn btn-info">
+                                    <i class="oi oi-cog"></i> Configuration
+                                </a>
+                                <a href="/rooms" class="btn btn-outline-primary">
+                                    <i class="oi oi-grid-three-up"></i> Voir Chambres
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

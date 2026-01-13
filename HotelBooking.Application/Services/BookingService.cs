@@ -1,0 +1,165 @@
+﻿using FluentValidation;
+using HotelBooking.Domain.Abstractions.Repositories;
+using HotelBooking.Domain.Abstractions.Repositories.Hotel;
+using HotelBooking.Domain.Abstractions.Repositories.Room;
+using HotelBooking.Domain.Abstractions.Services;
+using HotelBooking.Domain.Abstractions.Utilities;
+using HotelBooking.Domain.Models;
+using HotelBooking.Domain.Models.Hotel;
+using HotelBooking.Domain.Models.Room;
+using HotelBooking.Domain.Models.User;
+
+namespace HotelBooking.Application.Services
+{
+    /// <inheritdoc cref="IBookingService"/>
+    internal class BookingService : IBookingService
+    {
+        private readonly IBookingRepository _bookingRepository;
+        private readonly IValidator<BookingDTO> _bookingValidator;
+        private readonly IValidator<PaginationDTO> _paginationValidator;
+        private readonly IHotelDiscountRepository _hotelDiscountRepository;
+        private readonly IRoomRepository _roomRepository;
+        private readonly IEmailService _emailService;
+        private readonly IUserRepository _userRepository;
+        private readonly IHotelRepository _hotelRepository;
+
+        public BookingService(
+            IBookingRepository bookingRepository,
+            IValidator<BookingDTO> bookingValidator,
+            IValidator<PaginationDTO> paginationValidator,
+            IHotelDiscountRepository hotelDiscountRepository,
+            IRoomRepository roomRepository,
+            IEmailService emailService,
+            IUserRepository userRepository,
+            IHotelRepository hotelRepository)
+        {
+            _bookingRepository = bookingRepository;
+            _bookingValidator = bookingValidator;
+            _paginationValidator = paginationValidator;
+            _hotelDiscountRepository = hotelDiscountRepository;
+            _roomRepository = roomRepository;
+            _emailService = emailService;
+            _userRepository = userRepository;
+            _hotelRepository = hotelRepository;
+        }
+
+        public async Task AddAsync(BookingDTO newBooking)
+        {
+            await _bookingValidator.ValidateAndThrowAsync(newBooking);
+
+            newBooking.CreationDate = DateTime.UtcNow;
+            var room = await _roomRepository.GetByIdAsync(newBooking.RoomId);
+            var discount =
+                _hotelDiscountRepository.GetHighestActiveDiscount(room.HotelId);
+            AddPrice(newBooking, room, discount);
+
+            await _bookingRepository.AddAsync(newBooking);
+            await SendBookingDetailsEmailAsync(newBooking, room);
+        }
+
+        public async Task<IEnumerable<BookingWithDetailsDTO>> GetBookingsForUserAsync(Guid userId, PaginationDTO pagination)
+        {
+            await _paginationValidator.ValidateAndThrowAsync(pagination);
+            
+            int itemsToSkip = (pagination.PageNumber - 1) * pagination.PageSize;
+            int itemsToTake = pagination.PageSize;
+ 
+            return await _bookingRepository.GetBookingsForUserAsync(userId, itemsToSkip, itemsToTake);
+        }
+
+        public async Task<int> GetBookingsCountForUserAsync(Guid userId)
+        {
+            return await _bookingRepository.GetBookingsCountForUserAsync(userId);
+        }
+
+        public async Task<BookingWithDetailsDTO?> GetBookingByIdForUserAsync(Guid bookingId, Guid userId)
+        {
+            return await _bookingRepository.GetBookingByIdForUserAsync(bookingId, userId);
+        }
+
+        public async Task<bool> CancelBookingForUserAsync(Guid bookingId, Guid userId)
+        {
+            // Vérifier que la réservation appartient bien à l'utilisateur
+            var booking = await _bookingRepository.GetBookingByIdForUserAsync(bookingId, userId);
+            
+            if (booking == null)
+            {
+                return false;
+            }
+
+            // Vérifier que la réservation peut être annulée (par exemple, pas déjà commencée)
+            if (booking.StartingDate <= DateTime.UtcNow)
+            {
+                throw new InvalidOperationException("Cannot cancel a booking that has already started or is in the past.");
+            }
+
+            // Annuler la réservation
+            return await _bookingRepository.CancelBookingForUserAsync(bookingId, userId);
+        }
+
+        public async Task<RoomAvailabilityInfo> CheckRoomAvailabilityAsync(Guid roomId, DateTime startingDate, DateTime endingDate)
+        {
+            return await _bookingRepository.CheckRoomAvailabilityAsync(roomId, startingDate, endingDate);
+        }
+
+        private void AddPrice(
+            BookingDTO newBooking, RoomDTO room, DiscountDTO discount)
+        {
+            var discountPercentage = discount?.AmountPercent ?? 0;
+            // Calcul correct : le prix total = prix par nuit × nombre de nuits
+            // Note: si arrivée le 1er et départ le 3, c'est 2 nuits (1-2 et 2-3)
+            var numberOfNights = (newBooking.EndingDate - newBooking.StartingDate).Days;
+            var originalPrice = numberOfNights * room.PricePerNight;
+            newBooking.Price =
+                originalPrice - originalPrice * (decimal)(discountPercentage / 100);
+        }
+
+        private async Task SendBookingDetailsEmailAsync(BookingDTO booking, RoomDTO room)
+        {
+            var user = await _userRepository.GetByIdAsync(booking.UserId);
+            var hotel = await _hotelRepository.GetByIdAsync(room.HotelId);
+            string emailBody = GenerateEmailBody(booking, room, user, hotel);
+            var email = new EmailDTO
+            {
+                ToName = $"{user.FirstName} {user.LastName}",
+                ToEmail = user.Email,
+                Subject = "Booked room",
+                Body = emailBody
+
+            };
+
+            await _emailService.SendAsync(email);
+        }
+
+        private static string GenerateEmailBody(
+            BookingDTO booking, RoomDTO room, UserDTO user, HotelDTO hotel)
+        {
+            var googleMapsLink =
+                $"https://www.google.com/maps/search/?api=1&query={hotel.Geolocation}";
+            var emailBody =
+                $"Cher(e) {user.FirstName} {user.LastName},\n\n" +
+                $"Nous sommes ravis de confirmer votre réservation effectuée via notre site web.\n\n" +
+                $"📋 DÉTAILS DE VOTRE RÉSERVATION\n" +
+                $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                $"Date de réservation : {booking.CreationDate:dd/MM/yyyy à HH:mm}\n" +
+                $"Date d'arrivée : {booking.StartingDate:dd/MM/yyyy}\n" +
+                $"Date de départ : {booking.EndingDate:dd/MM/yyyy}\n" +
+                $"Prix total : {booking.Price:C}\n\n" +
+                $"🏨 INFORMATIONS SUR VOTRE HÉBERGEMENT\n" +
+                $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                $"Hôtel : {hotel.Name} ({hotel.StarRating} étoiles)\n" +
+                $"Chambre n° {room.Number}\n" +
+                $"Capacité : {room.AdultsCapacity} adulte(s) et {room.ChildrenCapacity} enfant(s)\n\n" +
+                $"📍 LOCALISATION\n" +
+                $"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+                $"Vous pouvez consulter l'emplacement exact de l'hôtel sur Google Maps :\n" +
+                $"{googleMapsLink}\n\n" +
+                $"Nous vous souhaitons un excellent séjour !\n" +
+                $"Si vous avez des questions ou besoin d'assistance, n'hésitez pas à nous contacter.\n\n" +
+                $"Cordialement,\n" +
+                $"L'équipe de votre site de réservation";
+
+            return emailBody;
+        }
+    }
+}

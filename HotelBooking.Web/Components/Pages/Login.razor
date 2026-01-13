@@ -1,0 +1,214 @@
+@page "/login"
+@using HotelBooking.Web.Models.Auth
+@using HotelBooking.Web.Services
+@inject IAuthService AuthService
+@inject NavigationManager NavManager
+
+<div class="login-page-wrapper d-flex align-items-center justify-content-center min-vh-100 py-5">
+    <div class="background-overlay"></div>
+
+    <div class="container position-relative z-10">
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6 col-xl-5">
+                
+                <div class="text-center mb-4">
+                    <i class="oi oi-skull display-4 text-amber-500 mb-2"></i>
+                    <h4 class="text-amber-500 fw-bold tracking-widest">SKULL KING</h4>
+                    <small class="text-slate-400">Rejoignez l'équipage</small>
+                </div>
+
+                <div class="card card-login border-0 p-4 shadow-lg">
+                    <div class="card-body">
+                        
+                        <h5 class="text-amber-500 text-center mb-1">Bienvenue matelot !</h5>
+                        <p class="text-slate-400 text-center small mb-4">Connectez-vous ou créez un compte pour naviguer</p>
+
+                        <div class="d-flex bg-slate-900 rounded-pill p-1 mb-4">
+                            <button class="btn btn-sm btn-amber rounded-pill w-50 fw-bold">Connexion</button>
+                            <a href="register" class="btn btn-sm text-slate-400 rounded-pill w-50 hover-text-white text-decoration-none text-center pt-1">Inscription</a>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger bg-danger-subtle text-danger border-0 py-2 small mb-3">
+                                <i class="oi oi-warning me-1"></i> @errorMessage
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(successMessage))
+                        {
+                            <div class="alert alert-success bg-success-subtle text-success border-0 py-2 small mb-3">
+                                <i class="oi oi-circle-check me-1"></i> @successMessage
+                            </div>
+                        }
+
+                        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
+                            <DataAnnotationsValidator />
+
+                            <div class="mb-3">
+                                <label class="form-label text-slate-300 small fw-bold">Email ou Nom d'utilisateur</label>
+                                <InputText class="form-control form-control-dark" placeholder="captain@skullking.com" @bind-Value="loginModel.Username" />
+                                <ValidationMessage For="@(() => loginModel.Username)" class="text-danger x-small" />
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label text-slate-300 small fw-bold">Mot de passe</label>
+                                <InputText type="password" class="form-control form-control-dark" placeholder="••••••••" @bind-Value="loginModel.Password" />
+                                <ValidationMessage For="@(() => loginModel.Password)" class="text-danger x-small" />
+                            </div>
+
+                            <div class="text-end mb-4">
+                                <a href="#" class="text-amber-500 small text-decoration-none hover-text-amber-light">Mot de passe oublié ?</a>
+                            </div>
+
+                            <button type="submit" class="btn btn-amber w-100 py-2 fw-bold d-flex align-items-center justify-content-center" disabled="@isLoading">
+                                @if (isLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Connexion...</span>
+                                }
+                                else
+                                {
+                                    <i class="oi oi-account-login me-2"></i> <span>Se connecter</span>
+                                }
+                            </button>
+                        </EditForm>
+
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <p class="text-slate-500 x-small">
+                        En vous connectant, vous acceptez nos <a href="#" class="text-slate-400">conditions d'utilisation</a>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private LoginRequest loginModel { get; set; } = new();
+    
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isLoading = false;
+
+    private async Task HandleLogin()
+    {
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+        isLoading = true;
+
+        try
+        {
+            var result = await AuthService.Login(loginModel);
+
+            if (result.Success)
+            {
+                successMessage = "Connexion réussie !";
+                await Task.Delay(800); 
+                NavManager.NavigateTo("/", true);
+            }
+            else
+            {
+                errorMessage = result.Message ?? "Identifiants incorrects.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Erreur de connexion au serveur.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
+
+<style>
+    /* VARIABLES */
+    :root {
+        --color-dark-950: #020617;
+        --color-slate-900: #0f172a;
+        --color-slate-800: #1e293b;
+        --color-slate-400: #94a3b8;
+        --color-amber-500: #f59e0b;
+        --color-amber-600: #d97706;
+    }
+
+    /* BACKGROUND FIXE */
+    .login-page-wrapper {
+        position: relative;
+        background-image: url('/uploads/backgroundhomepage.jpg'); 
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed; 
+    }
+    
+    .background-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.85);
+        backdrop-filter: blur(4px);
+        z-index: 0;
+    }
+    
+    .z-10 { z-index: 10; }
+
+    /* CARD THEME */
+    .card-login {
+        background-color: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* INPUTS */
+    .form-control-dark {
+        background-color: rgba(30, 41, 59, 0.5);
+        border: 1px solid var(--color-slate-800);
+        color: #e2e8f0;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+    }
+    .form-control-dark:focus {
+        background-color: rgba(30, 41, 59, 0.8);
+        border-color: var(--color-amber-500);
+        color: white;
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    }
+    .form-control-dark::placeholder { color: #64748b; }
+
+    /* UTILS */
+    .text-amber-500 { color: var(--color-amber-500) !important; }
+    .text-slate-300 { color: #cbd5e1 !important; }
+    .text-slate-400 { color: var(--color-slate-400) !important; }
+    .text-slate-500 { color: #64748b !important; }
+    
+    .hover-text-amber:hover { color: var(--color-amber-500) !important; }
+    .hover-text-white:hover { color: white !important; }
+
+    /* BUTTONS */
+    .btn-amber {
+        background-color: var(--color-amber-500);
+        border: none;
+        color: #0f172a;
+        transition: all 0.2s;
+    }
+    .btn-amber:hover {
+        background-color: var(--color-amber-600);
+        transform: translateY(-1px);
+    }
+    
+    .btn-dark-glass {
+        background-color: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(4px);
+    }
+    
+    .x-small { font-size: 0.75rem; }
+    .tracking-widest { letter-spacing: 0.2em; }
+</style>

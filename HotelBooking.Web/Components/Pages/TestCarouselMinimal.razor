@@ -1,0 +1,250 @@
+@page "/test-carousel-minimal"
+
+<PageTitle>Test Carrousel Minimal</PageTitle>
+
+<div class="container mt-4">
+    <h2>?? Test Carrousel Minimal (Debug Bootstrap)</h2>
+    
+    <div class="alert alert-info">
+        <h6>État Bootstrap :</h6>
+        <ul>
+            <li><strong>Ouvrez F12 ? Console</strong> pour voir les logs de chargement détaillés</li>
+            <li>Cherchez les messages commençant par ??, ?, ?</li>
+            <li>Si vous voyez "?? Bootstrap Carousel minimal implementation loaded successfully!" ? Bootstrap fonctionne</li>
+            <li>Si vous voyez "? Bootstrap is not loaded!" ? Problème de chargement</li>
+        </ul>
+    </div>
+    
+    <!-- Test en temps réel -->
+    <div class="alert alert-warning">
+        <h6>Test Bootstrap en temps réel :</h6>
+        <button class="btn btn-primary" onclick="checkBootstrapStatus()">?? Vérifier Bootstrap Maintenant</button>
+        <div id="bootstrapStatus" class="mt-2"></div>
+    </div>
+    
+    <!-- Carrousel le plus simple possible -->
+    <div id="minimalCarousel" class="carousel slide" data-bs-ride="false">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <div style="height: 300px; background-color: #ff6b6b; color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                    ????? Slide 1 - Cabine Pirate
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div style="height: 300px; background-color: #4ecdc4; color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                    ? Slide 2 - Vue Océan
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div style="height: 300px; background-color: #45b7d1; color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                    ??? Slide 3 - Carte au Trésor
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contrôles simples -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#minimalCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#minimalCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+        
+        <!-- Indicateurs -->
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#minimalCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
+            <button type="button" data-bs-target="#minimalCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#minimalCarousel" data-bs-slide-to="2"></button>
+        </div>
+    </div>
+    
+    <!-- Tests manuels -->
+    <div class="mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6>Tests JavaScript Manuels</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" onclick="testBootstrap()">
+                                ?? Test Bootstrap Disponible
+                            </button>
+                            <button class="btn btn-secondary" onclick="testCarousel()">
+                                ?? Test Carrousel Direct
+                            </button>
+                            <button class="btn btn-warning" onclick="goToSlide(0)">
+                                ? Slide 1
+                            </button>
+                            <button class="btn btn-warning" onclick="goToSlide(1)">
+                                ? Slide 2
+                            </button>
+                            <button class="btn btn-warning" onclick="goToSlide(2)">
+                                ? Slide 3
+                            </button>
+                            <button class="btn btn-success" onclick="forceInitCarousels()">
+                                ?? Force Init Carousels
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6>Instructions & Diagnostics</h6>
+                    </div>
+                    <div class="card-body">
+                        <h6>Tests à faire :</h6>
+                        <ol>
+                            <li>Cliquez sur <strong>"?? Test Bootstrap"</strong> ? Doit dire "Bootstrap disponible"</li>
+                            <li>Essayez les <strong>flèches ? ?</strong> du carrousel</li>
+                            <li>Cliquez sur les <strong>points</strong> en bas</li>
+                            <li>Utilisez les <strong>boutons "? Slide X"</strong></li>
+                        </ol>
+                        
+                        <h6>Debugging :</h6>
+                        <ul>
+                            <li>Ouvrez <strong>F12 ? Console</strong></li>
+                            <li>Cherchez les messages avec emoji</li>
+                            <li>Si erreur, utilisez <strong>"?? Force Init"</strong></li>
+                        </ul>
+                        
+                        <div class="alert alert-warning mt-3">
+                            <small>
+                                <strong>Si rien ne fonctionne :</strong><br/>
+                                1. Vérifiez la console pour les erreurs<br/>
+                                2. Essayez "Force Init Carousels"<br/>
+                                3. Rechargez la page (F5)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function checkBootstrapStatus() {
+        const statusDiv = document.getElementById('bootstrapStatus');
+        
+        if (typeof bootstrap !== 'undefined') {
+            statusDiv.innerHTML = '<span class="text-success"><strong>? Bootstrap est disponible !</strong></span>';
+            console.log('? Bootstrap check passed:', bootstrap);
+        } else {
+            statusDiv.innerHTML = '<span class="text-danger"><strong>? Bootstrap N\'EST PAS disponible !</strong></span>';
+            console.error('? Bootstrap check failed - window.bootstrap is undefined');
+        }
+        
+        // Test aussi la fonction testBootstrap globale
+        if (typeof window.testBootstrap === 'function') {
+            const result = window.testBootstrap();
+            console.log('Test Bootstrap function result:', result);
+        }
+    }
+    
+    function testBootstrap() {
+        if (typeof bootstrap !== 'undefined') {
+            alert('? Bootstrap est disponible !');
+            console.log('Bootstrap version:', bootstrap);
+            console.log('Carousel class:', bootstrap.Carousel);
+            
+            if (typeof bootstrap.Carousel === 'function') {
+                console.log('? Carousel class is available');
+            } else {
+                console.error('? Carousel class is not a function');
+            }
+        } else {
+            alert('? Bootstrap N\'EST PAS disponible !');
+            console.error('Bootstrap is undefined');
+            
+            // Debug: Vérifier les scripts chargés
+            const scripts = Array.from(document.scripts).map(s => s.src).filter(s => s.includes('bootstrap'));
+            console.log('Bootstrap scripts found:', scripts);
+        }
+    }
+    
+    function testCarousel() {
+        const carousel = document.getElementById('minimalCarousel');
+        if (carousel) {
+            if (typeof bootstrap !== 'undefined' && typeof bootstrap.Carousel === 'function') {
+                try {
+                    const carouselInstance = new bootstrap.Carousel(carousel);
+                    alert('? Carrousel créé avec succès !');
+                    console.log('Carousel instance:', carouselInstance);
+                } catch (error) {
+                    alert('? Erreur création carrousel: ' + error.message);
+                    console.error('Carousel error:', error);
+                }
+            } else {
+                alert('? Bootstrap.Carousel pas disponible pour créer le carrousel');
+                console.error('Bootstrap or Carousel class not available');
+            }
+        } else {
+            alert('? Élément carrousel non trouvé');
+            console.error('Carousel element not found');
+        }
+    }
+    
+    function goToSlide(slideNumber) {
+        console.log(`?? Attempting to go to slide ${slideNumber}`);
+        
+        if (typeof bootstrap === 'undefined') {
+            alert('? Bootstrap pas disponible');
+            return;
+        }
+        
+        const carousel = document.getElementById('minimalCarousel');
+        if (carousel) {
+            try {
+                const carouselInstance = bootstrap.Carousel.getOrCreateInstance(carousel);
+                carouselInstance.to(slideNumber);
+                console.log(`? Navigated to slide ${slideNumber}`);
+            } catch (error) {
+                alert('? Erreur navigation: ' + error.message);
+                console.error('Navigation error:', error);
+            }
+        }
+    }
+    
+    function forceInitCarousels() {
+        console.log('?? Force initializing carousels...');
+        
+        if (typeof window.initializeCarousels === 'function') {
+            try {
+                window.initializeCarousels();
+                alert('? Carousels réinitialisés !');
+            } catch (error) {
+                alert('? Erreur réinitialisation: ' + error.message);
+                console.error('Reinit error:', error);
+            }
+        } else {
+            alert('? Function initializeCarousels pas disponible');
+            console.error('initializeCarousels function not available');
+        }
+    }
+    
+    // Test automatique au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('?? DOMContentLoaded - Running automatic tests...');
+        
+        setTimeout(() => {
+            checkBootstrapStatus();
+            
+            if (typeof bootstrap !== 'undefined') {
+                console.log('? Bootstrap détecté après chargement');
+                console.log('Available methods:', Object.keys(bootstrap));
+            } else {
+                console.error('? Bootstrap toujours pas disponible après chargement');
+                
+                // Debug: Liste des scripts
+                const allScripts = Array.from(document.scripts);
+                console.log('All scripts:', allScripts.map(s => ({ src: s.src, loaded: s.readyState || 'unknown' })));
+            }
+        }, 1000);
+    });
+</script>

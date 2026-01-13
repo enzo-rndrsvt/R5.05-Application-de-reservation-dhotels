@@ -1,0 +1,226 @@
+@page "/admin/test-images"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@inject IHotelService HotelService
+@inject IHttpClientFactory HttpClientFactory
+@inject ILocalStorageService LocalStorage
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+
+<PageTitle>Test Images - Admin</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>??? Test Images Multiples - Toutes les Chambres</h3>
+        </div>
+        <div class="card-body">
+            
+            @if (rooms == null)
+            {
+                <div class="text-center">
+                    <div class="spinner-border"></div>
+                    <p>Chargement des chambres...</p>
+                </div>
+            }
+            else if (!rooms.Any())
+            {
+                <div class="alert alert-warning">
+                    <h5>Aucune chambre trouvée</h5>
+                    <p>Créez d'abord des chambres avant de tester les images.</p>
+                    <a href="/admin/rooms/create" class="btn btn-success">Créer une chambre</a>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var room in rooms.Take(10))
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6>Chambre @room.Number - @room.Type</h6>
+                                    <small class="text-muted">ID: @room.Id.ToString().Substring(0, 8)...</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <strong>Images actuelles :</strong>
+                                        <ul class="small">
+                                            <li>ImageUrl: @(string.IsNullOrEmpty(room.ImageUrl) ? "NULL" : "?")</li>
+                                            <li>ImageUrls Count: @room.ImageUrls.Count</li>
+                                            <li>AllImageUrls Count: @room.AllImageUrls.Count</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    @if (room.AllImageUrls.Any())
+                                    {
+                                        <div class="mb-2">
+                                            <small class="text-success">
+                                                <i class="oi oi-circle-check"></i> @room.AllImageUrls.Count image(s)
+                                            </small>
+                                            <div class="d-flex gap-1 mt-1">
+                                                @foreach (var img in room.AllImageUrls.Take(3))
+                                                {
+                                                    <div style="width: 40px; height: 30px; background-color: #f0f0f0; border: 1px solid #ddd; border-radius: 3px; display: flex; align-items: center; justify-content: center;">
+                                                        <small>??</small>
+                                                    </div>
+                                                }
+                                                @if (room.AllImageUrls.Count > 3)
+                                                {
+                                                    <div style="width: 40px; height: 30px; background-color: #e0e0e0; border: 1px solid #ddd; border-radius: 3px; display: flex; align-items: center; justify-content: center;">
+                                                        <small>+@(room.AllImageUrls.Count - 3)</small>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-warning">Aucune image</small>
+                                    }
+                                </div>
+                                <div class="card-footer">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-success btn-sm" @onclick="() => AddTestImages(room.Id)" disabled="@isLoading">
+                                            @if (isLoading)
+                                            {
+                                                <span class="spinner-border spinner-border-sm"></span>
+                                            }
+                                            ?? Ajouter 4 images test
+                                        </button>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/room/@room.Id" class="btn btn-outline-primary">
+                                                ??? Voir détails
+                                            </a>
+                                            <a href="/test-room-images/@room.Id" class="btn btn-outline-info">
+                                                ?? Debug
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                @if (rooms.Count() > 10)
+                {
+                    <div class="alert alert-info">
+                        <i class="oi oi-info"></i> Affichage des 10 premières chambres seulement (total: @rooms.Count())
+                    </div>
+                }
+            }
+            
+            @if (!string.IsNullOrEmpty(message))
+            {
+                <div class="alert alert-info mt-3">
+                    @message
+                </div>
+            }
+            
+            <hr />
+            <div class="text-center">
+                <h5>Actions globales</h5>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button class="btn btn-warning" @onclick="RefreshRooms">
+                        ?? Actualiser la liste
+                    </button>
+                    <a href="/admin/rooms/create" class="btn btn-success">
+                        ? Créer une nouvelle chambre
+                    </a>
+                    <a href="/rooms" class="btn btn-primary">
+                        ?? Voir toutes les chambres
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private IEnumerable<Room>? rooms;
+    private string? message;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllRooms();
+    }
+
+    private async Task LoadAllRooms()
+    {
+        try
+        {
+            var allRooms = new List<Room>();
+            var hotels = await HotelService.GetAllHotelsAsync();
+            
+            foreach (var hotel in hotels)
+            {
+                var hotelRooms = await HotelService.GetHotelRoomsAsync(hotel.Id, 1, 100);
+                if (hotelRooms != null)
+                {
+                    allRooms.AddRange(hotelRooms);
+                }
+            }
+            
+            rooms = allRooms.OrderBy(r => r.Number).ToList();
+            message = $"? {rooms.Count()} chambre(s) chargée(s) depuis {hotels.Count()} hôtel(s)";
+        }
+        catch (Exception ex)
+        {
+            message = $"? Erreur: {ex.Message}";
+        }
+    }
+
+    private async Task RefreshRooms()
+    {
+        rooms = null;
+        message = "?? Actualisation en cours...";
+        StateHasChanged();
+        await LoadAllRooms();
+        StateHasChanged();
+    }
+
+    private async Task AddTestImages(Guid roomId)
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("HotelBookingAPI");
+            
+            // Ajouter le token d'auth
+            var token = await LocalStorage.GetItemAsync<string>("authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+
+            var response = await httpClient.PostAsync($"api/admin/rooms/{roomId}/add-test-images", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                message = $"? Images de test ajoutées à la chambre {roomId.ToString().Substring(0, 8)}... ! Actualisez pour voir les changements.";
+                
+                // Optionnel: Actualiser la liste automatiquement
+                await Task.Delay(1000);
+                await LoadAllRooms();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                message = $"? Erreur API ({response.StatusCode}): {errorContent}";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"? Exception: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

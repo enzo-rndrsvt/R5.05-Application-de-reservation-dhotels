@@ -1,0 +1,210 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using HotelBooking.Web.Components.Shared
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+ <a class="navbar-brand" href="">
+    <i class="oi oi-home"></i> Hôtel SkullKing
+  </a>
+     <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+       <span class="navbar-toggler-icon"></span>
+  </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+     <div class="nav-item px-3">
+  <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+  <span class="oi oi-home" aria-hidden="true"></span> Accueil
+   </NavLink>
+  </div>
+  
+ <AuthorizeView>
+  <Authorized>
+ <div class="nav-item px-3">
+     <NavLink class="nav-link" href="rooms">
+     <span class="oi oi-grid-three-up" aria-hidden="true"></span> Nos cabines
+    <span class="badge bg-success ms-2">SkullKing</span>
+       </NavLink>
+   </div>
+      <div class="nav-item px-3">
+   <NavLink class="nav-link" href="booking">
+  <span class="oi oi-calendar" aria-hidden="true"></span> Réservation
+  </NavLink>
+       </div>
+    <div class="nav-item px-3">
+       <NavLink class="nav-link" href="my-bookings">
+        <span class="oi oi-list" aria-hidden="true"></span> Mes réservations
+       </NavLink>
+    </div>
+    <div class="nav-item px-3">
+   <NavLink class="nav-link" href="profile">
+        <span class="oi oi-person" aria-hidden="true"></span> Mon profil
+     </NavLink>
+ </div>
+    
+  <!-- Section Administration - Visible uniquement pour les Admins -->
+    <AuthorizeView Roles="Admin">
+        <Authorized Context="adminContext">
+            <hr class="border-light">
+            
+            <!-- Titre Administration -->
+            <div class="nav-item px-3 mb-2">
+                <div class="nav-link text-warning">
+                    <span class="oi oi-shield" aria-hidden="true"></span>
+                    <strong> ADMINISTRATION</strong>
+                </div>
+            </div>
+            
+            <!-- Dashboard principal -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin-safe" Match="NavLinkMatch.Prefix">
+                    <span class="oi oi-dashboard" aria-hidden="true"></span> 
+                    <strong>Dashboard Admin (Safe)</strong>
+                </NavLink>
+            </div>
+            
+            <!-- Test dashboard complet -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link text-warning" href="admin">
+                    <span class="oi oi-warning" aria-hidden="true"></span> 
+                    <small>Dashboard Complet (Test)</small>
+                </NavLink>
+            </div>
+            
+            <!-- Liens d'administration -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/rooms">
+                    <span class="oi oi-list" aria-hidden="true"></span> Gérer les Cabines
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/rooms/create">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Nouvelle Chambre
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/configuration">
+                    <span class="oi oi-wrench" aria-hidden="true"></span> Configuration
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/database/advanced">
+                    <span class="oi oi-cog" aria-hidden="true"></span> BDD Avancée
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/database">
+                    <span class="oi oi-hard-drive" aria-hidden="true"></span> Console BDD
+                </NavLink>
+            </div>
+            
+            <hr class="border-light my-2">
+            
+            <!-- Titre Debug -->
+            <div class="nav-item px-3 mb-2">
+                <div class="nav-link text-info">
+                    <span class="oi oi-bug" aria-hidden="true"></span>
+                    <strong> DEBUG & TESTS</strong>
+                </div>
+            </div>
+            
+            <!-- Liens de debug principaux -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="debug-api">
+                    <span class="oi oi-cloud" aria-hidden="true"></span> Debug API
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link text-danger" href="debug-reservations">
+                    <span class="oi oi-warning" aria-hidden="true"></span> Debug Réservations
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link text-info" href="test-image-display">
+                    <span class="oi oi-eye" aria-hidden="true"></span> Test Images
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="test-carousel-counter">
+                    <span class="oi oi-media-step-forward" aria-hidden="true"></span> Test Carrousel Compteur
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="test-profile-bookings">
+                    <span class="oi oi-person" aria-hidden="true"></span> Test Profil Réservations
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin/test-images">
+                    <span class="oi oi-camera-slr" aria-hidden="true"></span> Test Multi-Images
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="debug-database-public">
+                    <span class="oi oi-wrench" aria-hidden="true"></span> Debug BDD (Public)
+                </NavLink>
+            </div>
+            
+            <!-- Lien vers tests complets -->
+            <div class="nav-item px-3 mt-2">
+                <NavLink class="nav-link text-muted" href="debug/all-tests">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> 
+                    <small>Tous les Tests Debug</small>
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link text-danger" href="debug-error">
+                    <span class="oi oi-warning" aria-hidden="true"></span> 
+                    <small>Debug Erreurs</small>
+                </NavLink>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+      
+ <hr class="text-white-50 my-2" />
+   <div class="nav-item px-3">
+     <div class="nav-link text-success">
+     <span class="oi oi-circle-check" aria-hidden="true"></span> 
+  Bienvenue @context.User.Identity?.Name
+  </div>
+  </div>
+     <div class="nav-item px-3 py-2">
+ <LogoutButtonNav />
+    </div>
+  </Authorized>
+       <NotAuthorized>
+  <div class="nav-item px-3">
+       <NavLink class="nav-link text-warning" href="rooms">
+    <span class="oi oi-lock-locked" aria-hidden="true"></span> Nos cabines
+  <small class="d-block">Connexion requise</small>
+  </NavLink>
+</div>
+ <hr class="text-white-50 my-2" />
+ <div class="nav-item px-3">
+    <NavLink class="nav-link" href="login">
+           <span class="oi oi-account-login" aria-hidden="true"></span> Connexion
+      </NavLink>
+   </div>
+ <div class="nav-item px-3">
+  <NavLink class="nav-link" href="register">
+   <span class="oi oi-plus" aria-hidden="true"></span> Inscription
+   </NavLink>
+  </div>
+    </NotAuthorized>
+ </AuthorizeView>
+    </nav>
+</div>
+
+@code {
+  private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
+

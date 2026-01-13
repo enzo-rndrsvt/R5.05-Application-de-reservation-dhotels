@@ -1,0 +1,289 @@
+@page "/rooms"
+@page "/chambres"
+@using HotelBooking.Web.Models
+@using HotelBooking.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IHotelService HotelService
+@inject IBookingService BookingService
+@inject NavigationManager NavigationManager
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Nos Chambres - Hôtel SkullKing</PageTitle>
+
+<div class="page-container bg-darker-950 min-vh-100">
+
+    <div class="header-section position-relative py-5 overflow-hidden">
+        <div class="position-absolute inset-0 bg-gradient-header"></div>
+        <div class="position-absolute inset-0 opacity-20" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54.627 0l.83.828-1.415 1.415L51.8 0h2.827zM5.373 0l-.83.828L5.96 2.243 8.2 0H5.374zM48.97 0l3.657 3.657-1.414 1.414L46.143 0h2.828zM11.03 0L7.372 3.657 8.787 5.07 13.857 0H11.03zm32.284 0L49.8 6.485 48.384 7.9l-7.9-7.9h2.83zM16.686 0L10.2 6.485 11.616 7.9l7.9-7.9h-2.83zM22.344 0L13.858 8.485 15.272 9.9l7.9-7.9h-.828zM27 0l-8.485 8.485 1.414 1.414L27.828 0H27zm5.657 0l-8.486 8.485 1.415 1.414L33.485 0h-.828zM39 0l-8.485 8.485 1.414 1.414L40.828 0H39zm5.657 0L36.172 8.485l1.414 1.414L46.485 0h-1.828z\' fill=\'%23f59e0b\' fill-opacity=\'0.1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E');"></div>
+
+        <div class="container position-relative z-10 text-center pt-5 pb-4">
+            <h1 class="text-amber-500 mb-4 tracking-wider fw-bold display-4">NOS CHAMBRES</h1>
+            <p class="text-slate-300 mx-auto lead" style="max-width: 800px;">
+                Découvrez nos chambres thématiques inspirées de l'univers de Skull King.
+                Chaque suite vous transporte dans un monde unique, alliant confort moderne et décoration immersive.
+            </p>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+        <AuthorizeView>
+            <Authorized>
+                @if (rooms == null && string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-amber-500" role="status"></div>
+                        <p class="text-slate-400 mt-3">Chargement des cabines...</p>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-warning mx-auto" style="max-width: 600px;">
+                        @errorMessage
+                    </div>
+                }
+                else if (rooms != null)
+                {
+                    <div class="row g-4">
+                        @foreach (var room in rooms)
+                        {
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card card-room h-100 border-0 overflow-hidden group cursor-pointer" @onclick="() => NavigateToRoom(room.Id)">
+
+                                    <div class="position-relative overflow-hidden" style="height: 250px;">
+                                        <div class="position-absolute inset-0 bg-gradient-to-t opacity-0 group-hover-opacity-100 transition-opacity duration-300"
+                                             style="background: linear-gradient(to top, rgba(245, 158, 11, 0.2), transparent);"></div>
+
+                                        @if (room.HasImages)
+                                        {
+                                            <img src="@room.PrimaryImageUrl" alt="Cabine @room.Number"
+                                                 class="card-img-top h-100 w-100 object-fit-cover transition-transform duration-500 group-hover-scale" />
+                                        }
+                                        else
+                                        {
+                                            <div class="h-100 w-100 bg-secondary d-flex align-items-center justify-content-center">
+                                                <i class="oi oi-image fs-1 text-white-50"></i>
+                                            </div>
+                                        }
+
+                                        <div class="position-absolute inset-0" style="background: linear-gradient(to top, rgba(15, 23, 42, 1) 0%, rgba(15, 23, 42, 0.5) 50%, transparent 100%);"></div>
+
+                                        <div class="position-absolute bottom-0 start-0 w-100 p-4">
+                                            <h3 class="text-amber-500 mb-0 fw-bold transition-colors group-hover-text-amber-400">
+                                                Cabine @room.Number
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-body p-4 d-flex flex-column bg-slate-900-50">
+                                        <p class="card-text text-slate-300 small mb-4" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em;">
+                                            @room.BriefDescription
+                                        </p>
+
+                                        <div class="d-flex flex-wrap gap-2 mb-4">
+                                            <span class="badge-feature">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /></svg>
+                                                @room.Type
+                                            </span>
+                                        </div>
+
+                                        <div class="d-flex align-items-center justify-content-between pt-3 border-top border-slate-800 mb-3 text-slate-400 small">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="d-flex align-items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                                    @(room.AdultsCapacity + room.ChildrenCapacity) pers.
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="fw-bold text-slate-200">@room.PricePerNight€</span>/nuit
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button class="btn btn-amber w-100 fw-bold group-hover-bg-amber-400 transition-colors" @onclick:stopPropagation="true" @onclick="() => NavigateToRoom(room.Id)">
+                                            Découvrir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </Authorized>
+            <NotAuthorized>
+                <div class="text-center py-5">
+                    <h3 class="text-amber-500">Accès Réservé</h3>
+                    <p class="text-slate-400">Veuillez vous connecter pour voir nos chambres.</p>
+                    <a href="/login" class="btn btn-amber mt-3">Connexion</a>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
+
+@code {
+    private IEnumerable<Room>? rooms;
+    private string? errorMessage;
+    private HotelForUser? skullKingHotel;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSkullKingHotelAndRooms();
+    }
+
+    private async Task LoadSkullKingHotelAndRooms()
+    {
+        try
+        {
+            var hotels = await HotelService.GetAllHotelsAsync();
+            skullKingHotel = hotels?.FirstOrDefault(h => h.Name.Contains("SkullKing", StringComparison.OrdinalIgnoreCase));
+
+            if (skullKingHotel != null)
+            {
+                rooms = await HotelService.GetHotelRoomsAsync(skullKingHotel.Id, 1, 50);
+            }
+            else
+            {
+                errorMessage = "L'hôtel SkullKing n'est pas encore ouvert.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private void NavigateToRoom(Guid roomId)
+    {
+        NavigationManager.NavigateTo($"/room/{roomId}");
+    }
+}
+
+<style>
+    /* VARIABLES GLOBALES */
+    :root {
+        --color-dark-950: #020617; /* slate-950 */
+        --color-dark-900: #0f172a; /* slate-900 */
+        --color-slate-800: #1e293b;
+        --color-slate-400: #94a3b8;
+        --color-slate-300: #cbd5e1;
+        --color-amber-500: #f59e0b;
+        --color-amber-400: #fbbf24;
+        --color-amber-600: #d97706;
+    }
+
+    body {
+        background-color: var(--color-dark-950) !important;
+        color: white;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* UTILS */
+    .bg-darker-950 {
+        background-color: var(--color-dark-950) !important;
+    }
+
+    .text-amber-500 {
+        color: var(--color-amber-500) !important;
+    }
+
+    .text-slate-300 {
+        color: var(--color-slate-300) !important;
+    }
+
+    .text-slate-400 {
+        color: var(--color-slate-400) !important;
+    }
+
+    .bg-slate-900-50 {
+        background-color: rgba(15, 23, 42, 0.5);
+    }
+    /* slate-900/50 */
+    .border-slate-800 {
+        border-color: var(--color-slate-800) !important;
+    }
+
+    .inset-0 {
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .object-fit-cover {
+        object-fit: cover;
+    }
+
+    /* HEADER */
+    .bg-gradient-header {
+        background: linear-gradient(to bottom, var(--color-dark-900), var(--color-dark-950), var(--color-dark-950));
+    }
+
+    /* CARTE CHAMBRE (Style Maquette Exact) */
+    .card-room {
+        background-color: rgba(15, 23, 42, 0.5); /* bg-slate-900/50 */
+        border: 1px solid var(--color-slate-800);
+        transition: all 0.3s ease;
+        border-radius: 0.75rem; /* rounded-xl approx */
+    }
+
+        .card-room:hover {
+            border-color: rgba(245, 158, 11, 0.5); /* hover:border-amber-500/50 */
+        }
+
+    /* Effets Image */
+    .group:hover .group-hover-scale {
+        transform: scale(1.1);
+    }
+
+    .transition-transform {
+        transition: transform 0.5s ease;
+    }
+
+    .group-hover-opacity-100 {
+        opacity: 1 !important;
+    }
+
+    .transition-opacity {
+        transition: opacity 0.3s ease;
+    }
+
+    /* Texte Titre */
+    .group:hover .group-hover-text-amber-400 {
+        color: var(--color-amber-400) !important;
+    }
+
+    .transition-colors {
+        transition: color 0.3s ease;
+    }
+
+    /* Badges (Features) */
+    .badge-feature {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem; /* px-3 py-1 */
+        background-color: rgba(30, 41, 59, 0.5); /* bg-slate-800/50 */
+        color: var(--color-amber-500);
+        font-size: 0.75rem; /* text-xs */
+        border-radius: 9999px; /* rounded-full */
+    }
+
+    /* Bouton */
+    .btn-amber {
+        background-color: var(--color-amber-500);
+        color: #020617; /* slate-950 */
+        border: none;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+
+    .card-room:hover .btn-amber {
+        background-color: var(--color-amber-400); /* group-hover:bg-amber-400 */
+    }
+
+    .btn-amber:hover {
+        background-color: var(--color-amber-600) !important; /* hover:bg-amber-600 */
+    }
+</style>
