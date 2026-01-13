@@ -1,6 +1,6 @@
 ﻿namespace HotelBooking.Web.Components.Layout
 {
-    public class Footer
+    public partial class Footer
     {
     }
 }
