@@ -8,13 +8,13 @@
 @inject IJSRuntime JSRuntime
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>Cabine @(room?.Number.ToString() ?? "") - Hôtel SkullKing</PageTitle>
+<PageTitle>Cabine @(room?.Number.ToString() ?? "Détails") - Hôtel SkullKing</PageTitle>
 
 <div class="page-container bg-darker-950 min-vh-100 text-slate-300 pb-5">
 
-    <div class="container pt-4 mb-4">
-        <a href="/rooms" class="text-slate-400 text-decoration-none hover-text-amber d-inline-flex align-items-center mb-3 group-link">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 transition-transform group-hover-translate-back"><path d="m15 18-6-6 6-6" /></svg>
+    <div class="container pt-4 mb-3">
+        <a href="/rooms" class="text-slate-400 text-decoration-none hover-text-white d-inline-flex align-items-center mb-3 text-sm font-medium transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="m15 18-6-6 6-6" /></svg>
             Retour aux chambres
         </a>
     </div>
@@ -29,8 +29,9 @@
     else if (!string.IsNullOrEmpty(errorMessage))
     {
         <div class="container">
-            <div class="alert alert-warning border-amber-500 bg-dark-900-opacity text-amber-500">
-                <i class="oi oi-warning me-2"></i> @errorMessage
+            <div class="alert alert-warning border-amber-500 bg-dark-900-opacity text-amber-500 d-flex align-items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
+                @errorMessage
             </div>
             <div class="mt-3">
                 <a href="/rooms" class="btn btn-outline-amber">Retourner à la liste</a>
@@ -41,30 +42,32 @@
     {
         <div class="container">
 
-            <div class="card card-dark-theme border-0 overflow-hidden mb-5 rounded-4 shadow-lg">
-
-                <div class="position-relative" style="height: 500px;">
-                    @if (room.AllImageUrls.Any())
+            <div class="card border-0 overflow-hidden mb-5 rounded-4 shadow-lg position-relative" style="background-color: transparent;">
+                <div class="position-relative carousel-container">
+                    @if (room.AllImageUrls != null && room.AllImageUrls.Any())
                     {
                         var validImages = room.AllImageUrls.Where(url => !string.IsNullOrWhiteSpace(url)).ToList();
                         var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}";
 
                         <div id="@carouselId" class="carousel slide h-100" data-bs-ride="carousel">
-                            <!-- Indicateur de position global (affiché pour toutes les images) -->
+
                             @if (validImages.Count > 1)
                             {
-                                <div class="carousel-image-counter">
-                                    @GetImageCounterText()
+                                <div class="carousel-indicators-dots">
+                                    @for (int i = 0; i < validImages.Count; i++)
+                                    {
+                                        <span class="@(i == currentSlideIndex ? "active" : "")"></span>
+                                    }
                                 </div>
                             }
-                            
+
                             <div class="carousel-inner h-100">
                                 @for (int i = 0; i < validImages.Count; i++)
                                 {
                                     <div class="carousel-item h-100 @(i == currentSlideIndex ? "active" : "")">
                                         <img src="@validImages[i]"
-                                             class="d-block w-100 h-100 object-fit-cover"
-                                             alt="Cabine @room.Number - Image @(i + 1)"
+                                             class="d-block w-100 h-100 object-fit-cover transition-transform"
+                                             alt="Cabine @room.Number"
                                              onerror="this.style.display='none';" />
                                     </div>
                                 }
@@ -72,144 +75,166 @@
 
                             @if (validImages.Count > 1)
                             {
-                                <button class="carousel-control-prev" type="button" @onclick="PreviousSlide" style="z-index: 5;">
-                                    <span class="carousel-control-prev-icon bg-dark-opacity rounded-circle p-3" aria-hidden="true"></span>
-                                    <span class="visually-hidden">Précédent</span>
+                                <button class="carousel-control-prev custom-control" type="button" @onclick="PreviousSlide">
+                                    <span class="control-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg></span>
                                 </button>
-                                <button class="carousel-control-next" type="button" @onclick="NextSlide" style="z-index: 5;">
-                                    <span class="carousel-control-next-icon bg-dark-opacity rounded-circle p-3" aria-hidden="true"></span>
-                                    <span class="visually-hidden">Suivant</span>
+                                <button class="carousel-control-next custom-control" type="button" @onclick="NextSlide">
+                                    <span class="control-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></span>
                                 </button>
                             }
                         </div>
                     }
                     else
                     {
-                        <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center">
-                            <i class="oi oi-image display-1 text-white-50"></i>
+                        <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center" style="min-height: 400px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-white-50"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="row g-5">
+
+                <div class="col-lg-8">
+
+                    @if (room.AllImageUrls != null && room.AllImageUrls.Count > 1)
+                    {
+                        <div class="d-flex gap-2 mb-4 overflow-auto pb-2 scrollbar-thin">
+                            @for (int i = 0; i < room.AllImageUrls.Count; i++)
+                            {
+                                var index = i;
+                                <img src="@room.AllImageUrls[i]"
+                                     class="rounded cursor-pointer border border-2 @(i == currentSlideIndex ? "border-amber-500" : "border-transparent")"
+                                     style="width: 80px; height: 60px; object-fit: cover; transition: all 0.2s;"
+                                     @onclick="() => GoToSlide(index)"
+                                     alt="Vue @(i + 1)" />
+                            }
                         </div>
                     }
 
-                    <div class="position-absolute inset-0 pointer-events-none" style="background: linear-gradient(to top, #0d1117 0%, transparent 60%); z-index: 2;"></div>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h4 class="text-amber-500 mb-1 fw-bold fs-4">
+                                    Cabine @room.Number
+                                </h4>
 
-                    <div class="position-absolute top-0 end-0 m-4" style="z-index: 10;">
-                        <span class="badge bg-amber-500 text-dark fs-5 fw-bold px-4 py-2 shadow-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="me-2 mb-1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-                            @room.PricePerNight.ToString("C0")<small class="fw-normal">/nuit</small>
-                        </span>
+                                <div class="d-flex align-items-center gap-3 text-sm text-slate-400 mb-3">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                        <span>@room.AdultsCapacity Adultes, @room.ChildrenCapacity Enfants</span>
+                                    </div>
+
+                                    <div class="d-flex text-amber-500">
+                                        @for (int i = 0; i < 5; i++)
+                                        {
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <span class="badge bg-amber-500 text-dark d-lg-none">@room.PricePerNight€ / nuit</span>
+                        </div>
+
+                        <p class="text-slate-300 fst-italic mb-3">
+                            La suite du capitaine, avec tout le confort digne d'un véritable roi des mers
+                        </p>
+
+                        <p class="text-slate-400 text-sm lh-lg mb-4">
+                            @room.BriefDescription
+                        </p>
                     </div>
 
-                    <div class="position-absolute bottom-0 start-0 p-5 w-100" style="z-index: 3;">
-                        <h1 class="text-amber-500 fw-bold display-4 mb-2">
-                            Cabine @room.Number
-                        </h1>
-                        <div class="d-flex align-items-center text-white fs-5">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                            @(room.AdultsCapacity + room.ChildrenCapacity) personnes
-
-                            <span class="badge bg-light text-dark ms-3 fs-6">@room.Type</span>
+                    <div class="feature-box mb-4 p-4 rounded-3 border border-slate-800 bg-slate-900-50">
+                        <h6 class="text-amber-500 mb-3 fw-bold text-sm">Caractéristiques</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="check-circle"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg></div>
+                                    <span class="text-slate-300 text-sm">Suite premium</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="check-circle"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg></div>
+                                    <span class="text-slate-300 text-sm">Coffre au trésor</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="check-circle"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg></div>
+                                    <span class="text-slate-300 text-sm">Vue panoramique</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    <div class="feature-box p-4 rounded-3 border border-slate-800 bg-slate-900-50">
+                        <h6 class="text-amber-500 mb-3 fw-bold text-sm">Équipements</h6>
+                        <div class="row g-2">
+                            <div class="col-md-6"><ul class="list-unstyled mb-0"><li class="mb-2 d-flex align-items-center text-slate-300 text-sm"><span class="dot-amber me-2"></span>Suite 2 pièces</li></ul></div>
+                            <div class="col-md-6"><ul class="list-unstyled mb-0"><li class="mb-2 d-flex align-items-center text-slate-300 text-sm"><span class="dot-amber me-2"></span>Jacuzzi privé</li></ul></div>
+                            <div class="col-md-6"><ul class="list-unstyled mb-0"><li class="mb-2 d-flex align-items-center text-slate-300 text-sm"><span class="dot-amber me-2"></span>Télescope</li></ul></div>
+                            <div class="col-md-6"><ul class="list-unstyled mb-0"><li class="mb-2 d-flex align-items-center text-slate-300 text-sm"><span class="dot-amber me-2"></span>Coffre-fort décoratif</li></ul></div>
+                            <div class="col-md-6"><ul class="list-unstyled mb-0"><li class="mb-2 d-flex align-items-center text-slate-300 text-sm"><span class="dot-amber me-2"></span>Service en chambre 24h</li></ul></div>
+                            <div class="col-md-6"><ul class="list-unstyled mb-0"><li class="mb-2 d-flex align-items-center text-slate-300 text-sm"><span class="dot-amber me-2"></span>Minibar premium</li></ul></div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="card-body p-5 bg-darker-card">
-                    <div class="row g-5">
+                <div class="col-lg-4">
+                    <div class="card booking-card border border-slate-700 p-4 sticky-top" style="top: 20px;">
 
-                        <div class="col-lg-7">
-
-                            @if (room.AllImageUrls.Count > 1)
+                        <div class="text-center mb-4">
+                            <p class="text-slate-400 mb-1 small">À partir de</p>
+                            @if (room.CurrentDiscount != null)
                             {
-                                <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
-                                    @for (int i = 0; i < room.AllImageUrls.Count; i++)
-                                    {
-                                        var index = i;
-                                        <img src="@room.AllImageUrls[i]"
-                                             class="rounded cursor-pointer border border-2 @(i == currentSlideIndex ? "border-amber-500" : "border-transparent")"
-                                             style="width: 80px; height: 60px; object-fit: cover; transition: all 0.2s;"
-                                             @onclick="() => GoToSlide(index)"
-                                             alt="Miniature @(i + 1)" />
-                                    }
+                                <div class="d-flex justify-content-center align-items-baseline gap-2">
+                                    <h3 class="text-amber-500 fw-bold m-0">@CalculateDiscountedPrice(room.PricePerNight, room.CurrentDiscount.Percentage).ToString("C0")</h3>
+                                    <span class="text-decoration-line-through text-slate-500 small">/ nuit</span>
                                 </div>
                             }
+                            else
+                            {
+                                <h3 class="text-amber-500 fw-bold m-0">@room.PricePerNight.ToString("C0") <small class="fs-6 text-slate-400 fw-normal">/ nuit</small></h3>
+                            }
+                        </div>
 
-                            <h4 class="text-white mb-3">Une expérience pirate inoubliable</h4>
-                            <p class="text-slate-400 mb-4 lh-lg">
-                                @room.BriefDescription
-                            </p>
+                        <hr class="border-slate-800 my-4 opacity-50" />
 
-                            <div class="d-flex flex-wrap gap-3 mb-5">
-                                <span class="badge-feature-large"><i class="oi oi-star me-2 text-amber-500"></i> Suite thématique</span>
-                                <span class="badge-feature-large"><i class="oi oi-lock-locked me-2 text-amber-500"></i> Coffre au trésor</span>
-                                <span class="badge-feature-large"><i class="oi oi-eye me-2 text-amber-500"></i> Vue Océan</span>
+                        <div class="space-y-3 mb-4">
+                            <div class="d-flex justify-content-between text-slate-300 text-sm mb-2">
+                                <span class="text-slate-400">Capacité</span>
+                                <span>@room.AdultsCapacity Adultes, @room.ChildrenCapacity Enfants</span>
                             </div>
-
-                            <h5 class="text-amber-500 mb-3">Équipements de bord</h5>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <ul class="list-unstyled text-slate-300">
-                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Hamac confortable</li>
-                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Carte aux trésors</li>
-                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Service de chambre</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <ul class="list-unstyled text-slate-300">
-                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Salle de bain privée</li>
-                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Décoration immersive</li>
-                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Wi-Fi (via perroquet)</li>
-                                    </ul>
-                                </div>
+                            <div class="d-flex justify-content-between text-slate-300 text-sm mb-2">
+                                <span class="text-slate-400">Type</span>
+                                <span>@room.Type</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-slate-300 text-sm mb-2">
+                                <span class="text-slate-400">Vue</span>
+                                <span>Océan</span>
                             </div>
                         </div>
 
-                        <div class="col-lg-5">
-                            <div class="card bg-black-opacity border border-slate-700 p-4 h-100 rounded-4 sticky-top" style="top: 20px; z-index: 1;">
-                                <div class="text-center mb-4 border-bottom border-slate-700 pb-4">
-                                    <p class="text-slate-400 mb-1">À partir de</p>
-                                    @if (room.CurrentDiscount != null)
-                                    {
-                                        <div class="d-flex justify-content-center align-items-baseline gap-2">
-                                            <h3 class="text-amber-500 fw-bold m-0">@CalculateDiscountedPrice(room.PricePerNight, room.CurrentDiscount.Percentage).ToString("C0")</h3>
-                                            <span class="text-decoration-line-through text-slate-500 small">@room.PricePerNight.ToString("C0")</span>
-                                        </div>
-                                        <span class="badge bg-danger mt-2">-@room.CurrentDiscount.Percentage% Offre Pirate !</span>
-                                    }
-                                    else
-                                    {
-                                        <h3 class="text-amber-500 fw-bold">@room.PricePerNight.ToString("C0") <small class="fs-6 text-slate-400 fw-normal">/ nuit</small></h3>
-                                    }
-                                </div>
+                        <a href="/booking/@room.Id" class="btn btn-amber w-100 py-2 fw-bold text-dark mb-3 rounded-2 shadow-sm d-flex align-items-center justify-content-center">
+                            Réserver maintenant
+                        </a>
 
-                                <div class="mb-4">
-                                    <div class="d-flex justify-content-between mb-3 text-slate-300">
-                                        <span>Capacité</span>
-                                        <span class="fw-bold">@(room.AdultsCapacity + room.ChildrenCapacity) personnes</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-3 text-slate-300">
-                                        <span>Type</span>
-                                        <span class="fw-bold">@room.Type</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-3 text-slate-300">
-                                        <span>Numéro</span>
-                                        <span class="fw-bold">@room.Number</span>
-                                    </div>
-                                </div>
+                        <button class="btn btn-outline-secondary w-100 mb-3 d-flex align-items-center justify-content-center" @onclick="ShareRoom">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
+                            Partager
+                        </button>
 
-                                <a href="/booking/@room.Id" class="btn btn-amber w-100 py-3 fw-bold text-dark mb-3 rounded-3">
-                                    Réserver maintenant
-                                </a>
-
-                                <button class="btn btn-outline-secondary w-100 mb-3" @onclick="ShareRoom">
-                                    <i class="oi oi-share me-2"></i> Partager
-                                </button>
-
-                                <p class="text-center text-slate-500 small fst-italic">
-                                    <i class="oi oi-circle-check me-1"></i> Annulation gratuite jusqu'à 48h avant l'arrivée
-                                </p>
-                            </div>
-                        </div>
+                        <p class="text-center text-slate-500 x-small mt-2" style="font-size: 0.7rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1 text-slate-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                            Annulation gratuite jusqu'à 48h avant l'arrivée
+                        </p>
                     </div>
                 </div>
+
             </div>
         </div>
     }
@@ -294,38 +319,29 @@
 
     private async Task GoToSlide(int index)
     {
-        if (room == null || index < 0 || index >= room.AllImageUrls.Count) return;
         currentSlideIndex = index;
-        var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}";
+        var carouselId = $"roomCarousel_{room?.Id.ToString().Replace("-", "")}";
         try { await JSRuntime.InvokeVoidAsync("goToCarouselSlide", carouselId, index); } catch { }
         StateHasChanged();
     }
 
     private async Task NextSlide()
     {
-        var nextIndex = (currentSlideIndex + 1) >= (room?.AllImageUrls.Count ?? 0) ? 0 : currentSlideIndex + 1;
+        if (room == null) return;
+        var nextIndex = (currentSlideIndex + 1) >= (room.AllImageUrls?.Count ?? 0) ? 0 : currentSlideIndex + 1;
         await GoToSlide(nextIndex);
     }
 
     private async Task PreviousSlide()
     {
-        var prevIndex = (currentSlideIndex - 1) < 0 ? (room?.AllImageUrls.Count ?? 0) - 1 : currentSlideIndex - 1;
+        if (room == null) return;
+        var prevIndex = (currentSlideIndex - 1) < 0 ? (room.AllImageUrls?.Count ?? 0) - 1 : currentSlideIndex - 1;
         await GoToSlide(prevIndex);
-    }
-
-    // Méthode pour obtenir le texte de l'indicateur de position
-    private string GetImageCounterText()
-    {
-        if (room?.AllImageUrls == null || !room.AllImageUrls.Any())
-            return "1/1";
-        
-        var validImages = room.AllImageUrls.Where(url => !string.IsNullOrWhiteSpace(url)).ToList();
-        return $"{currentSlideIndex + 1}/{validImages.Count}";
     }
 }
 
 <style>
-    /* VARIABLES */
+    /* COLORS & VARS */
     :root {
         --color-dark-950: #020617;
         --color-dark-900: #0f172a;
@@ -337,11 +353,20 @@
         --color-amber-600: #d97706;
     }
 
-    /* BASE */
+    /* GLOBAL BACKGROUNDS */
     .bg-darker-950 {
         background-color: var(--color-dark-950) !important;
     }
 
+    .bg-dark-900-opacity {
+        background-color: rgba(15, 23, 42, 0.95);
+    }
+
+    .bg-slate-900-50 {
+        background-color: rgba(15, 23, 42, 0.5);
+    }
+
+    /* TEXT UTILS */
     .text-amber-500 {
         color: var(--color-amber-500) !important;
     }
@@ -354,87 +379,90 @@
         color: var(--color-slate-400) !important;
     }
 
-    .bg-amber-500 {
-        background-color: var(--color-amber-500) !important;
+    .text-sm {
+        font-size: 0.875rem;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .hover-text-white:hover {
+        color: white !important;
+    }
+
+    /* CAROUSEL CUSTOMIZATION */
+    .carousel-container {
+        height: 500px;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 1rem;
     }
 
     .object-fit-cover {
         object-fit: cover;
     }
 
-    .border-slate-700 {
-        border-color: var(--color-slate-700) !important;
+    /* Boutons prev/next circulaires */
+    .custom-control {
+        width: 50px;
+        opacity: 1;
+        transition: all 0.2s;
     }
 
-    .rounded-4 {
-        border-radius: 1rem !important;
-    }
-
-    .cursor-pointer {
-        cursor: pointer;
-    }
-
-    /* CARD THEME */
-    .card-dark-theme {
-        background-color: var(--color-dark-900);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    }
-
-    .bg-darker-card {
-        background-color: #0b101a;
-    }
-
-    .bg-black-opacity {
-        background-color: rgba(0, 0, 0, 0.3);
-    }
-
-    .bg-dark-opacity {
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-
-    /* BADGES & FEATURES */
-    .badge-feature-large {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.5rem 1rem;
-        background-color: rgba(30, 41, 59, 0.5);
-        border: 1px solid var(--color-slate-700);
-        color: var(--color-slate-300);
-        border-radius: 0.5rem;
-        font-size: 0.9rem;
-    }
-
-    .bullet-amber {
-        color: var(--color-amber-500);
-        font-weight: bold;
-        font-size: 1.2rem;
-        line-height: 0;
-    }
-
-    /* BOUTONS & LIENS */
-    .btn-amber {
-        background-color: var(--color-amber-500);
-        border: none;
-        transition: background-color 0.2s;
-    }
-
-        .btn-amber:hover {
-            background-color: var(--color-amber-600);
+        .custom-control:hover .control-icon {
+            background-color: rgba(30, 41, 59, 0.9);
+            transform: scale(1.1);
         }
 
-    .hover-text-amber:hover {
-        color: var(--color-amber-500) !important;
+    .control-icon {
+        width: 40px;
+        height: 40px;
+        background-color: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(4px);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: all 0.2s;
     }
 
-    .group-link:hover .group-hover-translate-back {
-        transform: translateX(-3px);
+    /* Indicateurs points en bas */
+    .carousel-indicators-dots {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        z-index: 10;
     }
 
-    .transition-transform {
-        transition: transform 0.2s ease;
+        .carousel-indicators-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.4);
+            transition: all 0.3s;
+        }
+
+            .carousel-indicators-dots span.active {
+                background-color: var(--color-amber-500);
+                width: 24px;
+                border-radius: 4px;
+            }
+
+    /* MINIATURES */
+    .scrollbar-thin::-webkit-scrollbar {
+        height: 4px;
     }
 
-    /* Bordures miniatures */
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background-color: var(--color-slate-700);
+        border-radius: 4px;
+    }
+
     .border-amber-500 {
         border-color: var(--color-amber-500) !important;
     }
@@ -443,94 +471,60 @@
         border-color: transparent !important;
     }
 
-    /* INDICATEUR DE POSITION DU CARROUSEL */
-    .carousel-image-counter {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.95) 0%, rgba(217, 119, 6, 0.95) 100%);
-        color: #000;
-        padding: 8px 14px;
-        border-radius: 25px;
-        font-size: 0.9rem;
-        font-weight: 700;
-        z-index: 10;
-        backdrop-filter: blur(10px);
-        border: 2px solid rgba(245, 158, 11, 0.4);
-        box-shadow: 
-            0 4px 15px rgba(245, 158, 11, 0.3),
-            0 2px 8px rgba(0, 0, 0, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        text-shadow: none;
-        letter-spacing: 0.5px;
-        min-width: 55px;
-        text-align: center;
-        line-height: 1.2;
-        user-select: none;
-        pointer-events: none;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        transform-origin: center;
-        animation: fadeInCounter 0.5s ease-out;
+    /* FEATURE BOXES */
+    .border-slate-800 {
+        border-color: var(--color-slate-800) !important;
     }
 
-    /* Animation d'entrée pour l'indicateur */
-    @@keyframes fadeInCounter {
-        from {
-            opacity: 0;
-            transform: scale(0.8) translateY(-5px);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
+    .check-circle {
+        width: 20px;
+        height: 20px;
+        background-color: rgba(245, 158, 11, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-amber-500);
     }
 
-    /* Animation subtile au hover du carrousel */
-    .carousel:hover .carousel-image-counter {
-        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-        border-color: rgba(251, 191, 36, 0.6);
-        transform: scale(1.05);
-        box-shadow: 
-            0 6px 20px rgba(245, 158, 11, 0.4),
-            0 3px 12px rgba(0, 0, 0, 0.5),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    .dot-amber {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        background-color: var(--color-amber-500);
+        border-radius: 50%;
     }
 
-    /* Style actif quand on change de slide */
-    .carousel-item.active .carousel-image-counter {
-        animation: pulseCounter 0.3s ease-out;
+    /* BOOKING CARD (Floating Right) */
+    .booking-card {
+        background-color: #0b101a; /* Très sombre, proche du noir */
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
 
-    @@keyframes pulseCounter {
-        0%, 100% {
-            transform: scale(1);
-        }
-        50% {
-            transform: scale(1.1);
-        }
+    .border-slate-700 {
+        border-color: var(--color-slate-700) !important;
     }
 
-    /* Responsive pour mobile */
-    @@media (max-width: 768px) {
-        .carousel-image-counter {
-            top: 12px;
-            left: 12px;
-            padding: 6px 12px;
-            font-size: 0.85rem;
-            min-width: 50px;
-            border-width: 1.5px;
-        }
+    /* BOUTON */
+    .btn-amber {
+        background-color: var(--color-amber-500);
+        border: none;
+        transition: all 0.2s;
+        font-weight: 600;
     }
 
-    /* Style pour écrans très petits */
-    @@media (max-width: 480px) {
-        .carousel-image-counter {
-            top: 10px;
-            left: 10px;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            min-width: 45px;
-            border-radius: 20px;
+        .btn-amber:hover {
+            background-color: var(--color-amber-600);
         }
+
+    .btn-outline-amber {
+        color: var(--color-amber-500);
+        border-color: var(--color-amber-500);
     }
+
+        .btn-outline-amber:hover {
+            background-color: var(--color-amber-500);
+            color: #000;
+        }
 </style>
