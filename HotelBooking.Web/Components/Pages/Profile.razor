@@ -2,29 +2,30 @@
 @using HotelBooking.Web.Models
 @using HotelBooking.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject IUserProfileService UserProfileService
 @inject IBookingService BookingService
+@inject IHotelService HotelService
 @inject NavigationManager NavigationManager
 @inject IAuthService AuthService
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <PageTitle>Mon Profil - Hôtel SkullKing</PageTitle>
 
 <div class="profile-container">
     <div class="profile-layout">
-        <!-- Section Gauche : Profil Utilisateur -->
         <div class="profile-sidebar">
-            @if (userProfile == null)
+            @if (isLoadingProfile)
             {
                 <div class="profile-loading">
                     <div class="spinner"></div>
                     <p>Chargement du profil...</p>
                 </div>
             }
-            else
+            else if (userProfile != null)
             {
-                <!-- Avatar et Nom -->
                 <div class="profile-avatar-section">
                     <div class="profile-avatar">
                         @if (!string.IsNullOrEmpty(userProfile.FirstName))
@@ -37,7 +38,7 @@
                         }
                     </div>
                     <h2 class="profile-name">@($"{userProfile.FirstName} {userProfile.LastName}".Trim())</h2>
-                    @if (userProfile.Roles.Any())
+                    @if (userProfile.Roles != null && userProfile.Roles.Any())
                     {
                         <div class="profile-badge">
                             <i class="oi oi-badge"></i>
@@ -46,7 +47,6 @@
                     }
                 </div>
 
-                <!-- Informations de Contact -->
                 <div class="profile-contact">
                     <div class="contact-item">
                         <i class="oi oi-envelope-closed"></i>
@@ -64,27 +64,25 @@
                     </div>
                 </div>
 
-                <!-- Onglets de Gestion -->
                 <div class="profile-tabs">
-                    <button class="profile-tab @(activeTab == "info" ? "active" : "")" 
+                    <button class="profile-tab @(activeTab == "info" ? "active" : "")"
                             @onclick="@(() => SwitchToTab("info"))">
                         <i class="oi oi-person"></i>
                         Informations
                     </button>
-                    <button class="profile-tab @(activeTab == "password" ? "active" : "")" 
+                    <button class="profile-tab @(activeTab == "password" ? "active" : "")"
                             @onclick="@(() => SwitchToTab("password"))">
                         <i class="oi oi-lock-locked"></i>
                         Mot de passe
                     </button>
                 </div>
 
-                <!-- Contenu des Onglets -->
                 <div class="profile-tab-content">
                     @if (activeTab == "info")
                     {
                         <EditForm Model="@userProfile" OnValidSubmit="HandleUpdateProfile">
                             <DataAnnotationsValidator />
-                            
+
                             <div class="form-group">
                                 <label>Prénom</label>
                                 <InputText class="form-input" @bind-Value="userProfile.FirstName" />
@@ -120,7 +118,7 @@
                     {
                         <EditForm Model="@userProfile" OnValidSubmit="HandleChangePassword">
                             <DataAnnotationsValidator />
-                            
+
                             <div class="form-group">
                                 <label>Nouveau mot de passe</label>
                                 <InputText type="password" class="form-input" @bind-Value="userProfile.NewPassword" />
@@ -148,7 +146,6 @@
                     }
                 </div>
 
-                <!-- Boutons d'action -->
                 <div class="profile-actions">
                     <button class="btn-home" @onclick="@(() => NavigationManager.NavigateTo("/"))">
                         Retour à l'accueil
@@ -160,20 +157,19 @@
             }
         </div>
 
-        <!-- Section Droite : Mes Réservations -->
         <div class="bookings-section">
             <div class="bookings-header">
                 <h2>Mes Réservations</h2>
                 <div class="booking-filters">
-                    <button class="filter-btn @(bookingFilter == "all" ? "active" : "")" 
+                    <button class="filter-btn @(bookingFilter == "all" ? "active" : "")"
                             @onclick="@(() => SetBookingFilter("all"))">
                         Toutes
                     </button>
-                    <button class="filter-btn @(bookingFilter == "upcoming" ? "active" : "")" 
+                    <button class="filter-btn @(bookingFilter == "upcoming" ? "active" : "")"
                             @onclick="@(() => SetBookingFilter("upcoming"))">
                         À venir
                     </button>
-                    <button class="filter-btn @(bookingFilter == "past" ? "active" : "")" 
+                    <button class="filter-btn @(bookingFilter == "past" ? "active" : "")"
                             @onclick="@(() => SetBookingFilter("past"))">
                         Passées
                     </button>
@@ -194,7 +190,11 @@
                     {
                         <div class="booking-card">
                             <div class="booking-image">
-                                @if (!string.IsNullOrEmpty(booking.RoomImageUrl))
+                                @if (roomImages.ContainsKey(booking.Id) && !string.IsNullOrEmpty(roomImages[booking.Id]))
+                                {
+                                    <img src="@roomImages[booking.Id]" alt="Chambre @booking.RoomNumber" />
+                                }
+                                else if (!string.IsNullOrEmpty(booking.RoomImageUrl))
                                 {
                                     <img src="@booking.RoomImageUrl" alt="Chambre @booking.RoomNumber" />
                                 }
@@ -266,19 +266,20 @@
                     <div class="no-bookings">
                         <i class="oi oi-calendar"></i>
                         <h3>Aucune réservation</h3>
-                        <p>@(bookingFilter == "all" ? "Vous n'avez pas encore de réservations." :
-                           bookingFilter == "upcoming" ? "Aucune réservation à venir." :
-                           "Aucune réservation passée.")</p>
-                        <button class="btn-book" @onclick="@(() => NavigationManager.NavigateTo("/rooms"))">
-                            Réserver une chambre
-                        </button>
-                    </div>
-                }
+                        <p>
+                            @(bookingFilter == "all" ? "Vous n'avez pas encore de réservations." :
+                                                    bookingFilter == "upcoming" ? "Aucune réservation à venir." :
+                                                    "Aucune réservation passée.")
+                    </p>
+                    <button class="btn-book" @onclick="@(() => NavigationManager.NavigateTo("/rooms"))">
+                        Réserver une chambre
+                    </button>
+                </div>
+                                }
             </div>
         </div>
     </div>
 
-    <!-- Messages d'alerte -->
     @if (!string.IsNullOrEmpty(successMessage))
     {
         <div class="alert alert-success">
@@ -298,7 +299,6 @@
     }
 </div>
 
-<!-- Modal pour les détails de réservation -->
 @if (selectedBooking != null)
 {
     <div class="modal-overlay" @onclick="CloseBookingDetails">
@@ -315,13 +315,13 @@
                     <p><strong>Description :</strong> @selectedBooking.RoomDescription</p>
                     <p><strong>Prix/nuit :</strong> @selectedBooking.PricePerNight.ToString("C")</p>
                 </div>
-                
+
                 <div class="booking-detail-section">
                     <h4>Hôtel</h4>
                     <p><strong>Nom :</strong> @selectedBooking.HotelName</p>
                     <p><strong>Étoiles :</strong> @selectedBooking.HotelStarRating ⭐</p>
                 </div>
-                
+
                 <div class="booking-detail-section">
                     <h4>Dates</h4>
                     <p><strong>Arrivée :</strong> @selectedBooking.StartingDate.ToString("dd/MM/yyyy")</p>
@@ -350,14 +350,18 @@
     private IEnumerable<BookingForUser>? userBookings;
     private IEnumerable<BookingForUser>? filteredBookings;
     private BookingForUser? selectedBooking;
-    
+
+    // Dictionnaire pour stocker les images
+    private Dictionary<Guid, string> roomImages = new();
+
     private string successMessage = string.Empty;
     private string errorMessage = string.Empty;
     private string activeTab = "info";
     private string bookingFilter = "all";
-    
+
     private bool isUpdatingProfile = false;
     private bool isChangingPassword = false;
+    private bool isLoadingProfile = true;
     private bool isLoadingBookings = false;
 
     protected override async Task OnInitializedAsync()
@@ -370,26 +374,76 @@
     {
         try
         {
+            isLoadingProfile = true;
             userProfile = await UserProfileService.GetCurrentUserProfileAsync();
-            
+
             if (userProfile == null)
             {
-                errorMessage = "Impossible de charger les informations du profil.";
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                var user = authState.User;
+                if (user.Identity?.IsAuthenticated == true)
+                {
+                    userProfile = new UserProfile
+                    {
+                        Username = user.Identity.Name ?? "Pirate",
+                        Email = user.FindFirst(ClaimTypes.Email)?.Value ?? "Inconnu",
+                        FirstName = user.Identity.Name ?? "Capitaine",
+                        Roles = new List<string>()
+                    };
+                }
+                else
+                {
+                    errorMessage = "Impossible de charger le profil.";
+                }
             }
         }
         catch (Exception ex)
         {
             errorMessage = $"Erreur lors du chargement du profil: {ex.Message}";
         }
+        finally
+        {
+            isLoadingProfile = false;
+        }
     }
 
     private async Task LoadUserBookings()
     {
         isLoadingBookings = true;
-        
+
         try
         {
             userBookings = await BookingService.GetUserBookingsAsync();
+
+            // Récupération des images manquantes
+            if (userBookings != null && userBookings.Any())
+            {
+                try
+                {
+                    var hotels = await HotelService.GetAllHotelsAsync();
+                    var allRooms = new List<Room>();
+
+                    foreach (var h in hotels)
+                    {
+                        var hotelRooms = await HotelService.GetHotelRoomsAsync(h.Id, 1, 100);
+                        if (hotelRooms != null) allRooms.AddRange(hotelRooms);
+                    }
+
+                    foreach (var booking in userBookings)
+                    {
+                        var room = allRooms.FirstOrDefault(r => r.Number == booking.RoomNumber);
+                        if (room != null && !string.IsNullOrEmpty(room.PrimaryImageUrl))
+                        {
+                            if (!roomImages.ContainsKey(booking.Id))
+                            {
+                                roomImages.Add(booking.Id, room.PrimaryImageUrl);
+                            }
+                        }
+                    }
+                }
+                catch { /* Echec silencieux */ }
+            }
+
             ApplyBookingFilter();
         }
         catch (Exception ex)
@@ -419,14 +473,14 @@
         if (userBookings == null) return;
 
         var now = DateTime.Now;
-        
+
         filteredBookings = bookingFilter switch
         {
-            "upcoming" => userBookings.Where(b => b.StartingDate > now),
+            "upcoming" => userBookings.Where(b => b.StartingDate > now && b.Status != "Annulée"),
             "past" => userBookings.Where(b => b.EndingDate < now),
             _ => userBookings
         };
-        
+
         StateHasChanged();
     }
 
@@ -442,15 +496,15 @@
 
     private async Task CancelBooking(BookingForUser booking)
     {
-        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", 
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm",
             $"Êtes-vous sûr de vouloir annuler votre réservation ?");
-        
+
         if (!confirmed) return;
 
         try
         {
             var result = await BookingService.CancelBookingAsync(booking.Id);
-            
+
             if (result)
             {
                 successMessage = $"Réservation annulée avec succès.";
@@ -479,7 +533,7 @@
         try
         {
             var result = await UserProfileService.UpdateUserProfileAsync(userProfile);
-            
+
             if (result)
             {
                 successMessage = "Profil mis à jour avec succès !";
@@ -510,7 +564,7 @@
         try
         {
             var result = await UserProfileService.ChangePasswordAsync(userProfile.NewPassword);
-            
+
             if (result)
             {
                 successMessage = "Mot de passe changé avec succès !";
@@ -540,689 +594,699 @@
 }
 
 <style>
-/* Variables de couleurs inspirées de la maquette */
-:root {
-    --bg-primary: #0a0e1a;
-    --bg-secondary: #1a2332;
-    --bg-card: #243142;
-    --text-primary: #ffffff;
-    --text-secondary: #8892b0;
-    --text-muted: #586577;
-    --accent-orange: #ff9500;
-    --accent-blue: #00d4d4;
-    --accent-green: #00c896;
-    --border-color: #334155;
-    --border-radius: 12px;
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
+    /* Variables de couleurs inspirées de la maquette */
+    :root {
+        --bg-primary: #0a0e1a;
+        --bg-secondary: #1a2332;
+        --bg-card: #243142;
+        --text-primary: #ffffff;
+        --text-secondary: #8892b0;
+        --text-muted: #586577;
+        --accent-orange: #ff9500;
+        --accent-blue: #00d4d4;
+        --accent-green: #00c896;
+        --border-color: #334155;
+        --border-radius: 12px;
+        --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .profile-container {
+        min-height: 100vh;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        padding: 20px;
+    }
 
-.profile-container {
-    min-height: 100vh;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    padding: 20px;
-}
-
-.profile-layout {
-    display: grid;
-    grid-template-columns: 400px 1fr;
-    gap: 30px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-/* Section Profil (Gauche) */
-.profile-sidebar {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
-    padding: 30px;
-    height: fit-content;
-    border: 1px solid var(--border-color);
-}
-
-.profile-avatar-section {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.profile-avatar {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: var(--accent-orange);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    font-size: 3rem;
-    font-weight: bold;
-    color: white;
-}
-
-.avatar-letter {
-    font-size: 3rem;
-    font-weight: bold;
-}
-
-.profile-name {
-    font-size: 1.8rem;
-    margin: 0 0 10px 0;
-    color: var(--text-primary);
-}
-
-.profile-badge {
-    background: var(--accent-orange);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.profile-contact {
-    margin-bottom: 30px;
-}
-
-.contact-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
-    padding: 15px 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.contact-item i {
-    color: var(--text-secondary);
-    font-size: 1.2rem;
-    width: 20px;
-}
-
-.contact-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.contact-label {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-}
-
-.contact-value {
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.profile-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.profile-tab {
-    flex: 1;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.profile-tab:hover {
-    background: var(--bg-card);
-    color: var(--text-primary);
-}
-
-.profile-tab.active {
-    background: var(--accent-orange);
-    color: white;
-    border-color: var(--accent-orange);
-}
-
-.profile-tab-content {
-    margin-bottom: 30px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.form-input {
-    width: 100%;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 1rem;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: var(--accent-orange);
-}
-
-.form-error {
-    color: #ff6b6b;
-    font-size: 0.875rem;
-    margin-top: 5px;
-}
-
-.btn-update {
-    width: 100%;
-    background: var(--accent-orange);
-    color: white;
-    border: none;
-    padding: 14px;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.btn-update:hover:not(:disabled) {
-    background: #e6850e;
-    transform: translateY(-2px);
-}
-
-.btn-update:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.profile-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.btn-home, .btn-logout {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
-    font-size: 1rem;
-}
-
-.btn-home {
-    background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-.btn-home:hover {
-    background: var(--bg-secondary);
-}
-
-.btn-logout {
-    background: #ff6b6b;
-    color: white;
-}
-
-.btn-logout:hover {
-    background: #ff5252;
-}
-
-/* Section Réservations (Droite) */
-.bookings-section {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
-    padding: 30px;
-    border: 1px solid var(--border-color);
-}
-
-.bookings-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.bookings-header h2 {
-    color: var(--accent-orange);
-    margin: 0;
-    font-size: 1.8rem;
-}
-
-.booking-filters {
-    display: flex;
-    gap: 10px;
-}
-
-.filter-btn {
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.filter-btn:hover {
-    color: var(--text-primary);
-}
-
-.filter-btn.active {
-    background: var(--accent-orange);
-    color: white;
-    border-color: var(--accent-orange);
-}
-
-.bookings-list {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.booking-card {
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border-color);
-    overflow: hidden;
-    display: grid;
-    grid-template-columns: 200px 1fr auto;
-    transition: all 0.3s ease;
-}
-
-.booking-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-}
-
-.booking-image {
-    height: 150px;
-    background: var(--bg-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--accent-blue);
-}
-
-.booking-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.booking-image-placeholder {
-    color: var(--text-muted);
-    font-size: 2rem;
-}
-
-.booking-details {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.booking-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.booking-room {
-    color: var(--accent-orange);
-    margin: 0;
-    font-size: 1.3rem;
-}
-
-.booking-status {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-.booking-status.a-venir {
-    background: var(--accent-green);
-    color: white;
-}
-
-.booking-status.en-cours {
-    background: var(--accent-blue);
-    color: white;
-}
-
-.booking-status.terminee {
-    background: var(--text-muted);
-    color: white;
-}
-
-.booking-info {
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.booking-dates {
-    display: flex;
-    gap: 30px;
-    align-items: center;
-}
-
-.date-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--text-secondary);
-}
-
-.date-item i {
-    color: var(--text-muted);
-}
-
-.date-item > div {
-    display: flex;
-    flex-direction: column;
-}
-
-.date-label {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-}
-
-.date-value {
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.date-item.price {
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.total-label {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-}
-
-.total-value {
-    color: var(--accent-orange);
-    font-size: 1.2rem;
-    font-weight: bold;
-}
-
-.booking-reference {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-}
-
-.booking-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 20px;
-    min-width: 120px;
-}
-
-.btn-details, .btn-cancel {
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn-details {
-    background: var(--accent-blue);
-    color: white;
-}
-
-.btn-details:hover {
-    background: #00b8b8;
-}
-
-.btn-cancel {
-    background: #ff6b6b;
-    color: white;
-}
-
-.btn-cancel:hover {
-    background: #ff5252;
-}
-
-/* États vides et de chargement */
-.profile-loading, .bookings-loading {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-secondary);
-}
-
-.no-bookings {
-    text-align: center;
-    padding: 60px;
-    color: var(--text-secondary);
-}
-
-.no-bookings i {
-    font-size: 4rem;
-    margin-bottom: 20px;
-    color: var(--text-muted);
-}
-
-.no-bookings h3 {
-    color: var(--text-primary);
-    margin: 0 0 10px 0;
-}
-
-.btn-book {
-    background: var(--accent-orange);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 20px;
-}
-
-.btn-book:hover {
-    background: #e6850e;
-}
-
-/* Spinners */
-.spinner, .spinner-small {
-    border: 2px solid transparent;
-    border-top: 2px solid var(--accent-orange);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.spinner {
-    width: 40px;
-    height: 40px;
-    margin: 0 auto 20px;
-}
-
-.spinner-small {
-    width: 16px;
-    height: 16px;
-    margin-right: 8px;
-}
-
-@@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Alertes */
-.alert {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 16px 20px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    z-index: 1000;
-    box-shadow: var(--shadow);
-    animation: slideIn 0.3s ease;
-}
-
-.alert-success {
-    background: var(--accent-green);
-    color: white;
-}
-
-.alert-error {
-    background: #ff6b6b;
-    color: white;
-}
-
-.alert-close {
-    background: none;
-    border: none;
-    color: inherit;
-    font-size: 1.2rem;
-    cursor: pointer;
-    margin-left: auto;
-}
-
-@@keyframes slideIn {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
-}
-
-/* Modal */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
-    width: 90%;
-    max-width: 600px;
-    max-height: 80vh;
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-}
-
-.modal-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h3 {
-    margin: 0;
-    color: var(--text-primary);
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 1.5rem;
-    cursor: pointer;
-}
-
-.modal-body {
-    padding: 20px;
-}
-
-.booking-detail-section {
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.booking-detail-section:last-child {
-    border-bottom: none;
-}
-
-.booking-detail-section h4 {
-    color: var(--accent-orange);
-    margin: 0 0 15px 0;
-}
-
-.booking-detail-section p {
-    margin: 8px 0;
-    color: var(--text-secondary);
-}
-
-.modal-footer {
-    padding: 20px;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    gap: 15px;
-    justify-content: flex-end;
-}
-
-.btn-danger, .btn-secondary {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-.btn-danger {
-    background: #ff6b6b;
-    color: white;
-}
-
-.btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-/* Responsive */
-@@media (max-width: 768px) {
     .profile-layout {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 30px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Section Profil (Gauche) */
+    .profile-sidebar {
+        background: var(--bg-card);
+        border-radius: var(--border-radius);
+        padding: 30px;
+        height: fit-content;
+        border: 1px solid var(--border-color);
+    }
+
+    .profile-avatar-section {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: var(--accent-orange);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 3rem;
+        font-weight: bold;
+        color: white;
+    }
+
+    .avatar-letter {
+        font-size: 3rem;
+        font-weight: bold;
+    }
+
+    .profile-name {
+        font-size: 1.8rem;
+        margin: 0 0 10px 0;
+        color: var(--text-primary);
+    }
+
+    .profile-badge {
+        background: var(--accent-orange);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .profile-contact {
+        margin-bottom: 30px;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .contact-item i {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            width: 20px;
+        }
+
+    .contact-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .contact-label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .contact-value {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .profile-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .profile-tab {
+        flex: 1;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+        .profile-tab:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .profile-tab.active {
+            background: var(--accent-orange);
+            color: white;
+            border-color: var(--accent-orange);
+        }
+
+    .profile-tab-content {
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+    .form-input {
+        width: 100%;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-orange);
+        }
+
+    .form-error {
+        color: #ff6b6b;
+        font-size: 0.875rem;
+        margin-top: 5px;
+    }
+
+    .btn-update {
+        width: 100%;
+        background: var(--accent-orange);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+        .btn-update:hover:not(:disabled) {
+            background: #e6850e;
+            transform: translateY(-2px);
+        }
+
+        .btn-update:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .profile-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .btn-home, .btn-logout {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 1rem;
+    }
+
+    .btn-home {
+        background: transparent;
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+
+        .btn-home:hover {
+            background: var(--bg-secondary);
+        }
+
+    .btn-logout {
+        background: #ff6b6b;
+        color: white;
+    }
+
+        .btn-logout:hover {
+            background: #ff5252;
+        }
+
+    /* Section Réservations (Droite) */
+    .bookings-section {
+        background: var(--bg-card);
+        border-radius: var(--border-radius);
+        padding: 30px;
+        border: 1px solid var(--border-color);
+    }
+
+    .bookings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+        .bookings-header h2 {
+            color: var(--accent-orange);
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+    .booking-filters {
+        display: flex;
+        gap: 10px;
+    }
+
+    .filter-btn {
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .filter-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .filter-btn.active {
+            background: var(--accent-orange);
+            color: white;
+            border-color: var(--accent-orange);
+        }
+
+    .bookings-list {
+        display: flex;
+        flex-direction: column;
         gap: 20px;
     }
-    
+
     .booking-card {
-        grid-template-columns: 1fr;
+        background: var(--bg-secondary);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 200px 1fr auto;
+        transition: all 0.3s ease;
     }
-    
+
+        .booking-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
     .booking-image {
-        height: 200px;
+        height: 150px;
+        background: var(--bg-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--accent-blue);
     }
-    
+
+        .booking-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .booking-image-placeholder {
+        color: var(--text-muted);
+        font-size: 2rem;
+    }
+
+    .booking-details {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .booking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .booking-room {
+        color: var(--accent-orange);
+        margin: 0;
+        font-size: 1.3rem;
+    }
+
+    .booking-status {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+        .booking-status.a-venir {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .booking-status.en-cours {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .booking-status.terminee {
+            background: var(--text-muted);
+            color: white;
+        }
+
+    .booking-info {
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .booking-dates {
+        display: flex;
+        gap: 30px;
+        align-items: center;
+    }
+
+    .date-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-secondary);
+    }
+
+        .date-item i {
+            color: var(--text-muted);
+        }
+
+        .date-item > div {
+            display: flex;
+            flex-direction: column;
+        }
+
+    .date-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .date-value {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .date-item.price {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .total-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .total-value {
+        color: var(--accent-orange);
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .booking-reference {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
     .booking-actions {
-        flex-direction: row;
-        padding: 15px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 20px;
+        min-width: 120px;
     }
-}
+
+    .btn-details, .btn-cancel {
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-details {
+        background: var(--accent-blue);
+        color: white;
+    }
+
+        .btn-details:hover {
+            background: #00b8b8;
+        }
+
+    .btn-cancel {
+        background: #ff6b6b;
+        color: white;
+    }
+
+        .btn-cancel:hover {
+            background: #ff5252;
+        }
+
+    /* États vides et de chargement */
+    .profile-loading, .bookings-loading {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-secondary);
+    }
+
+    .no-bookings {
+        text-align: center;
+        padding: 60px;
+        color: var(--text-secondary);
+    }
+
+        .no-bookings i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--text-muted);
+        }
+
+        .no-bookings h3 {
+            color: var(--text-primary);
+            margin: 0 0 10px 0;
+        }
+
+    .btn-book {
+        background: var(--accent-orange);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+        .btn-book:hover {
+            background: #e6850e;
+        }
+
+    /* Spinners */
+    .spinner, .spinner-small {
+        border: 2px solid transparent;
+        border-top: 2px solid var(--accent-orange);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 20px;
+    }
+
+    .spinner-small {
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Alertes */
+    .alert {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 20px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 1000;
+        box-shadow: var(--shadow);
+        animation: slideIn 0.3s ease;
+    }
+
+    .alert-success {
+        background: var(--accent-green);
+        color: white;
+    }
+
+    .alert-error {
+        background: #ff6b6b;
+        color: white;
+    }
+
+    .alert-close {
+        background: none;
+        border: none;
+        color: inherit;
+        font-size: 1.2rem;
+        cursor: pointer;
+        margin-left: auto;
+    }
+
+    @@keyframes slideIn {
+        from {
+            transform: translateX(100%);
+        }
+
+        to {
+            transform: translateX(0);
+        }
+    }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: var(--bg-card);
+        border-radius: var(--border-radius);
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+    }
+
+    .modal-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .booking-detail-section {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+        .booking-detail-section:last-child {
+            border-bottom: none;
+        }
+
+        .booking-detail-section h4 {
+            color: var(--accent-orange);
+            margin: 0 0 15px 0;
+        }
+
+        .booking-detail-section p {
+            margin: 8px 0;
+            color: var(--text-secondary);
+        }
+
+    .modal-footer {
+        padding: 20px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        gap: 15px;
+        justify-content: flex-end;
+    }
+
+    .btn-danger, .btn-secondary {
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .btn-danger {
+        background: #ff6b6b;
+        color: white;
+    }
+
+    .btn-secondary {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .profile-layout {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .booking-card {
+            grid-template-columns: 1fr;
+        }
+
+        .booking-image {
+            height: 200px;
+        }
+
+        .booking-actions {
+            flex-direction: row;
+            padding: 15px 20px;
+        }
+    }
 </style>
