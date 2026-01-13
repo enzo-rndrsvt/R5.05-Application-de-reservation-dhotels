@@ -76,7 +76,7 @@
                                     <p class="text-slate-400 mb-2">Une chambre spectaculaire inspirée de la légende.</p>
                                     <div class="d-flex align-items-center text-slate-300 small">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                                        @guests voyageur@(guests > 1 ? "s" : "") (estimation)
+                                        @guests voyageur@(guests > 1 ? "s" : "")
                                     </div>
                                 </div>
                             </div>
@@ -129,10 +129,7 @@
                                     <span>@booking.PricePerNight.ToString("C0") × @booking.NumberOfNights nuits</span>
                                     <span>@((booking.PricePerNight * booking.NumberOfNights).ToString("C"))</span>
                                 </div>
-                                <div class="d-flex justify-content-between mb-4 text-slate-300">
-                                    <span>Taxes et frais</span>
-                                    <span>@((booking.Price - (booking.PricePerNight * booking.NumberOfNights)).ToString("C"))</span>
-                                </div>
+                                
 
                                 <div class="d-flex justify-content-between align-items-center pt-3 border-top border-slate-800">
                                     <span class="text-amber-500 fw-bold fs-5">Total payé</span>
