@@ -8,245 +8,196 @@
 @inject IJSRuntime JSRuntime
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
-<PageTitle>@(room?.Type ?? "Cabine") @(room?.Number.ToString() ?? "") - Hôtel SkullKing</PageTitle>
+<PageTitle>Cabine @(room?.Number.ToString() ?? "") - Hôtel SkullKing</PageTitle>
 
-<div class="container mt-4">
+<div class="page-container bg-darker-950 min-vh-100 text-slate-300 pb-5">
+
+    <div class="container pt-4 mb-4">
+        <a href="/rooms" class="text-slate-400 text-decoration-none hover-text-amber d-inline-flex align-items-center mb-3 group-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 transition-transform group-hover-translate-back"><path d="m15 18-6-6 6-6" /></svg>
+            Retour aux chambres
+        </a>
+    </div>
+
     @if (room == null && string.IsNullOrEmpty(errorMessage))
     {
-        <div class="text-center p-4">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Chargement...</span>
-            </div>
-            <p class="mt-2">Chargement des détails de la cabine...</p>
+        <div class="container text-center py-5">
+            <div class="spinner-border text-amber-500" role="status"></div>
+            <p class="mt-3 text-slate-400">Chargement des détails de la cabine...</p>
         </div>
     }
     else if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-warning">
-            <h4><i class="oi oi-warning"></i> Cabine introuvable</h4>
-            <p>@errorMessage</p>
+        <div class="container">
+            <div class="alert alert-warning border-amber-500 bg-dark-900-opacity text-amber-500">
+                <i class="oi oi-warning me-2"></i> @errorMessage
+            </div>
             <div class="mt-3">
-                <a href="/rooms" class="btn btn-primary">
-                    <i class="oi oi-arrow-left"></i> Retour aux cabines
-                </a>
+                <a href="/rooms" class="btn btn-outline-amber">Retourner à la liste</a>
             </div>
         </div>
     }
-    else
+    else if (room != null)
     {
-        <!-- Navigation breadcrumb -->
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Accueil</a></li>
-                <li class="breadcrumb-item"><a href="/rooms">Nos cabines</a></li>
-                <li class="breadcrumb-item active">Cabine @room.Number</li>
-            </ol>
-        </nav>
+        <div class="container">
 
-        <div class="row">
-            <!-- Galerie d'images -->
-            <div class="col-lg-8">
-                <div class="card mb-4">
-                    <div class="card-body p-0">
-                        @if (room.AllImageUrls.Any())
-                        {
-                            var validImages = room.AllImageUrls.Where(url => !string.IsNullOrWhiteSpace(url)).ToList();
-                            var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}"; // ID unique par chambre
-                            
-                            <div id="@carouselId" class="carousel slide" data-bs-ride="carousel">
-                                <div class="carousel-inner">
-                                    @for (int i = 0; i < validImages.Count; i++)
-                                    {
-                                        <div class="carousel-item @(i == 0 ? "active" : "")">
-                                            <img src="@validImages[i]" 
-                                                 class="d-block w-100" 
-                                                 style="height: 500px; object-fit: cover;" 
-                                                 alt="Cabine @room.Number - Image @(i + 1)"
-                                                 onerror="console.log('Image failed to load: @validImages[i]'); this.style.display='none';" />
-                                        </div>
-                                    }
-                                </div>
-                                
-                                @if (validImages.Count > 1)
+            <div class="card card-dark-theme border-0 overflow-hidden mb-5 rounded-4 shadow-lg">
+
+                <div class="position-relative" style="height: 500px;">
+                    @if (room.AllImageUrls.Any())
+                    {
+                        var validImages = room.AllImageUrls.Where(url => !string.IsNullOrWhiteSpace(url)).ToList();
+                        var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}";
+
+                        <div id="@carouselId" class="carousel slide h-100" data-bs-ride="carousel">
+                            <div class="carousel-inner h-100">
+                                @for (int i = 0; i < validImages.Count; i++)
                                 {
-                                    <!-- Contrôles du carousel avec événements manuels -->
-                                    <button class="carousel-control-prev" type="button" @onclick="PreviousSlide">
-                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                        <span class="visually-hidden">Précédent</span>
-                                    </button>
-                                    <button class="carousel-control-next" type="button" @onclick="NextSlide">
-                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                        <span class="visually-hidden">Suivant</span>
-                                    </button>
-                                    
-                                    <!-- Indicateurs -->
-                                    <div class="carousel-indicators">
-                                        @for (int i = 0; i < validImages.Count; i++)
-                                        {
-                                            var index = i;
-                                            <button type="button" 
-                                                    @onclick="() => GoToSlide(index)"
-                                                    class="@(i == currentSlideIndex ? "active" : "")" 
-                                                    aria-current="@(i == currentSlideIndex ? "true" : "false")"
-                                                    aria-label="Image @(i + 1)"></button>
-                                        }
+                                    <div class="carousel-item h-100 @(i == currentSlideIndex ? "active" : "")">
+                                        <img src="@validImages[i]"
+                                             class="d-block w-100 h-100 object-fit-cover"
+                                             alt="Cabine @room.Number - Image @(i + 1)"
+                                             onerror="this.style.display='none';" />
                                     </div>
                                 }
-                                
-                                <!-- Badge informatif sans debug -->
-                                <div class="position-absolute top-0 end-0 m-2">
-                                    <span class="badge bg-dark bg-opacity-75">@validImages.Count / @validImages.Count</span>
-                                </div>
                             </div>
-                            
-                            <!-- Miniatures cliquables -->
+
                             @if (validImages.Count > 1)
                             {
-                                <div class="row mt-3 px-3">
-                                    @for (int i = 0; i < validImages.Count; i++)
+                                <button class="carousel-control-prev" type="button" @onclick="PreviousSlide" style="z-index: 5;">
+                                    <span class="carousel-control-prev-icon bg-dark-opacity rounded-circle p-3" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Précédent</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" @onclick="NextSlide" style="z-index: 5;">
+                                    <span class="carousel-control-next-icon bg-dark-opacity rounded-circle p-3" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Suivant</span>
+                                </button>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center">
+                            <i class="oi oi-image display-1 text-white-50"></i>
+                        </div>
+                    }
+
+                    <div class="position-absolute inset-0 pointer-events-none" style="background: linear-gradient(to top, #0d1117 0%, transparent 60%); z-index: 2;"></div>
+
+                    <div class="position-absolute top-0 end-0 m-4" style="z-index: 10;">
+                        <span class="badge bg-amber-500 text-dark fs-5 fw-bold px-4 py-2 shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="me-2 mb-1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                            @room.PricePerNight.ToString("C0")<small class="fw-normal">/nuit</small>
+                        </span>
+                    </div>
+
+                    <div class="position-absolute bottom-0 start-0 p-5 w-100" style="z-index: 3;">
+                        <h1 class="text-amber-500 fw-bold display-4 mb-2">
+                            Cabine @room.Number
+                        </h1>
+                        <div class="d-flex align-items-center text-white fs-5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                            @(room.AdultsCapacity + room.ChildrenCapacity) personnes
+
+                            <span class="badge bg-light text-dark ms-3 fs-6">@room.Type</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-5 bg-darker-card">
+                    <div class="row g-5">
+
+                        <div class="col-lg-7">
+
+                            @if (room.AllImageUrls.Count > 1)
+                            {
+                                <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
+                                    @for (int i = 0; i < room.AllImageUrls.Count; i++)
                                     {
-                                        var index = i; // Capture for onclick
-                                        <div class="col-2 mb-2">
-                                            <img src="@validImages[i]" 
-                                                 class="img-thumbnail cursor-pointer border-2 @(i == currentSlideIndex ? "border-primary" : "border-secondary")" 
-                                                 style="height: 80px; object-fit: cover; cursor: pointer; transition: all 0.3s ease;" 
-                                                 @onclick="() => GoToSlide(index)"
-                                                 alt="Image @(i + 1)"
-                                                 title="Cliquez pour voir l'image @(i + 1)" />
-                                        </div>
+                                        var index = i;
+                                        <img src="@room.AllImageUrls[i]"
+                                             class="rounded cursor-pointer border border-2 @(i == currentSlideIndex ? "border-amber-500" : "border-transparent")"
+                                             style="width: 80px; height: 60px; object-fit: cover; transition: all 0.2s;"
+                                             @onclick="() => GoToSlide(index)"
+                                             alt="Miniature @(i + 1)" />
                                     }
                                 </div>
                             }
-                        }
-                        else
-                        {
-                            <!-- Placeholder si pas d'images -->
-                            <div class="d-flex align-items-center justify-content-center bg-light" style="height: 500px;">
-                                <div class="text-center text-muted">
-                                    <i class="oi oi-image" style="font-size: 5rem;"></i>
-                                    <h4 class="mt-3">Aucune image disponible</h4>
-                                    <p>Cette cabine n'a pas encore de photos</p>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
 
-            <!-- Informations et réservation -->
-            <div class="col-lg-4">
-                <div class="card sticky-top" style="top: 20px;">
-                    <div class="card-header text-white" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
-                        <h3 class="mb-0">
-                            <i class="oi oi-home"></i> Cabine @room.Number
-                        </h3>
-                        <span class="badge bg-light text-dark fs-6">@room.Type</span>
-                    </div>
-                    
-                    <div class="card-body">
-                        <!-- Prix et réduction -->
-                        <div class="mb-4">
-                            @if (room.CurrentDiscount != null)
-                            {
-                                <div class="alert alert-warning">
-                                    <strong><i class="oi oi-tag"></i> Offre spéciale !</strong><br>
-                                    <span class="badge bg-warning text-dark">-@room.CurrentDiscount.Percentage%</span>
-                                </div>
-                                <div class="d-flex align-items-center mb-2">
-                                    <span class="text-decoration-line-through text-muted me-2 fs-5">
-                                        @room.PricePerNight.ToString("C")
-                                    </span>
-                                    <span class="text-success fs-3 fw-bold">
-                                        @CalculateDiscountedPrice(room.PricePerNight, room.CurrentDiscount.Percentage).ToString("C")
-                                    </span>
-                                </div>
-                                <small class="text-muted">par nuit d'aventure</small>
-                            }
-                            else
-                            {
-                                <div class="text-center">
-                                    <span class="display-4 text-primary fw-bold">@room.PricePerNight.ToString("C")</span>
-                                    <p class="text-muted">par nuit</p>
-                                </div>
-                            }
-                        </div>
+                            <h4 class="text-white mb-3">Une expérience pirate inoubliable</h4>
+                            <p class="text-slate-400 mb-4 lh-lg">
+                                @room.BriefDescription
+                            </p>
 
-                        <!-- Capacités -->
-                        <div class="row mb-4">
-                            <div class="col-6 text-center">
-                                <div class="border rounded p-3">
-                                    <i class="oi oi-people text-primary fs-3"></i>
-                                    <p class="mb-0 mt-2"><strong>@room.AdultsCapacity</strong></p>
-                                    <small class="text-muted">Matelots adultes</small>
-                                </div>
+                            <div class="d-flex flex-wrap gap-3 mb-5">
+                                <span class="badge-feature-large"><i class="oi oi-star me-2 text-amber-500"></i> Suite thématique</span>
+                                <span class="badge-feature-large"><i class="oi oi-lock-locked me-2 text-amber-500"></i> Coffre au trésor</span>
+                                <span class="badge-feature-large"><i class="oi oi-eye me-2 text-amber-500"></i> Vue Océan</span>
                             </div>
-                            <div class="col-6 text-center">
-                                <div class="border rounded p-3">
-                                    <i class="oi oi-person text-info fs-3"></i>
-                                    <p class="mb-0 mt-2"><strong>@room.ChildrenCapacity</strong></p>
-                                    <small class="text-muted">Moussaillons</small>
+
+                            <h5 class="text-amber-500 mb-3">Équipements de bord</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled text-slate-300">
+                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Hamac confortable</li>
+                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Carte aux trésors</li>
+                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Service de chambre</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled text-slate-300">
+                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Salle de bain privée</li>
+                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Décoration immersive</li>
+                                        <li class="mb-2 d-flex align-items-center"><span class="bullet-amber me-2">•</span> Wi-Fi (via perroquet)</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Description -->
-                        <div class="mb-4">
-                            <h6><i class="oi oi-document"></i> Description de la cabine</h6>
-                            <p class="text-muted">@room.BriefDescription</p>
-                        </div>
+                        <div class="col-lg-5">
+                            <div class="card bg-black-opacity border border-slate-700 p-4 h-100 rounded-4 sticky-top" style="top: 20px; z-index: 1;">
+                                <div class="text-center mb-4 border-bottom border-slate-700 pb-4">
+                                    <p class="text-slate-400 mb-1">À partir de</p>
+                                    @if (room.CurrentDiscount != null)
+                                    {
+                                        <div class="d-flex justify-content-center align-items-baseline gap-2">
+                                            <h3 class="text-amber-500 fw-bold m-0">@CalculateDiscountedPrice(room.PricePerNight, room.CurrentDiscount.Percentage).ToString("C0")</h3>
+                                            <span class="text-decoration-line-through text-slate-500 small">@room.PricePerNight.ToString("C0")</span>
+                                        </div>
+                                        <span class="badge bg-danger mt-2">-@room.CurrentDiscount.Percentage% Offre Pirate !</span>
+                                    }
+                                    else
+                                    {
+                                        <h3 class="text-amber-500 fw-bold">@room.PricePerNight.ToString("C0") <small class="fs-6 text-slate-400 fw-normal">/ nuit</small></h3>
+                                    }
+                                </div>
 
-                        <!-- Boutons d'action -->
-                        <div class="d-grid gap-2">
-                            <a href="/booking/@room.Id" class="btn btn-success btn-lg">
-                                <i class="oi oi-calendar"></i> Réserver cette cabine
-                            </a>
-                            <button class="btn btn-outline-primary" @onclick="ShareRoom">
-                                <i class="oi oi-share"></i> Partager
-                            </button>
-                            <a href="/rooms" class="btn btn-outline-secondary">
-                                <i class="oi oi-arrow-left"></i> Retour aux cabines
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between mb-3 text-slate-300">
+                                        <span>Capacité</span>
+                                        <span class="fw-bold">@(room.AdultsCapacity + room.ChildrenCapacity) personnes</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3 text-slate-300">
+                                        <span>Type</span>
+                                        <span class="fw-bold">@room.Type</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3 text-slate-300">
+                                        <span>Numéro</span>
+                                        <span class="fw-bold">@room.Number</span>
+                                    </div>
+                                </div>
 
-        <!-- Informations supplémentaires -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="oi oi-info"></i> Informations supplémentaires</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <h6>????? Équipements pirate</h6>
-                                <ul class="list-unstyled">
-                                    <li><i class="oi oi-circle-check text-success"></i> Hamac confortable</li>
-                                    <li><i class="oi oi-circle-check text-success"></i> Coffre au trésor personnel</li>
-                                    <li><i class="oi oi-circle-check text-success"></i> Vue sur les sept mers</li>
-                                    <li><i class="oi oi-circle-check text-success"></i> Accès aux ponts du navire</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-4">
-                                <h6>? Services inclus</h6>
-                                <ul class="list-unstyled">
-                                    <li><i class="oi oi-circle-check text-success"></i> Petit-déjeuner du marin</li>
-                                    <li><i class="oi oi-circle-check text-success"></i> Nettoyage quotidien</li>
-                                    <li><i class="oi oi-circle-check text-success"></i> Accès au mess</li>
-                                    <li><i class="oi oi-circle-check text-success"></i> Animations pirates</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-4">
-                                <h6>??? Informations pratiques</h6>
-                                <ul class="list-unstyled">
-                                    <li><strong>Check-in :</strong> 15h00</li>
-                                    <li><strong>Check-out :</strong> 11h00</li>
-                                    <li><strong>Étage :</strong> Pont principal</li>
-                                    <li><strong>Numéro :</strong> @room.Number</li>
-                                </ul>
+                                <a href="/booking/@room.Id" class="btn btn-amber w-100 py-3 fw-bold text-dark mb-3 rounded-3">
+                                    Réserver maintenant
+                                </a>
+
+                                <button class="btn btn-outline-secondary w-100 mb-3" @onclick="ShareRoom">
+                                    <i class="oi oi-share me-2"></i> Partager
+                                </button>
+
+                                <p class="text-center text-slate-500 small fst-italic">
+                                    <i class="oi oi-circle-check me-1"></i> Annulation gratuite jusqu'à 48h avant l'arrivée
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -273,7 +224,7 @@
         if (room?.Id != RoomId)
         {
             await LoadRoomDetails();
-            currentSlideIndex = 0; // Reset slide index for new room
+            currentSlideIndex = 0;
         }
     }
 
@@ -283,32 +234,13 @@
         {
             try
             {
-                // Attendre que le DOM soit complètement rendu
                 await Task.Delay(200);
-                
                 var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}";
-                
-                Console.WriteLine($"?? Attempting to initialize carousel: {carouselId}");
-                
-                // Essayer d'initialiser le carrousel spécifique
-                var success = await JSRuntime.InvokeAsync<bool>("initializeRoomCarousel", carouselId);
-                
-                if (success)
-                {
-                    Console.WriteLine($"? Carousel {carouselId} initialized successfully for room {room.Number}");
-                }
-                else
-                {
-                    Console.WriteLine($"? Failed to initialize carousel {carouselId} for room {room.Number}");
-                    
-                    // Fallback: essayer l'initialisation générale
-                    await JSRuntime.InvokeVoidAsync("initializeCarousels");
-                }
+                await JSRuntime.InvokeVoidAsync("initializeCarousels");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"? Error initializing carousel: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                Console.WriteLine($"JS Error: {ex.Message}");
             }
         }
     }
@@ -318,52 +250,22 @@
         try
         {
             errorMessage = null;
-            
-            Console.WriteLine($"=== DEBUG LoadRoomDetails pour RoomId: {RoomId} ===");
-            
-            // Pour l'instant, on utilise la liste des chambres et on trouve celle qui correspond
-            // TODO: Créer un endpoint API spécifique GetRoomByIdAsync
             var hotels = await HotelService.GetAllHotelsAsync();
-            
-            Console.WriteLine($"Nombre d'hôtels trouvés: {hotels?.Count() ?? 0}");
-            
             foreach (var hotel in hotels)
             {
                 var rooms = await HotelService.GetHotelRoomsAsync(hotel.Id, 1, 100);
-                Console.WriteLine($"Hôtel {hotel.Name}: {rooms?.Count() ?? 0} chambres");
-                
                 room = rooms?.FirstOrDefault(r => r.Id == RoomId);
-                if (room != null) 
-                {
-                    Console.WriteLine($"Chambre trouvée: {room.Number} - {room.Type}");
-                    Console.WriteLine($"ImageUrl: {room.ImageUrl ?? "NULL"}");
-                    Console.WriteLine($"ImageUrls count: {room.ImageUrls?.Count ?? 0}");
-                    Console.WriteLine($"AllImageUrls count: {room.AllImageUrls?.Count ?? 0}");
-                    
-                    if (room.AllImageUrls?.Any() == true)
-                    {
-                        for (int i = 0; i < room.AllImageUrls.Count; i++)
-                        {
-                            Console.WriteLine($"  AllImageUrls[{i}]: {room.AllImageUrls[i]}");
-                        }
-                    }
-                    
-                    break;
-                }
+                if (room != null) break;
             }
 
             if (room == null)
             {
-                errorMessage = "Cette cabine n'a pas été trouvée. Elle a peut-être été supprimée ou n'existe pas.";
-                Console.WriteLine("ERREUR: Chambre non trouvée");
+                errorMessage = "Cette cabine n'a pas été trouvée.";
             }
-            
-            Console.WriteLine("=== FIN DEBUG LoadRoomDetails ===");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"EXCEPTION LoadRoomDetails: {ex.Message}");
-            errorMessage = $"Erreur lors du chargement de la cabine : {ex.Message}";
+            errorMessage = $"Erreur lors du chargement : {ex.Message}";
         }
     }
 
@@ -378,65 +280,148 @@
         {
             var url = NavigationManager.Uri;
             await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
-            
-            // TODO: Ajouter un toast notification
-            Console.WriteLine("URL copiée dans le presse-papier !");
         }
-        catch
-        {
-            // Fallback si l'API clipboard n'est pas disponible
-            Console.WriteLine($"Partagez cette cabine : {NavigationManager.Uri}");
-        }
+        catch { /* Fallback */ }
     }
 
     private async Task GoToSlide(int index)
     {
-        try
-        {
-            if (room == null || index < 0 || index >= room.AllImageUrls.Count) return;
-            
-            currentSlideIndex = index;
-            
-            // Obtenir l'ID du carrousel de cette chambre
-            var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}";
-            
-            Console.WriteLine($"GoToSlide called: carouselId={carouselId}, index={index}");
-            
-            // Utiliser JavaScript pour aller à la slide spécifique
-            await JSRuntime.InvokeVoidAsync("goToCarouselSlide", carouselId, index);
-            
-            // Mettre à jour l'interface
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error in GoToSlide: {ex.Message}");
-        }
+        if (room == null || index < 0 || index >= room.AllImageUrls.Count) return;
+        currentSlideIndex = index;
+        var carouselId = $"roomCarousel_{room.Id.ToString().Replace("-", "")}";
+        try { await JSRuntime.InvokeVoidAsync("goToCarouselSlide", carouselId, index); } catch { }
+        StateHasChanged();
     }
-    
+
     private async Task NextSlide()
     {
-        if (room == null) return;
-        
-        var nextIndex = currentSlideIndex + 1;
-        if (nextIndex >= room.AllImageUrls.Count)
-        {
-            nextIndex = 0; // Revenir au début
-        }
-        
+        var nextIndex = (currentSlideIndex + 1) >= (room?.AllImageUrls.Count ?? 0) ? 0 : currentSlideIndex + 1;
         await GoToSlide(nextIndex);
     }
-    
+
     private async Task PreviousSlide()
     {
-        if (room == null) return;
-        
-        var prevIndex = currentSlideIndex - 1;
-        if (prevIndex < 0)
-        {
-            prevIndex = room.AllImageUrls.Count - 1; // Aller à la fin
-        }
-        
+        var prevIndex = (currentSlideIndex - 1) < 0 ? (room?.AllImageUrls.Count ?? 0) - 1 : currentSlideIndex - 1;
         await GoToSlide(prevIndex);
     }
 }
+
+<style>
+    /* VARIABLES */
+    :root {
+        --color-dark-950: #020617;
+        --color-dark-900: #0f172a;
+        --color-slate-800: #1e293b;
+        --color-slate-700: #334155;
+        --color-slate-400: #94a3b8;
+        --color-slate-300: #cbd5e1;
+        --color-amber-500: #f59e0b;
+        --color-amber-600: #d97706;
+    }
+
+    /* BASE */
+    .bg-darker-950 {
+        background-color: var(--color-dark-950) !important;
+    }
+
+    .text-amber-500 {
+        color: var(--color-amber-500) !important;
+    }
+
+    .text-slate-300 {
+        color: var(--color-slate-300) !important;
+    }
+
+    .text-slate-400 {
+        color: var(--color-slate-400) !important;
+    }
+
+    .bg-amber-500 {
+        background-color: var(--color-amber-500) !important;
+    }
+
+    .object-fit-cover {
+        object-fit: cover;
+    }
+
+    .border-slate-700 {
+        border-color: var(--color-slate-700) !important;
+    }
+
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    /* CARD THEME */
+    .card-dark-theme {
+        background-color: var(--color-dark-900);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+
+    .bg-darker-card {
+        background-color: #0b101a;
+    }
+
+    .bg-black-opacity {
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .bg-dark-opacity {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    /* BADGES & FEATURES */
+    .badge-feature-large {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background-color: rgba(30, 41, 59, 0.5);
+        border: 1px solid var(--color-slate-700);
+        color: var(--color-slate-300);
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .bullet-amber {
+        color: var(--color-amber-500);
+        font-weight: bold;
+        font-size: 1.2rem;
+        line-height: 0;
+    }
+
+    /* BOUTONS & LIENS */
+    .btn-amber {
+        background-color: var(--color-amber-500);
+        border: none;
+        transition: background-color 0.2s;
+    }
+
+        .btn-amber:hover {
+            background-color: var(--color-amber-600);
+        }
+
+    .hover-text-amber:hover {
+        color: var(--color-amber-500) !important;
+    }
+
+    .group-link:hover .group-hover-translate-back {
+        transform: translateX(-3px);
+    }
+
+    .transition-transform {
+        transition: transform 0.2s ease;
+    }
+
+    /* Bordures miniatures */
+    .border-amber-500 {
+        border-color: var(--color-amber-500) !important;
+    }
+
+    .border-transparent {
+        border-color: transparent !important;
+    }
+</style>
