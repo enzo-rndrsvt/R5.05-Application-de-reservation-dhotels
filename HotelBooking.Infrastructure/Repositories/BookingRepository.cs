@@ -42,14 +42,19 @@ namespace HotelBooking.Infrastructure.Repositories
 
         public async Task<IEnumerable<BookingWithDetailsDTO>> GetBookingsForUserAsync(Guid userId, int itemsToSkip, int itemsToTake)
         {
-            var bookings = await _dbContext.Bookings
-                .Where(b => b.UserId == userId)
-                .Include(b => b.Room)
-                .ThenInclude(r => r.Hotel)
-                .OrderByDescending(b => b.CreationDate)
-                .Skip(itemsToSkip)
-                .Take(itemsToTake)
-                .Select(b => new BookingWithDetailsDTO
+            try
+            {
+                var bookings = await _dbContext.Bookings
+                    .Where(b => b.UserId == userId)
+                    .Include(b => b.Room)
+                    .ThenInclude(r => r.Hotel)
+                    .OrderByDescending(b => b.CreationDate)
+                    .Skip(itemsToSkip)
+                    .Take(itemsToTake)
+                    .ToListAsync();
+
+                // Mapper les résultats avec gestion d'erreurs pour les images
+                return bookings.Select(b => new BookingWithDetailsDTO
                 {
                     Id = b.Id,
                     CreationDate = b.CreationDate,
@@ -64,15 +69,21 @@ namespace HotelBooking.Infrastructure.Repositories
                     PricePerNight = b.Room.PricePerNight,
                     AdultsCapacity = b.Room.AdultsCapacity,
                     ChildrenCapacity = b.Room.ChildrenCapacity,
+                    RoomImageUrl = b.Room.ImageUrl,
+                    RoomImageUrls = SafeDeserializeImageUrls(b.Room),
                     HotelId = b.Room.HotelId,
                     HotelName = b.Room.Hotel.Name,
                     HotelDescription = b.Room.Hotel.BriefDescription,
                     HotelStarRating = b.Room.Hotel.StarRating,
                     OwnerName = b.Room.Hotel.OwnerName
-                })
-                .ToListAsync();
-
-            return bookings;
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                // Log l'erreur et retourner une liste vide plutôt que de planter
+                Console.WriteLine($"Erreur GetBookingsForUserAsync: {ex.Message}");
+                return new List<BookingWithDetailsDTO>();
+            }
         }
 
         public async Task<int> GetBookingsCountForUserAsync(Guid userId)
@@ -84,34 +95,46 @@ namespace HotelBooking.Infrastructure.Repositories
 
         public async Task<BookingWithDetailsDTO?> GetBookingByIdForUserAsync(Guid bookingId, Guid userId)
         {
-            var booking = await _dbContext.Bookings
-                .Where(b => b.Id == bookingId && b.UserId == userId)
-                .Include(b => b.Room)
-                .ThenInclude(r => r.Hotel)
-                .Select(b => new BookingWithDetailsDTO
-                {
-                    Id = b.Id,
-                    CreationDate = b.CreationDate,
-                    StartingDate = b.StartingDate,
-                    EndingDate = b.EndingDate,
-                    Price = b.Price,
-                    UserId = b.UserId,
-                    RoomId = b.RoomId,
-                    RoomNumber = b.Room.Number,
-                    RoomType = b.Room.Type,
-                    RoomDescription = b.Room.BriefDescription,
-                    PricePerNight = b.Room.PricePerNight,
-                    AdultsCapacity = b.Room.AdultsCapacity,
-                    ChildrenCapacity = b.Room.ChildrenCapacity,
-                    HotelId = b.Room.HotelId,
-                    HotelName = b.Room.Hotel.Name,
-                    HotelDescription = b.Room.Hotel.BriefDescription,
-                    HotelStarRating = b.Room.Hotel.StarRating,
-                    OwnerName = b.Room.Hotel.OwnerName
-                })
-                .FirstOrDefaultAsync();
+            try
+            {
+                var booking = await _dbContext.Bookings
+                    .Where(b => b.Id == bookingId && b.UserId == userId)
+                    .Include(b => b.Room)
+                    .ThenInclude(r => r.Hotel)
+                    .FirstOrDefaultAsync();
 
-            return booking;
+                if (booking == null) return null;
+
+                // Mapper avec gestion d'erreurs pour les images
+                return new BookingWithDetailsDTO
+                {
+                    Id = booking.Id,
+                    CreationDate = booking.CreationDate,
+                    StartingDate = booking.StartingDate,
+                    EndingDate = booking.EndingDate,
+                    Price = booking.Price,
+                    UserId = booking.UserId,
+                    RoomId = booking.RoomId,
+                    RoomNumber = booking.Room.Number,
+                    RoomType = booking.Room.Type,
+                    RoomDescription = booking.Room.BriefDescription,
+                    PricePerNight = booking.Room.PricePerNight,
+                    AdultsCapacity = booking.Room.AdultsCapacity,
+                    ChildrenCapacity = booking.Room.ChildrenCapacity,
+                    RoomImageUrl = booking.Room.ImageUrl,
+                    RoomImageUrls = SafeDeserializeImageUrls(booking.Room),
+                    HotelId = booking.Room.HotelId,
+                    HotelName = booking.Room.Hotel.Name,
+                    HotelDescription = booking.Room.Hotel.BriefDescription,
+                    HotelStarRating = booking.Room.Hotel.StarRating,
+                    OwnerName = booking.Room.Hotel.OwnerName
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur GetBookingByIdForUserAsync: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<bool> CancelBookingForUserAsync(Guid bookingId, Guid userId)
@@ -219,6 +242,30 @@ namespace HotelBooking.Infrastructure.Repositories
             }
 
             return RoomAvailabilityInfo.Unavailable(roomId, message, conflicts, nextAvailable);
+        }
+
+        private List<string> SafeDeserializeImageUrls(RoomTable room)
+        {
+            // Pour l'instant, on utilise seulement ImageUrl existant
+            // La colonne ImageUrls sera ajoutée dans une future migration
+            return new List<string>();
+        }
+
+        private List<string> DeserializeImageUrls(string? imageUrlsJson)
+        {
+            if (string.IsNullOrEmpty(imageUrlsJson))
+                return new List<string>();
+
+            try
+            {
+                return System.Text.Json.JsonSerializer.Deserialize<List<string>>(imageUrlsJson) ?? new List<string>();
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                // En cas d'erreur de désérialisation, retourner une liste vide
+                Console.WriteLine($"Erreur de désérialisation JSON: {ex.Message}");
+                return new List<string>();
+            }
         }
     }
 }

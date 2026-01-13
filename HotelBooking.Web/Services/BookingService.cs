@@ -226,28 +226,30 @@ if (room != null)
         }
 
         /// <summary>
-  /// Mapper un BookingWithDetailsDTO vers BookingForUser
+        /// Mapper un BookingWithDetailsDTO vers BookingForUser
         /// </summary>
-    private static BookingForUser MapToBookingForUser(BookingWithDetailsDTO dto)
+        private static BookingForUser MapToBookingForUser(BookingWithDetailsDTO dto)
         {
-    return new BookingForUser
-    {
-    Id = dto.Id,
-    CreationDate = dto.CreationDate,
-      StartingDate = dto.StartingDate,
-      EndingDate = dto.EndingDate,
-   Price = dto.Price,
-      RoomId = dto.RoomId,
-  RoomNumber = dto.RoomNumber,
-     RoomType = dto.RoomType,
-      RoomDescription = dto.RoomDescription,
-  PricePerNight = dto.PricePerNight,
- HotelId = dto.HotelId,
-    HotelName = dto.HotelName,
-    HotelDescription = dto.HotelDescription,
-   HotelStarRating = dto.HotelStarRating,
-   OwnerName = dto.OwnerName
-   };
-      }
+            return new BookingForUser
+            {
+                Id = dto.Id,
+                CreationDate = dto.CreationDate,
+                StartingDate = dto.StartingDate,
+                EndingDate = dto.EndingDate,
+                Price = dto.Price,
+                RoomId = dto.RoomId,
+                RoomNumber = dto.RoomNumber,
+                RoomType = dto.RoomType,
+                RoomDescription = dto.RoomDescription,
+                PricePerNight = dto.PricePerNight,
+                RoomImageUrl = dto.RoomImageUrl,
+                RoomImageUrls = dto.RoomImageUrls ?? new List<string>(),
+                HotelId = dto.HotelId,
+                HotelName = dto.HotelName,
+                HotelDescription = dto.HotelDescription,
+                HotelStarRating = dto.HotelStarRating,
+                OwnerName = dto.OwnerName
+            };
+        }
     }
 }
