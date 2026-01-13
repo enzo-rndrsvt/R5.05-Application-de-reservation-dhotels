@@ -35,6 +35,9 @@ namespace HotelBooking.Infrastructure.Tables
         /// <inheritdoc cref="RoomDTO.ImageUrl"/>
         public string? ImageUrl { get; set; }
 
+        // Note: ImageUrls sera ajouté dans une future migration
+        // public string? ImageUrls { get; set; }
+
         public HotelTable Hotel { get; set; }
 
         public List<CartItemTable> CartItems { get; } = new();

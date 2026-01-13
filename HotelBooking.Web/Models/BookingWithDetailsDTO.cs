@@ -21,6 +21,10 @@ namespace HotelBooking.Web.Models
       public int AdultsCapacity { get; set; }
      public int ChildrenCapacity { get; set; }
 
+        // Room images (depuis l'API)
+        public string? RoomImageUrl { get; set; } = string.Empty;
+        public List<string> RoomImageUrls { get; set; } = new();
+
         // Hotel information
         public Guid HotelId { get; set; }
         public string HotelName { get; set; } = string.Empty;
@@ -29,8 +33,37 @@ namespace HotelBooking.Web.Models
         public string OwnerName { get; set; } = string.Empty;
 
     /// <summary>
-        /// Number of nights in the booking
+        /// URL de l'image principale de la chambre
         /// </summary>
+        public string? PrimaryImageUrl => !string.IsNullOrEmpty(RoomImageUrl) ? RoomImageUrl : RoomImageUrls?.FirstOrDefault();
+
+        /// <summary>
+        /// Toutes les images disponibles pour la chambre
+        /// </summary>
+        public List<string> AllRoomImageUrls 
+        {
+            get
+            {
+                var allImages = new List<string>();
+                
+                if (!string.IsNullOrEmpty(RoomImageUrl))
+                    allImages.Add(RoomImageUrl);
+                
+                if (RoomImageUrls?.Any() == true)
+                    allImages.AddRange(RoomImageUrls.Where(url => !string.IsNullOrEmpty(url) && url != RoomImageUrl));
+                
+                return allImages.Distinct().ToList();
+            }
+        }
+
+        /// <summary>
+        /// Vérifier si la chambre a des images
+        /// </summary>
+        public bool HasImages => !string.IsNullOrEmpty(RoomImageUrl) || (RoomImageUrls?.Any() == true);
+
+        /// <summary>
+     /// Number of nights in the booking
+     /// </summary>
         public int NumberOfNights => (EndingDate - StartingDate).Days;
 
         /// <summary>

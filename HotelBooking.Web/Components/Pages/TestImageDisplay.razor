@@ -1,0 +1,152 @@
+@page "/test-image-display"
+@using HotelBooking.Web.Models
+
+<PageTitle>Test Affichage Images</PageTitle>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h4>??? Test de l'Affichage des Images de Cabines</h4>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <h5>?? Test de la Logique d'Affichage</h5>
+                <p>Cette page teste les différents scénarios d'affichage d'images de cabines :</p>
+                <ul>
+                    <li><strong>Image en base</strong> : Utilise <code>RoomImageUrl</code></li>
+                    <li><strong>Pas d'image en base</strong> : Utilise <code>PrimaryRoomImageUrl</code> (image par défaut)</li>
+                </ul>
+            </div>
+
+            <!-- Simulation 1: Avec image en base -->
+            <h5 class="mt-4">? Simulation : Image en Base de Données</h5>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <strong>Cabine 101 (avec ImageUrl en DB)</strong>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 150px; background: #0a0e1a; display: flex; align-items: center; justify-content: center; border: 2px solid #00d4d4;">
+                                <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&h=300&fit=crop&crop=center" 
+                                     style="width: 100%; height: 100%; object-fit: cover;" 
+                                     alt="Cabine 101"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                
+                                <div style="display: none; width: 100%; height: 100%; background: #0a0e1a; color: #8892b0; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                                    <i class="oi oi-home" style="font-size: 2.5rem; color: #ff9500;"></i>
+                                    <span style="font-size: 0.9rem; color: #8892b0; font-weight: 600;">Cabine 101</span>
+                                    <small style="font-size: 0.75rem; color: #586577;">Erreur de chargement</small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <strong>RoomImageUrl:</strong> https://images.unsplash.com/photo-1611892440504-42a792e24d32...<br>
+                                    <strong>Logique:</strong> if (!string.IsNullOrEmpty(booking.RoomImageUrl)) ? <span class="text-success">TRUE</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white">
+                            <strong>Code utilisé</strong>
+                        </div>
+                        <div class="card-body">
+                            <pre style="font-size: 0.8rem;"><code>@@if (!string.IsNullOrEmpty(booking.RoomImageUrl))
+{
+    &lt;img src="@@booking.RoomImageUrl" 
+         alt="Cabine @@booking.RoomNumber" /&gt;
+}
+else
+{
+    &lt;img src="@@booking.PrimaryRoomImageUrl" 
+         alt="Cabine @@booking.RoomNumber" /&gt;
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulation 2: Sans image en base -->
+            <h5 class="mt-4">?? Simulation : Pas d'Image en Base</h5>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <strong>Cabine 999 (sans ImageUrl en DB)</strong>
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 150px; background: #0a0e1a; display: flex; align-items: center; justify-content: center; border: 2px solid #00d4d4;">
+                                <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=400&h=300&fit=crop&crop=center" 
+                                     style="width: 100%; height: 100%; object-fit: cover;" 
+                                     alt="Cabine 999"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                
+                                <div style="display: none; width: 100%; height: 100%; background: #0a0e1a; color: #8892b0; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                                    <i class="oi oi-home" style="font-size: 2.5rem; color: #ff9500;"></i>
+                                    <span style="font-size: 0.9rem; color: #8892b0; font-weight: 600;">Cabine 999</span>
+                                    <small style="font-size: 0.75rem; color: #586577;">Image indisponible</small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <strong>RoomImageUrl:</strong> null ou vide<br>
+                                    <strong>PrimaryRoomImageUrl:</strong> Image par défaut générée<br>
+                                    <strong>Logique:</strong> else ? <span class="text-warning">Utilise l'image par défaut</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white">
+                            <strong>Calcul image par défaut</strong>
+                        </div>
+                        <div class="card-body">
+                            <pre style="font-size: 0.8rem;"><code>private string GetDefaultRoomImage(int roomNumber)
+{
+    var images = new[] {
+        "image1.jpg", "image2.jpg", ...
+    };
+    return images[roomNumber % images.Length];
+}</code></pre>
+                            <p class="mt-2"><small>Pour la cabine 999: 999 % 8 = 7 ? image[7]</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outils de diagnostic -->
+            <div class="mt-4 alert alert-primary">
+                <h6>?? Outils de Diagnostic :</h6>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="/debug-reservations" class="btn btn-warning btn-sm">
+                        <i class="oi oi-bug"></i> Debug Réservations
+                    </a>
+                    <a href="/profile" class="btn btn-success btn-sm">
+                        <i class="oi oi-person"></i> Page Profil
+                    </a>
+                    <button class="btn btn-info btn-sm" onclick="navigator.clipboard.writeText('UPDATE Rooms SET ImageUrl = \\'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&h=300&fit=crop&crop=center\\' WHERE Number = 101;')">
+                        <i class="oi oi-clipboard"></i> Copier SQL Test
+                    </button>
+                </div>
+            </div>
+
+            <!-- Checklist -->
+            <div class="mt-4 alert alert-secondary">
+                <h6>?? Checklist de Vérification :</h6>
+                <ul class="mb-0">
+                    <li>? <strong>Logique d'affichage</strong> : Priorité à RoomImageUrl puis PrimaryRoomImageUrl</li>
+                    <li>? <strong>Fallback d'erreur</strong> : onerror avec placeholder</li>
+                    <li>? <strong>Styles cohérents</strong> : Même apparence que les cartes de réservation</li>
+                    <li>? <strong>Test avec vraies données</strong> : Exécuter script SQL puis tester /profile</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
